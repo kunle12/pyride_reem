@@ -1,4 +1,4 @@
-import PyPR2
+import PyREEM
 import time
 import constants
 import tinstate
@@ -29,8 +29,8 @@ class Messenger( timerclient.TimerClient ):
     self.appdisabled = (tininfo.TiNTwOAToken == None)
 
     if self.appdisabled:
-      print '''PyRIDE PR2 twitter app is diabled. Create a Twitter account and application for
-               your PR2 and enter the access tokens and secrets in the tininfo.py. Make sure
+      print '''PyRIDE REEM twitter app is diabled. Create a Twitter account and application for
+               your REEM and enter the access tokens and secrets in the tininfo.py. Make sure
                your Twitter account application allow read and write access.'''
       return
     #load last twitter token
@@ -65,7 +65,7 @@ class Messenger( timerclient.TimerClient ):
     try:
       self.twtaccess = Twitter(auth=OAuth(tininfo.TiNTwOAToken, tininfo.TiNTwOASecret, tininfo.TiNTwConKey, tininfo.TiNTwConSecret))
     except:
-      print 'Unable to check into PyRIDE PR2 twitter app. Try again in 10mins.'
+      print 'Unable to check into PyRIDE REEM twitter app. Try again in 10mins.'
       return False
 
     self.startupTime = time.localtime()
@@ -74,13 +74,13 @@ class Messenger( timerclient.TimerClient ):
     self.token = self.lastoken
     self.getmessages()
     tinstate.updateStatus( constants.NEW_MESSAGES, len( self.messages ) == 0 )
-    tid = PyPR2.addTimer( 60, -1, 60 )
+    tid = PyREEM.addTimer( 60, -1, 60 )
     self.timercontext[tid] = 'getmsg'
     timermanager.addTimer( tid, self )
     #add purge archive time
     purgetime = timermanager.calcTimePeriodFromNow( "4:00" )
     if purgetime > 0:
-      tid = PyPR2.addTimer( purgetime, -1, 24*60*3600 )
+      tid = PyREEM.addTimer( purgetime, -1, 24*60*3600 )
       self.timercontext[tid] = 'purgemsg'
       timermanager.addTimer( tid, self )
 
@@ -138,7 +138,7 @@ class Messenger( timerclient.TimerClient ):
       msg.id = newmsg['id']
       #if msg.text.startswith( '#now#' ):
         #msg.text = msg.text[5:]
-        #PyPR2.say( "Urgent message announcement")
+        #PyREEM.say( "Urgent message announcement")
         #self.announcemsg( [msg] )
         #tinstate.updateStatus( constants.ARCHIVE_MESSAGES, len(self.archive) == 0 )
       if msg.text.startswith( '#qa#' ):
@@ -171,7 +171,7 @@ class Messenger( timerclient.TimerClient ):
 
   def announcemsg( self, mesgs ):
     if len( mesgs ) == 0:
-      PyPR2.say( "There is no message to be announced" )
+      PyREEM.say( "There is no message to be announced" )
       return
 
     curTime = time.localtime()
@@ -184,9 +184,9 @@ class Messenger( timerclient.TimerClient ):
         frmWho = "From %s," % self.useraliases[ i.sender ]
       else:
         frmWho = "From %s," % i.sender
-      PyPR2.say( "%s %s %s" % (sayTime, frmWho, i.text) )
+      PyREEM.say( "%s %s %s" % (sayTime, frmWho, i.text) )
 
-    PyPR2.say( "Message announcement is complete." )
+    PyREEM.say( "Message announcement is complete." )
 
   def announce( self ):
     self.archive = self.messages + self.archive
@@ -201,12 +201,12 @@ class Messenger( timerclient.TimerClient ):
 
   def purgearchive( self ):
     if len(self.archive) == 0:
-      PyPR2.say( "No archived message to be deleted." )
+      PyREEM.say( "No archived message to be deleted." )
       return
 
     self.archive = []
     tinstate.updateStatus( constants.ARCHIVE_MESSAGES, True )
-    PyPR2.say( "All archived message have been deleted." )
+    PyREEM.say( "All archived message have been deleted." )
 
   def savestate( self ):
     f = None
@@ -222,7 +222,7 @@ class Messenger( timerclient.TimerClient ):
 
   def stoptimers( self ):
     for tid in self.timercontext:
-      PyPR2.removeTimer( tid )
+      PyREEM.removeTimer( tid )
       timermanager.delTimer( tid )
 
     self.timercontext = {}

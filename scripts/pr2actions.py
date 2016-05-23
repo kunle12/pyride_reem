@@ -1,4 +1,4 @@
-import PyPR2
+import PyREEM
 import math
 
 class Actionlet( object ):
@@ -43,7 +43,7 @@ class GripperRotateAction( Actionlet ):
       print "still playing action '%s'." % self.name
       return
 
-    myaction = PyPR2.getArmJointPositions( self.isleft )
+    myaction = PyREEM.getArmJointPositions( self.isleft )
     myaction['time_to_reach'] = 1.0
 
     rot = 0.0
@@ -57,7 +57,7 @@ class GripperRotateAction( Actionlet ):
     else:
       myaction['r_wrist_roll_joint'] = myaction['r_wrist_roll_joint'] + rot
 
-    PyPR2.moveArmWithJointPos( **myaction )
+    PyREEM.moveArmWithJointPos( **myaction )
     self.action_finishes = False
 
   def finishsArmAction( self, is_left ):
@@ -67,7 +67,7 @@ class GripperRotateAction( Actionlet ):
       self.action_finishes = True
       return
 
-    myaction = PyPR2.getArmJointPositions( self.isleft )
+    myaction = PyREEM.getArmJointPositions( self.isleft )
     myaction['time_to_reach'] = 1.0
         
     rot = 0.0
@@ -81,7 +81,7 @@ class GripperRotateAction( Actionlet ):
     else:
       myaction['r_wrist_roll_joint'] = myaction['r_wrist_roll_joint'] + rot
 
-    PyPR2.moveArmWithJointPos( **myaction )
+    PyREEM.moveArmWithJointPos( **myaction )
 
   def isActionCompleted( self ):
     return self.action_finishes
@@ -113,7 +113,7 @@ class PointHeadToAction( Actionlet ):
       print "still playing action '%s'" % self.name
       return
 
-    PyPR2.pointHeadTo( "base_link", self.target_x, self.target_y, self.target_z )
+    PyREEM.pointHeadTo( "base_link", self.target_x, self.target_y, self.target_z )
 
   def finishsHeadAction( self ):
     self.action_finishes = True
@@ -139,15 +139,15 @@ class PrimitiveArmAction( Actionlet ):
 
     if self.arm_action:
       if isinstance( self.arm_action, list ):
-        PyPR2.moveArmWithJointTrajectory( self.arm_action )
+        PyREEM.moveArmWithJointTrajectory( self.arm_action )
       else:
-        PyPR2.moveArmWithJointPos( **(self.arm_action) )
+        PyREEM.moveArmWithJointPos( **(self.arm_action) )
       self.isarm_finished = False
     if self.grip_action != None:
       if self.is_left:
-        PyPR2.setGripperPosition( 1, self.grip_action )
+        PyREEM.setGripperPosition( 1, self.grip_action )
       else:
-        PyPR2.setGripperPosition( 2, self.grip_action )
+        PyREEM.setGripperPosition( 2, self.grip_action )
 
       self.isgripper_finished = False
 

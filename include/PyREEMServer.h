@@ -1,14 +1,14 @@
 /*
- *  PyPR2Server.h
- *  PyPR2Server
+ *  PyREEMServer.h
+ *  PyREEMServer
  *
  *  Created by Xun Wang on 09/03/2012.
  *  Copyright 2012 Galaxy Network. All rights reserved.
  *
  */
 
-#ifndef PyPR2Server_h_DEFINED
-#define PyPR2Server_h_DEFINED
+#ifndef PyREEMServer_h_DEFINED
+#define PyREEMServer_h_DEFINED
 
 #include <stdio.h>
 #include <string.h>
@@ -29,10 +29,10 @@ namespace pyride {
 
 using namespace ros;
 
-class PyPR2Server : public PyRideExtendedCommandHandler {
+class PyREEMServer : public PyRideExtendedCommandHandler {
 public:
-  PyPR2Server();
-  virtual ~PyPR2Server();
+  PyREEMServer();
+  virtual ~PyREEMServer();
   bool init();
   void fini();
   
@@ -63,4 +63,4 @@ private:
   
 };
 }; // namespace pyride
-#endif // PyPR2Server_h_DEFINED
+#endif // PyREEMServer_h_DEFINED

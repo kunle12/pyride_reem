@@ -1,9 +1,9 @@
 import os
 import sys
 import math
-import PyPR2
+import PyREEM
 
-MagiksPR2Path = 'Magiks/magiks/projects/s_pr2'
+MagiksREEMPath = 'Magiks/magiks/projects/s_pr2'
 
 class IKSError( Exception ):
   pass
@@ -16,7 +16,7 @@ class IKSResolver( object ):
     self.pint = None
     self.geometry = None
     self.resolveIKS()
-    self.useSPR2()
+    self.useSREEM()
 
   def getArmPose( self, left_arm ):
     if self.iks_in_use == 2:
@@ -33,13 +33,13 @@ class IKSResolver( object ):
       return pose
     else:
       if left_arm:
-        return PyPR2.getRelativeTF( '/base_footprint', '/l_gripper_tool_frame' )
+        return PyREEM.getRelativeTF( '/base_footprint', '/l_gripper_tool_frame' )
       else:
-        return PyPR2.getRelativeTF( '/base_footprint', '/r_gripper_tool_frame' )
+        return PyREEM.getRelativeTF( '/base_footprint', '/r_gripper_tool_frame' )
 
   def moveArmInTrajectory( self, traj, time = 10.0, left_arm = False, relative = False ):
     if self.iks_in_use != 2:
-      raise IKSError( 'This function is only available with S-PR2.' )
+      raise IKSError( 'This function is only available with S-REEM.' )
 
     if time <= 1.0:
       raise IKSError( 'Invalid execution time.' )
@@ -71,7 +71,7 @@ class IKSResolver( object ):
       jt.consistent_velocities()
       self.spr2_obj.run_config_trajectory(jt, is_left_arm = False, duration = time) 
 
-  def moveArmWithSPR2( self, **kwargs ):
+  def moveArmWithSREEM( self, **kwargs ):
     if not self.spr2_obj:
       return False
 
@@ -104,10 +104,10 @@ class IKSResolver( object ):
       self.pint.set_callback_functions()
 
   def resolveIKS( self ):
-    PyPR2.moveArmTo = self.dummyMoveArmTo
-    PyPR2.getArmPose = self.getArmPose
-    PyPR2.moveArmInTrajectory = self.moveArmInTrajectory
-    iksPath = os.path.join( sys.path[0], MagiksPR2Path )
+    PyREEM.moveArmTo = self.dummyMoveArmTo
+    PyREEM.getArmPose = self.getArmPose
+    PyREEM.moveArmInTrajectory = self.moveArmInTrajectory
+    iksPath = os.path.join( sys.path[0], MagiksREEMPath )
     if os.path.exists( iksPath ):
       sys.path.append('/usr/local/lib/python2.7/dist-packages/')
       sys.path.append('/usr/lib/python2.7/dist-packages/')
@@ -123,29 +123,29 @@ class IKSResolver( object ):
         self.np = np
         self.pint = pys.pint
         self.geometry = geometry
-        self.spr2_obj = pys.PyRide_PR2()
+        self.spr2_obj = pys.PyRide_REEM()
         self.traj = traj
       except:
-        print 'unable to load S-PR2/Magiks engine'
+        print 'unable to load S-REEM/Magiks engine'
         self.spr2_obj = None
 
-  def useSPR2( self ):
+  def useSREEM( self ):
     if self.spr2_obj:
-      PyPR2.moveArmTo = self.moveArmWithSPR2
+      PyREEM.moveArmTo = self.moveArmWithSREEM
       self.iks_in_use = 2
-      print 'PyRIDE is using S-PR2 for PR2'
+      print 'PyRIDE is using S-REEM for REEM'
       
   def useMoveIt( self ):
-    if PyPR2.useMoveIt():
-      PyPR2.moveArmTo = PyPR2.moveArmPoseTo
+    if PyREEM.useMoveIt():
+      PyREEM.moveArmTo = PyREEM.moveArmPoseTo
       self.iks_in_use = 1
-      print 'PyRIDE is using MoveIt! for PR2'
+      print 'PyRIDE is using MoveIt! for REEM'
 
   def iksInUse( self ):
     if self.iks_in_use == 1:
       return 'MoveIt!'
     elif self.iks_in_use == 2:
-      return 'S-PR2'
+      return 'S-REEM'
     else:
       return 'None'
 

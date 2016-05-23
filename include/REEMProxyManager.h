@@ -1,14 +1,14 @@
 /*
- *  PR2ProxyManager.h
- *  PyPR2Server
+ *  REEMProxyManager.h
+ *  PyREEMServer
  *
  *  Created by Xun Wang on 9/03/2012.
  *  Copyright 2012 Galaxy Network. All rights reserved.
  *
  */
 
-#ifndef PR2_PROXY_MANAGER_H
-#define PR2_PROXY_MANAGER_H
+#ifndef REEM_PROXY_MANAGER_H
+#define REEM_PROXY_MANAGER_H
 
 #include <string>
 #include <ros/ros.h>
@@ -50,7 +50,7 @@
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #include <shape_tools/solid_primitive_dims.h>
 
-#ifdef WITH_PR2HT
+#ifdef WITH_REEMHT
 #include <pr2ht/TrackedObjectStatusChange.h>
 #include <pr2ht/TrackedObjectUpdate.h>
 #endif
@@ -76,11 +76,11 @@ typedef actionlib::SimpleActionClient<pr2_common_action_msgs::TuckArmsAction> Tu
 typedef actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction> TrajectoryClient;
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
   
-class PR2ProxyManager
+class REEMProxyManager
 {
 public:
-  static PR2ProxyManager * instance();
-  ~PR2ProxyManager();
+  static REEMProxyManager * instance();
+  ~REEMProxyManager();
 
   void initWithNodeHandle( NodeHandle * nodeHandle, bool useOptionNodes = false, bool useMoveIt = false );
     
@@ -144,7 +144,7 @@ public:
   bool navigateBodyTo( const std::vector<double> & positions,
                       const std::vector<double> & orientation );
   
-#ifdef WITH_PR2HT
+#ifdef WITH_REEMHT
   bool enableHumanDetection( bool enable, bool enableTrackingNotif = false );
 #endif
   
@@ -189,7 +189,7 @@ private:
   AsyncSpinner * jointDataThread_;
   CallbackQueue jointDataQueue_;
 
-#ifdef WITH_PR2HT
+#ifdef WITH_REEMHT
   Subscriber * htObjStatusSub_;
   Subscriber * htObjUpdateSub_;
 
@@ -277,9 +277,9 @@ private:
   int lowPowerThreshold_;
   Duration batTimeRemain_;
 
-  static PR2ProxyManager * s_pPR2ProxyManager;
+  static REEMProxyManager * s_pREEMProxyManager;
 
-  PR2ProxyManager();
+  REEMProxyManager();
   double clamp( double val, double max );
   double max( double val1, double val2 );
   bool isBodyControlWithOdometryTimeExpired();
@@ -316,7 +316,7 @@ private:
 
   bool findSolidObjectInScene( const std::string & name );
 
-#ifdef WITH_PR2HT
+#ifdef WITH_REEMHT
   void htObjStatusCB( const pr2ht::TrackedObjectStatusChangeConstPtr & msg );
   void htObjUpdateCB( const pr2ht::TrackedObjectUpdateConstPtr & msg );
 #endif
@@ -328,4 +328,4 @@ private:
 };
 }; // namespace pyride
 
-#endif // PR2_PROXY_MANAGER_H
+#endif // REEM_PROXY_MANAGER_H

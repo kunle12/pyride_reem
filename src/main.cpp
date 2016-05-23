@@ -1,6 +1,6 @@
 /*
  *  main.cpp
- *  PyPR2Server
+ *  PyREEMServer
  *
  *  Created by Xun Wang on 09/03/2012.
  *  Copyright 2012 Galaxy Network. All rights reserved.
@@ -10,10 +10,10 @@
 #include <ros/ros.h>
 #include <signal.h>
 
-#include "PyPR2Server.h"
+#include "PyREEMServer.h"
 
 using namespace pyride;
-static PyPR2Server * s_server = NULL;
+static PyREEMServer * s_server = NULL;
 
 void stopProcess( int sig )
 {
@@ -23,9 +23,9 @@ void stopProcess( int sig )
 
 int main( int argc, char * argv[] )
 {
-  ros::init( argc, argv, "pyride_pr2" );
+  ros::init( argc, argv, "pyride_reem" );
 
-  s_server = new PyPR2Server();
+  s_server = new PyREEMServer();
 
   signal( SIGINT, ::stopProcess );
   

@@ -1,5 +1,5 @@
 /*
- *  PyPR2Module.h
+ *  PyREEMModule.h
  *  PyRIDE
  *
  *  Created by Xun Wang on 18/06/12.
@@ -7,18 +7,18 @@
  *
  */
 
-#ifndef PY_PR2_MODULE_H
-#define PY_PR2_MODULE_H
+#ifndef PY_REEM_MODULE_H
+#define PY_REEM_MODULE_H
 
 #include <PyModuleStub.h>
 
 namespace pyride {
 
-class PyPR2Module : public PyModuleExtension
+class PyREEMModule : public PyModuleExtension
 {
 public:
-  static PyPR2Module * instance();
-  virtual ~PyPR2Module();
+  static PyREEMModule * instance();
+  virtual ~PyREEMModule();
   
   void invokeBaseScanCallback( PyObject * arg );
   void invokeTiltScanCallback( PyObject * arg );
@@ -26,7 +26,7 @@ public:
   void setBaseScanCallback( PyObject * obj );
   void setTiltScanCallback( PyObject * obj );
 
-#ifdef WITH_PR2HT
+#ifdef WITH_REEMHT
   void setObjectDTCallback( PyObject * detectcb, PyObject * trackcb );
   
   void invokeObjectDetectionCallback( PyObject * arg );
@@ -39,12 +39,12 @@ public:
 #endif
 
 private:
-  static PyPR2Module * s_pyPR2Module;
+  static PyREEMModule * s_pyREEMModule;
   
   PyObject * baseScanCB_;
   PyObject * tiltScanCB_;
   
-#ifdef WITH_PR2HT
+#ifdef WITH_REEMHT
   PyObject * objectDetectCB_;
   PyObject * objectTrackCB_;
 #endif
@@ -53,10 +53,10 @@ private:
   PyObject * trajInputCB_;
 #endif
 
-  PyPR2Module();
+  PyREEMModule();
   PyObject * createPyModule();
 };
 
 } // namespace pyride
 
-#endif // PY_PR2_MODULE_H
+#endif // PY_REEM_MODULE_H

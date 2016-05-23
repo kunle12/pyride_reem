@@ -1,4 +1,4 @@
-import PyPR2
+import PyREEM
 import math
 import constants
 import tinstate
@@ -16,12 +16,12 @@ iksResolver = None
 msgTryTimer = -1
 
 def userLogon( name ):
-  PyPR2.say( '%s has logged on.' % name )
+  PyREEM.say( '%s has logged on.' % name )
   tinstate.updateStatus( constants.USER_PRESENT, False )
 
 def userLogoff( name ):
-  PyPR2.say( '%s has logged off.' % name )
-  tinstate.updateStatus( constants.USER_PRESENT, len(PyPR2.listCurrentUsers()) == 0)
+  PyREEM.say( '%s has logged off.' % name )
+  tinstate.updateStatus( constants.USER_PRESENT, len(PyREEM.listCurrentUsers()) == 0)
 
 def remoteCommandActions( cmd, arg ):
   pass
@@ -38,7 +38,7 @@ def timerActions( id ):
   global myMessenger, msgTryTimer
 
   if msgTryTimer == id and myMessenger.checkin():
-    PyPR2.removeTimer( msgTryTimer )
+    PyREEM.removeTimer( msgTryTimer )
     msgTryTimer = -1
   else:
     timermanager.onTimerCall( id )
@@ -52,7 +52,7 @@ def powerPlugChangeActions( isplugged ):
   else:
     text = "I'm on battery power."
   
-  PyPR2.say( text )
+  PyREEM.say( text )
   
   if myMessenger:
     myMessenger.updatestatus( text )
@@ -61,7 +61,7 @@ def batteryChargeChangeActions( batpc, isplugged, time_remain ):
   global myMessenger
   
   if batpc < 20 and not isplugged:
-    PyPR2.say( "I'm low on battery, please put me back on main power." )
+    PyREEM.say( "I'm low on battery, please put me back on main power." )
     
     if myMessenger:
       myMessenger.updatestatus( "I have only %d percent battery power left!" % batpc )
@@ -70,7 +70,7 @@ def systemShutdownActions():
   global myMessenger
   global extProcCall
 
-  PyPR2.say( 'I am going off line. Goodbye.' )
+  PyREEM.say( 'I am going off line. Goodbye.' )
 
   myMessenger.checkout()
   extProcCall.fini()
@@ -82,20 +82,20 @@ def main():
   extProcCall = extprocall.ProcConduit()
   iksResolver = iksresolver.IKSResolver()
   
-  PyPR2.onUserLogOn = userLogon
-  PyPR2.onUserLogOff = userLogoff
-  PyPR2.onTimer = timerActions
-  PyPR2.onTimerLapsed = timerLapsedActions
-  PyPR2.onRemoteCommand = remoteCommandActions
-  PyPR2.onSystemShutdown = systemShutdownActions
-  PyPR2.onPowerPluggedChange = powerPlugChangeActions
-  PyPR2.onBatteryChargeChange = batteryChargeChangeActions
-  PyPR2.onNodeStatusUpdate = nodeStatusUpdate
+  PyREEM.onUserLogOn = userLogon
+  PyREEM.onUserLogOff = userLogoff
+  PyREEM.onTimer = timerActions
+  PyREEM.onTimerLapsed = timerLapsedActions
+  PyREEM.onRemoteCommand = remoteCommandActions
+  PyREEM.onSystemShutdown = systemShutdownActions
+  PyREEM.onPowerPluggedChange = powerPlugChangeActions
+  PyREEM.onBatteryChargeChange = batteryChargeChangeActions
+  PyREEM.onNodeStatusUpdate = nodeStatusUpdate
    
   myMessenger = messenger.Messenger()
   if not myMessenger.checkin():
-    msgTryTimer = PyPR2.addTimer( 10*60, -1, 10*60 )
+    msgTryTimer = PyREEM.addTimer( 10*60, -1, 10*60 )
 
-  PyPR2.say( constants.INTRO_TEXT )
-  PyPR2.setLowPowerThreshold( 20 )
+  PyREEM.say( constants.INTRO_TEXT )
+  PyREEM.setLowPowerThreshold( 20 )
 

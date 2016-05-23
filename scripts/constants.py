@@ -30,7 +30,7 @@ LEARNING_COMPLETE  = 2
 FAULTY_HARDWARE    = 3
 CUSTOM_STATE       = 4
 
-INTRO_TEXT = "Welcome to PyRIDE PR2."
+INTRO_TEXT = "Welcome to PyRIDE REEM."
 
 # record bag state
 REC_CAM    = 1

@@ -1,6 +1,6 @@
 /*
- *  PR2ProxyManager.cpp
- *  PyPR2Server
+ *  REEMProxyManager.cpp
+ *  PyREEMServer
  *
  *  Created by Xun Wang on 9/03/2012.
  *  Copyright 2012 Galaxy Network. All rights reserved.
@@ -8,10 +8,10 @@
  */
 #include <pr2_msgs/SetPeriodicCmd.h>
 #include <pr2_msgs/SetLaserTrajCmd.h>
-#include "PR2ProxyManager.h"
-#include "PyPR2Module.h"
+#include "REEMProxyManager.h"
+#include "PyREEMModule.h"
 
-#ifdef WITH_PR2HT
+#ifdef WITH_REEMHT
 #include "pr2ht/DetectTrackControl.h"
 #endif
 
@@ -36,7 +36,7 @@ static const double kMaxHeadPan = 2.7;
 static const double kMaxTorsoHeight = 1.06; // w.r.t. base_link frame
 static const double kMinTorsoHeight = 0.75;
 
-static const char *kPR2TFFrameList[] = { "map", "odom_combined", "base_footprint", "base_link",
+static const char *kREEMTFFrameList[] = { "map", "odom_combined", "base_footprint", "base_link",
   "torso_lift_link", "head_pan_link", "head_tilt_link", "head_mount_link", "double_stereo_link",
   "r_forearm_cam_frame", "l_forearm_cam_frame", "r_forearm_link", "l_forearm_link",
   "r_upper_arm_link", "l_upper_arm_link", "r_gripper_tool_frame", "l_gripper_tool_frame",
@@ -47,10 +47,10 @@ static const char *kPR2TFFrameList[] = { "map", "odom_combined", "base_footprint
   "laser_tilt_link", "base_laser_link",
   NULL };
 
-static const int kPR2TFFrameListSize = sizeof( kPR2TFFrameList ) / sizeof( kPR2TFFrameList[0] );
+static const int kREEMTFFrameListSize = sizeof( kREEMTFFrameList ) / sizeof( kREEMTFFrameList[0] );
 
 // helper function
-inline double PR2ProxyManager::clamp( double val, double max )
+inline double REEMProxyManager::clamp( double val, double max )
 {
   if (val > max) {
     return max;
@@ -63,17 +63,17 @@ inline double PR2ProxyManager::clamp( double val, double max )
   }
 }
 
-inline double PR2ProxyManager::max( double val1, double val2 )
+inline double REEMProxyManager::max( double val1, double val2 )
 {
   return (val1 >= val2 ? val1 : val2);
 }
           
-PR2ProxyManager * PR2ProxyManager::s_pPR2ProxyManager = NULL;
+REEMProxyManager * REEMProxyManager::s_pREEMProxyManager = NULL;
 
-PR2ProxyManager::PR2ProxyManager() :
+REEMProxyManager::REEMProxyManager() :
   rawBaseScanSub_( NULL ),
   rawTiltScanSub_( NULL ),
-#ifdef WITH_PR2HT
+#ifdef WITH_REEMHT
   htObjStatusSub_( NULL ),
   htObjUpdateSub_( NULL ),
 #endif
@@ -114,19 +114,19 @@ PR2ProxyManager::PR2ProxyManager() :
 {
 }
 
-PR2ProxyManager::~PR2ProxyManager()
+REEMProxyManager::~REEMProxyManager()
 {
 }
   
-PR2ProxyManager * PR2ProxyManager::instance()
+REEMProxyManager * REEMProxyManager::instance()
 {
-  if (!s_pPR2ProxyManager) {
-    s_pPR2ProxyManager = new PR2ProxyManager();
+  if (!s_pREEMProxyManager) {
+    s_pREEMProxyManager = new REEMProxyManager();
   }
-  return s_pPR2ProxyManager;
+  return s_pREEMProxyManager;
 }
 
-void PR2ProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOptionNodes, bool useMoveIt )
+void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOptionNodes, bool useMoveIt )
 {
   mCtrlNode_ = nodeHandle;
 
@@ -134,17 +134,17 @@ void PR2ProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOptio
   hPub_ = mCtrlNode_->advertise<trajectory_msgs::JointTrajectory>( "head_vel", 1 );
   torsoPub_ = mCtrlNode_->advertise<trajectory_msgs::JointTrajectory>( "torso_vel", 1 );
 
-  powerSub_ = mCtrlNode_->subscribe( "power_state", 1, &PR2ProxyManager::powerStateDataCB, this );
+  powerSub_ = mCtrlNode_->subscribe( "power_state", 1, &REEMProxyManager::powerStateDataCB, this );
 
   ros::SubscribeOptions sopts = ros::SubscribeOptions::create<sensor_msgs::JointState>( "joint_states",
-        1, boost::bind( &PR2ProxyManager::jointStateDataCB, this, _1 ), ros::VoidPtr(), &jointDataQueue_ );
+        1, boost::bind( &REEMProxyManager::jointStateDataCB, this, _1 ), ros::VoidPtr(), &jointDataQueue_ );
 
   jointSub_ = mCtrlNode_->subscribe( sopts );
 
   jointDataThread_ = new ros::AsyncSpinner( 1, &jointDataQueue_ );
   jointDataThread_->start();
 
-#ifdef WITH_PR2HT
+#ifdef WITH_REEMHT
   htClient_ = mCtrlNode_->serviceClient<pr2ht::DetectTrackControl>( "enable_hdt" );
 
   if (!htClient_.exists()) {
@@ -295,10 +295,10 @@ void PR2ProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOptio
 doneInit:
   this->getHeadPos( reqHeadYaw_, reqHeadPitch_ );
   
-  ROS_INFO( "PR2 PyRIDE is fully initialised." );
+  ROS_INFO( "REEM PyRIDE is fully initialised." );
 }
 
-void PR2ProxyManager::fini()
+void REEMProxyManager::fini()
 {
   if (rarmGroup_) {
     rarmGroup_->stop();
@@ -343,7 +343,7 @@ void PR2ProxyManager::fini()
   jointSub_.shutdown();
   powerSub_.shutdown();
 
-#ifdef WITH_PR2HT
+#ifdef WITH_REEMHT
   if (htObjStatusSub_) {
     htObjStatusSub_->shutdown();
     delete htObjStatusSub_;
@@ -377,16 +377,16 @@ void PR2ProxyManager::fini()
  */
 /**@{*/
 /*! \typedef onHeadActionSuccess()
- *  \memberof PyPR2.
- *  \brief Callback function when PyPR2.pointHeadTo method call is successful.
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.pointHeadTo method call is successful.
  *  \return None.
  */
 /*! \typedef onHeadActionFailed()
- *  \memberof PyPR2.
- *  \brief Callback function when PyPR2.pointHeadTo method call is failed.
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.pointHeadTo method call is failed.
  *  \return None.
  */
-void PR2ProxyManager::doneHeadAction( const actionlib::SimpleClientGoalState & state,
+void REEMProxyManager::doneHeadAction( const actionlib::SimpleClientGoalState & state,
             const PointHeadResultConstPtr & result )
 {
   headCtrlWithActionClient_ = false;
@@ -395,17 +395,17 @@ void PR2ProxyManager::doneHeadAction( const actionlib::SimpleClientGoalState & s
   gstate = PyGILState_Ensure();
   
   if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
-    PyPR2Module::instance()->invokeCallback( "onHeadActionSuccess", NULL );
+    PyREEMModule::instance()->invokeCallback( "onHeadActionSuccess", NULL );
   }
   else {
-    PyPR2Module::instance()->invokeCallback( "onHeadActionFailed", NULL );
+    PyREEMModule::instance()->invokeCallback( "onHeadActionFailed", NULL );
   }
   PyGILState_Release( gstate );
   
   ROS_INFO("Head action finished in state [%s]", state.toString().c_str());
 }
 
-void PR2ProxyManager::doneTuckArmAction( const actionlib::SimpleClientGoalState & state,
+void REEMProxyManager::doneTuckArmAction( const actionlib::SimpleClientGoalState & state,
                                         const TuckArmsResultConstPtr & result )
 {
   tuckArmCtrl_ = false;
@@ -414,10 +414,10 @@ void PR2ProxyManager::doneTuckArmAction( const actionlib::SimpleClientGoalState 
   gstate = PyGILState_Ensure();
   
   if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
-    PyPR2Module::instance()->invokeCallback( "onTuckArmActionSuccess", NULL );
+    PyREEMModule::instance()->invokeCallback( "onTuckArmActionSuccess", NULL );
   }
   else {
-    PyPR2Module::instance()->invokeCallback( "onTuckArmActionFailed", NULL );
+    PyREEMModule::instance()->invokeCallback( "onTuckArmActionFailed", NULL );
   }
   
   PyGILState_Release( gstate );
@@ -426,18 +426,18 @@ void PR2ProxyManager::doneTuckArmAction( const actionlib::SimpleClientGoalState 
 }
 
 /*! \typedef onMoveArmActionSuccess(is_left_arm)
- *  \memberof PyPR2.
- *  \brief Callback function when PyPR2.moveArmWithJointPos or PyPR2.moveArmWithJointTrajectory method call is successful.
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.moveArmWithJointPos or PyREEM.moveArmWithJointTrajectory method call is successful.
  *  \param bool is_left_arm. True = left arm; False = right arm.
  *  \return None.
  */
 /*! \typedef onMoveArmActionFailed(is_left_arm)
- *  \memberof PyPR2.
- *  \brief Callback function when PyPR2.moveArmWithJointPos or PyPR2.moveArmWithJointTrajectory method call is failed.
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.moveArmWithJointPos or PyREEM.moveArmWithJointTrajectory method call is failed.
  *  \param bool is_left_arm. True = left arm; False = right arm.
  *  \return None.
  */
-void PR2ProxyManager::doneMoveLArmAction( const actionlib::SimpleClientGoalState & state,
+void REEMProxyManager::doneMoveLArmAction( const actionlib::SimpleClientGoalState & state,
                                         const JointTrajectoryResultConstPtr & result)
 {
   lArmCtrl_ = false;
@@ -448,10 +448,10 @@ void PR2ProxyManager::doneMoveLArmAction( const actionlib::SimpleClientGoalState
   PyObject * arg = Py_BuildValue( "(O)", Py_True );
   
   if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
-    PyPR2Module::instance()->invokeCallback( "onMoveArmActionSuccess", arg );
+    PyREEMModule::instance()->invokeCallback( "onMoveArmActionSuccess", arg );
   }
   else {
-    PyPR2Module::instance()->invokeCallback( "onMoveArmActionFailed", arg );
+    PyREEMModule::instance()->invokeCallback( "onMoveArmActionFailed", arg );
   }
   Py_DECREF( arg );
   
@@ -460,7 +460,7 @@ void PR2ProxyManager::doneMoveLArmAction( const actionlib::SimpleClientGoalState
   ROS_INFO("move arm action finished in state [%s]", state.toString().c_str());
 }
 
-void PR2ProxyManager::doneMoveRArmAction( const actionlib::SimpleClientGoalState & state,
+void REEMProxyManager::doneMoveRArmAction( const actionlib::SimpleClientGoalState & state,
                                          const JointTrajectoryResultConstPtr & result)
 {
   rArmCtrl_ = false;
@@ -471,10 +471,10 @@ void PR2ProxyManager::doneMoveRArmAction( const actionlib::SimpleClientGoalState
   PyObject * arg = Py_BuildValue( "(O)", Py_False );
 
   if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
-    PyPR2Module::instance()->invokeCallback( "onMoveArmActionSuccess", arg );
+    PyREEMModule::instance()->invokeCallback( "onMoveArmActionSuccess", arg );
   }
   else {
-    PyPR2Module::instance()->invokeCallback( "onMoveArmActionFailed", arg );
+    PyREEMModule::instance()->invokeCallback( "onMoveArmActionFailed", arg );
   }
   Py_DECREF( arg );
   
@@ -484,16 +484,16 @@ void PR2ProxyManager::doneMoveRArmAction( const actionlib::SimpleClientGoalState
 }
 
 /*! \typedef onMoveTorsoSuccess()
- *  \memberof PyPR2.
- *  \brief Callback function when PyPR2.moveTorsoBy method call is successful.
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.moveTorsoBy method call is successful.
  *  \return None.
  */
 /*! \typedef onMoveTorsoFailed()
- *  \memberof PyPR2.
- *  \brief Callback function when PyPR2.moveTorsoBy method call is failed.
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.moveTorsoBy method call is failed.
  *  \return None.
  */
-void PR2ProxyManager::doneTorsoAction( const actionlib::SimpleClientGoalState & state,
+void REEMProxyManager::doneTorsoAction( const actionlib::SimpleClientGoalState & state,
                                       const SingleJointPositionResultConstPtr & result )
 {
   torsoCtrl_ = false;
@@ -502,10 +502,10 @@ void PR2ProxyManager::doneTorsoAction( const actionlib::SimpleClientGoalState & 
   gstate = PyGILState_Ensure();
   
   if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
-    PyPR2Module::instance()->invokeCallback( "onMoveTorsoSuccess", NULL );
+    PyREEMModule::instance()->invokeCallback( "onMoveTorsoSuccess", NULL );
   }
   else {
-    PyPR2Module::instance()->invokeCallback( "onMoveTorsoFailed", NULL );
+    PyREEMModule::instance()->invokeCallback( "onMoveTorsoFailed", NULL );
   }
   
   PyGILState_Release( gstate );
@@ -514,16 +514,16 @@ void PR2ProxyManager::doneTorsoAction( const actionlib::SimpleClientGoalState & 
 }
 
 /*! \typedef onNavigateBodySuccess()
- *  \memberof PyPR2.
- *  \brief Callback function when PyPR2.navigateBodyTo method call is successful.
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.navigateBodyTo method call is successful.
  *  \return None.
  */
 /*! \typedef onNavigateBodyFailed()
- *  \memberof PyPR2.
- *  \brief Callback function when PyPR2.navigateBodyTo method call is failed.
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.navigateBodyTo method call is failed.
  *  \return None.
  */
-void PR2ProxyManager::doneNavgiateBodyAction( const actionlib::SimpleClientGoalState & state,
+void REEMProxyManager::doneNavgiateBodyAction( const actionlib::SimpleClientGoalState & state,
                                              const MoveBaseResultConstPtr & result )
 {
   bodyCtrlWithNavigation_ = false;
@@ -532,10 +532,10 @@ void PR2ProxyManager::doneNavgiateBodyAction( const actionlib::SimpleClientGoalS
   gstate = PyGILState_Ensure();
   
   if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
-    PyPR2Module::instance()->invokeCallback( "onNavigateBodySuccess", NULL );
+    PyREEMModule::instance()->invokeCallback( "onNavigateBodySuccess", NULL );
   }
   else {
-    PyPR2Module::instance()->invokeCallback( "onNavigateBodyFailed", NULL );
+    PyREEMModule::instance()->invokeCallback( "onNavigateBodyFailed", NULL );
   }
   
   PyGILState_Release( gstate );
@@ -543,7 +543,7 @@ void PR2ProxyManager::doneNavgiateBodyAction( const actionlib::SimpleClientGoalS
   ROS_INFO("nagivate body finished in state [%s]", state.toString().c_str());
 }
 
-void PR2ProxyManager::moveLArmActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback )
+void REEMProxyManager::moveLArmActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback )
 {
   ROS_INFO( "Left arm trajectory move action feedback." );
 
@@ -558,7 +558,7 @@ void PR2ProxyManager::moveLArmActionFeedback( const JointTrajectoryFeedbackConst
 
     PyObject * arg = Py_BuildValue( "(O)", Py_True );
 
-    PyPR2Module::instance()->invokeCallback( "onMoveArmActionFailed", arg );
+    PyREEMModule::instance()->invokeCallback( "onMoveArmActionFailed", arg );
 
     Py_DECREF( arg );
 
@@ -567,7 +567,7 @@ void PR2ProxyManager::moveLArmActionFeedback( const JointTrajectoryFeedbackConst
    */
 }
 
-void PR2ProxyManager::moveRArmActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback )
+void REEMProxyManager::moveRArmActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback )
 {
   ROS_INFO( "Right arm trajectory move action feedback." );
   /*
@@ -581,7 +581,7 @@ void PR2ProxyManager::moveRArmActionFeedback( const JointTrajectoryFeedbackConst
     
     PyObject * arg = Py_BuildValue( "(O)", Py_False );
     
-    PyPR2Module::instance()->invokeCallback( "onMoveArmActionFailed", arg );
+    PyREEMModule::instance()->invokeCallback( "onMoveArmActionFailed", arg );
     
     Py_DECREF( arg );
     
@@ -591,18 +591,18 @@ void PR2ProxyManager::moveRArmActionFeedback( const JointTrajectoryFeedbackConst
 }
 
 /*! \typedef onGripperActionSuccess(is_left_gripper)
- *  \memberof PyPR2.
- *  \brief Callback function when PyPR2.openGripper, PyPR2.closeGripper and PyPR2.setGripperPosition method call is successful.
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.openGripper, PyREEM.closeGripper and PyREEM.setGripperPosition method call is successful.
  *  \param bool is_left_gripper. True means left gripper; False means right gripper.
  *  \return None.
  */
 /*! \typedef onGripperActionFailed(is_left_gripper)
- *  \memberof PyPR2.
- *  \brief Callback function when PyPR2.openGripper, PyPR2.closeGripper and PyPR2.setGripperPosition method call is failed.
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.openGripper, PyREEM.closeGripper and PyREEM.setGripperPosition method call is failed.
  *  \param bool is_left_gripper. True means left gripper; False means right gripper.
  *  \return None.
  */
-void PR2ProxyManager::doneLGripperAction( const actionlib::SimpleClientGoalState & state,
+void REEMProxyManager::doneLGripperAction( const actionlib::SimpleClientGoalState & state,
                                          const Pr2GripperCommandResultConstPtr & result )
 {
   lGripperCtrl_ = false;
@@ -613,10 +613,10 @@ void PR2ProxyManager::doneLGripperAction( const actionlib::SimpleClientGoalState
   PyObject * arg = Py_BuildValue( "(O)", Py_True );
 
   if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
-    PyPR2Module::instance()->invokeCallback( "onGripperActionSuccess", arg );
+    PyREEMModule::instance()->invokeCallback( "onGripperActionSuccess", arg );
   }
   else {
-    PyPR2Module::instance()->invokeCallback( "onGripperActionFailed", arg );
+    PyREEMModule::instance()->invokeCallback( "onGripperActionFailed", arg );
   }
   Py_DECREF( arg );
   
@@ -625,7 +625,7 @@ void PR2ProxyManager::doneLGripperAction( const actionlib::SimpleClientGoalState
   ROS_INFO( "Left gripper action finished in state [%s]", state.toString().c_str());
 }
 
-void PR2ProxyManager::doneRGripperAction( const actionlib::SimpleClientGoalState & state,
+void REEMProxyManager::doneRGripperAction( const actionlib::SimpleClientGoalState & state,
                                          const Pr2GripperCommandResultConstPtr & result )
 {
   rGripperCtrl_ = false;
@@ -636,10 +636,10 @@ void PR2ProxyManager::doneRGripperAction( const actionlib::SimpleClientGoalState
   PyObject * arg = Py_BuildValue( "(O)", Py_False );
   
   if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
-    PyPR2Module::instance()->invokeCallback( "onGripperActionSuccess", arg );
+    PyREEMModule::instance()->invokeCallback( "onGripperActionSuccess", arg );
   }
   else {
-    PyPR2Module::instance()->invokeCallback( "onGripperActionFailed", arg );
+    PyREEMModule::instance()->invokeCallback( "onGripperActionFailed", arg );
   }
   Py_DECREF( arg );
   
@@ -648,17 +648,17 @@ void PR2ProxyManager::doneRGripperAction( const actionlib::SimpleClientGoalState
   ROS_INFO( "Right gripper action finished in state [%s]", state.toString().c_str());
 }
 
-void PR2ProxyManager::sayWithVolume( const std::string & text, float volume, bool toBlock )
+void REEMProxyManager::sayWithVolume( const std::string & text, float volume, bool toBlock )
 {
   soundClient_.say( text.c_str() );
 }
 
-void PR2ProxyManager::setAudioVolume( const float vol )
+void REEMProxyManager::setAudioVolume( const float vol )
 {
   
 }
 
-void PR2ProxyManager::baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg )
+void REEMProxyManager::baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg )
 {
   if (baseScanTransformFrame_.length() > 0) { // we transform to point cloud w.r.t to the frame
     sensor_msgs::PointCloud cloud;
@@ -686,7 +686,7 @@ void PR2ProxyManager::baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg
     }
     PyObject * arg = Py_BuildValue( "(O)", retList );
 
-    PyPR2Module::instance()->invokeBaseScanCallback( arg );
+    PyREEMModule::instance()->invokeBaseScanCallback( arg );
     
     Py_DECREF( arg );
     Py_DECREF( retList );
@@ -720,7 +720,7 @@ void PR2ProxyManager::baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg
 
     PyObject * arg = Py_BuildValue( "(OO)", rangeData, intensityData );
     
-    PyPR2Module::instance()->invokeBaseScanCallback( arg );
+    PyREEMModule::instance()->invokeBaseScanCallback( arg );
 
     Py_DECREF( arg );
     Py_DECREF( rangeData );
@@ -730,7 +730,7 @@ void PR2ProxyManager::baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg
   }
 }
 
-void PR2ProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg )
+void REEMProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg )
 {
   if (tiltScanTransformFrame_.length() > 0) { // we transform to point cloud w.r.t to the frame
     sensor_msgs::PointCloud cloud;
@@ -758,7 +758,7 @@ void PR2ProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg
     }
     PyObject * arg = Py_BuildValue( "(O)", retList );
     
-    PyPR2Module::instance()->invokeTiltScanCallback( arg );
+    PyREEMModule::instance()->invokeTiltScanCallback( arg );
     
     Py_DECREF( arg );
     Py_DECREF( retList );
@@ -792,7 +792,7 @@ void PR2ProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg
     
     PyObject * arg = Py_BuildValue( "(OO)", rangeData, intensityData );
     
-    PyPR2Module::instance()->invokeTiltScanCallback( arg );
+    PyREEMModule::instance()->invokeTiltScanCallback( arg );
     
     Py_DECREF( arg );
     Py_DECREF( rangeData );
@@ -802,8 +802,8 @@ void PR2ProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg
   }
 }
 
-#ifdef WITH_PR2HT
-void PR2ProxyManager::htObjStatusCB( const pr2ht::TrackedObjectStatusChangeConstPtr & msg )
+#ifdef WITH_REEMHT
+void REEMProxyManager::htObjStatusCB( const pr2ht::TrackedObjectStatusChangeConstPtr & msg )
 {
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
@@ -811,14 +811,14 @@ void PR2ProxyManager::htObjStatusCB( const pr2ht::TrackedObjectStatusChangeConst
   PyObject * arg = Py_BuildValue( "(iiii)", msg->objtype, msg->trackid,
                                  msg->nameid, msg->status );
   
-  PyPR2Module::instance()->invokeObjectDetectionCallback( arg );
+  PyREEMModule::instance()->invokeObjectDetectionCallback( arg );
   
   Py_DECREF( arg );
   
   PyGILState_Release( gstate );
 }
 
-void PR2ProxyManager::htObjUpdateCB( const pr2ht::TrackedObjectUpdateConstPtr & msg )
+void REEMProxyManager::htObjUpdateCB( const pr2ht::TrackedObjectUpdateConstPtr & msg )
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -859,7 +859,7 @@ void PR2ProxyManager::htObjUpdateCB( const pr2ht::TrackedObjectUpdateConstPtr & 
     
     PyObject * arg = Py_BuildValue( "(O)", retList );
     
-    PyPR2Module::instance()->invokeObjectTrackingCallback( arg );
+    PyREEMModule::instance()->invokeObjectTrackingCallback( arg );
     
     Py_DECREF( arg );
     Py_DECREF( retList );
@@ -869,7 +869,7 @@ void PR2ProxyManager::htObjUpdateCB( const pr2ht::TrackedObjectUpdateConstPtr & 
 #endif
 
 #ifdef WITH_RHYTH_DMP
-void PR2ProxyManager::trajectoryDataInputCB( const rhyth_dmp::OutputTrajDataConstPtr & msg )
+void REEMProxyManager::trajectoryDataInputCB( const rhyth_dmp::OutputTrajDataConstPtr & msg )
 {
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
@@ -906,7 +906,7 @@ void PR2ProxyManager::trajectoryDataInputCB( const rhyth_dmp::OutputTrajDataCons
 
   PyObject * arg = Py_BuildValue( "(O)", retObj );
 
-  PyPR2Module::instance()->invokeTrajectoryInputCallback( arg );
+  PyREEMModule::instance()->invokeTrajectoryInputCallback( arg );
 
   Py_DECREF( arg );
   Py_DECREF( retObj );
@@ -915,7 +915,7 @@ void PR2ProxyManager::trajectoryDataInputCB( const rhyth_dmp::OutputTrajDataCons
 }
 #endif
 
-bool PR2ProxyManager::getRobotPose( std::vector<double> & positions, std::vector<double> & orientation )
+bool REEMProxyManager::getRobotPose( std::vector<double> & positions, std::vector<double> & orientation )
 {
   tf::StampedTransform curTransform;
   
@@ -947,7 +947,7 @@ bool PR2ProxyManager::getRobotPose( std::vector<double> & positions, std::vector
   return true;
 }
   
-bool PR2ProxyManager::getRelativeTF( const char * ref_frame,
+bool REEMProxyManager::getRelativeTF( const char * ref_frame,
                                         const char * child_frame,
                                         std::vector<double> & positions,
                                         std::vector<double> & orientation )
@@ -985,7 +985,7 @@ bool PR2ProxyManager::getRelativeTF( const char * ref_frame,
   return true;
 }
 
-bool PR2ProxyManager::navigateBodyTo( const std::vector<double> & positions, const std::vector<double> & orientation )
+bool REEMProxyManager::navigateBodyTo( const std::vector<double> & positions, const std::vector<double> & orientation )
 {
   if (bodyCtrlWithNavigation_ || bodyCtrlWithOdmetry_ || !moveBaseClient_)
     return false;
@@ -1009,7 +1009,7 @@ bool PR2ProxyManager::navigateBodyTo( const std::vector<double> & positions, con
   goal.target_pose.pose.orientation.z = orientation[3];
   
   moveBaseClient_->sendGoal( goal,
-                        boost::bind( &PR2ProxyManager::doneNavgiateBodyAction, this, _1, _2 ),
+                        boost::bind( &REEMProxyManager::doneNavgiateBodyAction, this, _1, _2 ),
                         MoveBaseClient::SimpleActiveCallback(),
                         MoveBaseClient::SimpleFeedbackCallback() );
 
@@ -1017,7 +1017,7 @@ bool PR2ProxyManager::navigateBodyTo( const std::vector<double> & positions, con
   return true;
 }
 
-bool PR2ProxyManager::getHeadPos( double & yaw, double & pitch )
+bool REEMProxyManager::getHeadPos( double & yaw, double & pitch )
 {
   yaw = pitch = 0.0;
   int resCnt = 0;
@@ -1039,7 +1039,7 @@ bool PR2ProxyManager::getHeadPos( double & yaw, double & pitch )
   return false;
 }
   
-bool PR2ProxyManager::getPositionForJoints( std::vector<std::string> & joint_names, std::vector<double> & positions )
+bool REEMProxyManager::getPositionForJoints( std::vector<std::string> & joint_names, std::vector<double> & positions )
 {
   positions.clear();
   
@@ -1055,7 +1055,7 @@ bool PR2ProxyManager::getPositionForJoints( std::vector<std::string> & joint_nam
   return (joint_names.size() == positions.size());
 }
 
-bool PR2ProxyManager::getJointPos( const char * joint_name, double & value )
+bool REEMProxyManager::getJointPos( const char * joint_name, double & value )
 {
   if (joint_name == NULL)
     return false;
@@ -1070,17 +1070,17 @@ bool PR2ProxyManager::getJointPos( const char * joint_name, double & value )
   return false;
 }
 
-void PR2ProxyManager::registerForBaseScanData()
+void REEMProxyManager::registerForBaseScanData()
 {
   if (rawBaseScanSub_ || baseScanSub_) {
     ROS_WARN( "Already registered for base laser scan." );
   }
   else {
-    rawBaseScanSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "base_scan", 1, &PR2ProxyManager::baseScanDataCB, this ) );
+    rawBaseScanSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "base_scan", 1, &REEMProxyManager::baseScanDataCB, this ) );
   }
 }
 
-void PR2ProxyManager::registerForBaseScanData( const std::string & target_frame )
+void REEMProxyManager::registerForBaseScanData( const std::string & target_frame )
 {
   if (rawBaseScanSub_ || baseScanSub_) {
     ROS_WARN( "Already registered for base laser scan." );
@@ -1090,12 +1090,12 @@ void PR2ProxyManager::registerForBaseScanData( const std::string & target_frame 
     baseScanSub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>( *mCtrlNode_, "base_scan", 10 );
     baseScanNotifier_ = new tf::MessageFilter<sensor_msgs::LaserScan>( *baseScanSub_, tflistener_, baseScanTransformFrame_, 10 );
 
-    baseScanNotifier_->registerCallback( boost::bind( &PR2ProxyManager::baseScanDataCB, this, _1 ) );
+    baseScanNotifier_->registerCallback( boost::bind( &REEMProxyManager::baseScanDataCB, this, _1 ) );
     baseScanNotifier_->setTolerance( ros::Duration( 0.01 ) );
   }
 }
 
-void PR2ProxyManager::deregisterForBaseScanData()
+void REEMProxyManager::deregisterForBaseScanData()
 {
   if (rawBaseScanSub_) {
     rawBaseScanSub_->shutdown();
@@ -1114,17 +1114,17 @@ void PR2ProxyManager::deregisterForBaseScanData()
   }
 }
   
-void PR2ProxyManager::registerForTiltScanData()
+void REEMProxyManager::registerForTiltScanData()
 {
   if (rawTiltScanSub_ || tiltScanSub_) {
     ROS_WARN( "Already registered for tilt laser scan." );
   }
   else {
-    rawTiltScanSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "tilt_scan", 1, &PR2ProxyManager::tiltScanDataCB, this ) );
+    rawTiltScanSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "tilt_scan", 1, &REEMProxyManager::tiltScanDataCB, this ) );
   }
 }
 
-void PR2ProxyManager::registerForTiltScanData( const std::string & target_frame )
+void REEMProxyManager::registerForTiltScanData( const std::string & target_frame )
 {
   if (rawTiltScanSub_ || tiltScanSub_) {
     ROS_WARN( "Already registered for tilt laser scan." );
@@ -1134,12 +1134,12 @@ void PR2ProxyManager::registerForTiltScanData( const std::string & target_frame 
     tiltScanSub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>( *mCtrlNode_, "tilt_scan", 10 );
     tiltScanNotifier_ = new tf::MessageFilter<sensor_msgs::LaserScan>( *tiltScanSub_, tflistener_, tiltScanTransformFrame_, 10 );
     
-    tiltScanNotifier_->registerCallback( boost::bind( &PR2ProxyManager::tiltScanDataCB, this, _1 ) );
+    tiltScanNotifier_->registerCallback( boost::bind( &REEMProxyManager::tiltScanDataCB, this, _1 ) );
     tiltScanNotifier_->setTolerance( ros::Duration( 0.01 ) );
   }
 }
   
-void PR2ProxyManager::deregisterForTiltScanData()
+void REEMProxyManager::deregisterForTiltScanData()
 {
   if (rawTiltScanSub_) {
     rawTiltScanSub_->shutdown();
@@ -1158,7 +1158,7 @@ void PR2ProxyManager::deregisterForTiltScanData()
   }
 }
 
-bool PR2ProxyManager::moveHeadTo( double yaw, double pitch, bool relative )
+bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative )
 {
   if (headCtrlWithActionClient_ || headCtrlWithOdmetry_)
     return false;
@@ -1199,7 +1199,7 @@ bool PR2ProxyManager::moveHeadTo( double yaw, double pitch, bool relative )
   return true;
 }
 
-bool PR2ProxyManager::pointHeadTo( const std::string & frame, float x, float y, float z )
+bool REEMProxyManager::pointHeadTo( const std::string & frame, float x, float y, float z )
 {
   if (headCtrlWithActionClient_ || headCtrlWithOdmetry_)
     return false;
@@ -1234,7 +1234,7 @@ bool PR2ProxyManager::pointHeadTo( const std::string & frame, float x, float y, 
 
   // Need boost::bind to pass in the 'this' pointer
   phClient_->sendGoal( goal,
-                      boost::bind( &PR2ProxyManager::doneHeadAction, this, _1, _2 ),
+                      boost::bind( &REEMProxyManager::doneHeadAction, this, _1, _2 ),
                       PointHeadClient::SimpleActiveCallback(),
                       PointHeadClient::SimpleFeedbackCallback() );
 
@@ -1242,7 +1242,7 @@ bool PR2ProxyManager::pointHeadTo( const std::string & frame, float x, float y, 
   return true;
 }
 
-bool PR2ProxyManager::tuckArms( bool tuckleft, bool tuckright )
+bool REEMProxyManager::tuckArms( bool tuckleft, bool tuckright )
 {
   if (!tacClient_ || tuckArmCtrl_ || lArmCtrl_ || rArmCtrl_)
     return false;
@@ -1255,13 +1255,13 @@ bool PR2ProxyManager::tuckArms( bool tuckleft, bool tuckright )
   tuckArmCtrl_ = true;
 
   tacClient_->sendGoal( goal,
-                       boost::bind( &PR2ProxyManager::doneTuckArmAction, this, _1, _2 ),
+                       boost::bind( &REEMProxyManager::doneTuckArmAction, this, _1, _2 ),
                        TuckArmsActionClient::SimpleActiveCallback(),
                        TuckArmsActionClient::SimpleFeedbackCallback() );
   return true;
 }
 
-void PR2ProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> & positions, float time_to_reach )
+void REEMProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> & positions, float time_to_reach )
 {
   if (positions.size() != 7 || tuckArmCtrl_) {
     return;
@@ -1324,20 +1324,20 @@ void PR2ProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> &
   if (isLeftArm) {
     lArmActionTimeout_ = time_to_reach * 1.05; // give additional 5% allowance
     mlacClient_->sendGoal( goal,
-                          boost::bind( &PR2ProxyManager::doneMoveLArmAction, this, _1, _2 ),
+                          boost::bind( &REEMProxyManager::doneMoveLArmAction, this, _1, _2 ),
                           TrajectoryClient::SimpleActiveCallback(),
-                          boost::bind( &PR2ProxyManager::moveLArmActionFeedback, this, _1 ) );
+                          boost::bind( &REEMProxyManager::moveLArmActionFeedback, this, _1 ) );
   }
   else {
     rArmActionTimeout_ = time_to_reach * 1.05; // give additional 5% allowance
     mracClient_->sendGoal( goal,
-                          boost::bind( &PR2ProxyManager::doneMoveRArmAction, this, _1, _2 ),
+                          boost::bind( &REEMProxyManager::doneMoveRArmAction, this, _1, _2 ),
                           TrajectoryClient::SimpleActiveCallback(),
-                          boost::bind( &PR2ProxyManager::moveRArmActionFeedback, this, _1 ) );
+                          boost::bind( &REEMProxyManager::moveRArmActionFeedback, this, _1 ) );
   }
 }
 
-void PR2ProxyManager::moveArmWithJointTrajectory( bool isLeftArm, std::vector< std::vector<double> > & trajectory,
+void REEMProxyManager::moveArmWithJointTrajectory( bool isLeftArm, std::vector< std::vector<double> > & trajectory,
                                                   std::vector<float> & times_to_reach )
 {
   if (tuckArmCtrl_) {
@@ -1402,20 +1402,20 @@ void PR2ProxyManager::moveArmWithJointTrajectory( bool isLeftArm, std::vector< s
   if (isLeftArm) {
     lArmActionTimeout_ = time_to_reach_for_pt * 1.05; // give additional 5% allowance
     mlacClient_->sendGoal( goal,
-                          boost::bind( &PR2ProxyManager::doneMoveLArmAction, this, _1, _2 ),
+                          boost::bind( &REEMProxyManager::doneMoveLArmAction, this, _1, _2 ),
                           TrajectoryClient::SimpleActiveCallback(),
-                          boost::bind( &PR2ProxyManager::moveLArmActionFeedback, this, _1 ) );
+                          boost::bind( &REEMProxyManager::moveLArmActionFeedback, this, _1 ) );
   }
   else {
     rArmActionTimeout_ = time_to_reach_for_pt * 1.05; // give additional 5% allowance
     mracClient_->sendGoal( goal,
-                          boost::bind( &PR2ProxyManager::doneMoveRArmAction, this, _1, _2 ),
+                          boost::bind( &REEMProxyManager::doneMoveRArmAction, this, _1, _2 ),
                           TrajectoryClient::SimpleActiveCallback(),
-                          boost::bind( &PR2ProxyManager::moveRArmActionFeedback, this, _1 ) );
+                          boost::bind( &REEMProxyManager::moveRArmActionFeedback, this, _1 ) );
   }
 }
 
-void PR2ProxyManager::moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
+void REEMProxyManager::moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
                                         std::vector< std::vector<double> > & trajectory,
                                         std::vector< std::vector<double> > & joint_velocities,
                                         std::vector<float> & times_to_reach )
@@ -1482,20 +1482,20 @@ void PR2ProxyManager::moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
   if (isLeftArm) {
     lArmActionTimeout_ = time_to_reach_for_pt * 1.05; // give additional 5% allowance
     mlacClient_->sendGoal( goal,
-                          boost::bind( &PR2ProxyManager::doneMoveLArmAction, this, _1, _2 ),
+                          boost::bind( &REEMProxyManager::doneMoveLArmAction, this, _1, _2 ),
                           TrajectoryClient::SimpleActiveCallback(),
-                          boost::bind( &PR2ProxyManager::moveLArmActionFeedback, this, _1 ) );
+                          boost::bind( &REEMProxyManager::moveLArmActionFeedback, this, _1 ) );
   }
   else {
     rArmActionTimeout_ = time_to_reach_for_pt * 1.05; // give additional 5% allowance
     mracClient_->sendGoal( goal,
-                          boost::bind( &PR2ProxyManager::doneMoveRArmAction, this, _1, _2 ),
+                          boost::bind( &REEMProxyManager::doneMoveRArmAction, this, _1, _2 ),
                           TrajectoryClient::SimpleActiveCallback(),
-                          boost::bind( &PR2ProxyManager::moveRArmActionFeedback, this, _1 ) );
+                          boost::bind( &REEMProxyManager::moveRArmActionFeedback, this, _1 ) );
   }
 }
 
-bool PR2ProxyManager::moveArmWithGoalPose( bool isLeftArm, std::vector<double> & position,
+bool REEMProxyManager::moveArmWithGoalPose( bool isLeftArm, std::vector<double> & position,
                                           std::vector<double> & orientation, float time_to_reach )
 {
   if (!rarmGroup_ || !larmGroup_)
@@ -1564,7 +1564,7 @@ bool PR2ProxyManager::moveArmWithGoalPose( bool isLeftArm, std::vector<double> &
   return true;
 }
 
-void PR2ProxyManager::cancelArmMovement( bool isLeftArm )
+void REEMProxyManager::cancelArmMovement( bool isLeftArm )
 {
   if (isLeftArm) {
     if (!lArmCtrl_) {
@@ -1590,7 +1590,7 @@ void PR2ProxyManager::cancelArmMovement( bool isLeftArm )
   }
 }
 
-void PR2ProxyManager::cancelBodyMovement()
+void REEMProxyManager::cancelBodyMovement()
 {
   if (!bodyCtrlWithOdmetry_)
     return;
@@ -1599,7 +1599,7 @@ void PR2ProxyManager::cancelBodyMovement()
   bodyCtrlWithOdmetry_ = false;
 }
   
-bool PR2ProxyManager::setGripperPosition( int whichgripper, double position )
+bool REEMProxyManager::setGripperPosition( int whichgripper, double position )
 {
   if (position > 0.08 || position < 0.0 )
     return false;
@@ -1616,7 +1616,7 @@ bool PR2ProxyManager::setGripperPosition( int whichgripper, double position )
       else {
         lGripperCtrl_ = true;
         lgripperClient_->sendGoal( gaction,
-                                  boost::bind( &PR2ProxyManager::doneLGripperAction, this, _1, _2 ),
+                                  boost::bind( &REEMProxyManager::doneLGripperAction, this, _1, _2 ),
                                   GripperClient::SimpleActiveCallback(),
                                   GripperClient::SimpleFeedbackCallback() );
       }
@@ -1628,7 +1628,7 @@ bool PR2ProxyManager::setGripperPosition( int whichgripper, double position )
       else {
         rGripperCtrl_ = true;
         rgripperClient_->sendGoal( gaction,
-                                  boost::bind( &PR2ProxyManager::doneRGripperAction, this, _1, _2 ),
+                                  boost::bind( &REEMProxyManager::doneRGripperAction, this, _1, _2 ),
                                   GripperClient::SimpleActiveCallback(),
                                   GripperClient::SimpleFeedbackCallback() );
       }
@@ -1643,11 +1643,11 @@ bool PR2ProxyManager::setGripperPosition( int whichgripper, double position )
         lGripperCtrl_ = true;
         rGripperCtrl_ = true;
         lgripperClient_->sendGoal( gaction,
-                                  boost::bind( &PR2ProxyManager::doneLGripperAction, this, _1, _2 ),
+                                  boost::bind( &REEMProxyManager::doneLGripperAction, this, _1, _2 ),
                                   GripperClient::SimpleActiveCallback(),
                                   GripperClient::SimpleFeedbackCallback() );
         rgripperClient_->sendGoal( gaction,
-                                  boost::bind( &PR2ProxyManager::doneRGripperAction, this, _1, _2 ),
+                                  boost::bind( &REEMProxyManager::doneRGripperAction, this, _1, _2 ),
                                   GripperClient::SimpleActiveCallback(),
                                   GripperClient::SimpleFeedbackCallback() );
       }
@@ -1660,8 +1660,8 @@ bool PR2ProxyManager::setGripperPosition( int whichgripper, double position )
   return true;
 }
 
-#ifdef WITH_PR2HT
-bool PR2ProxyManager::enableHumanDetection( bool toEnable, bool enableTrackingNotif )
+#ifdef WITH_REEMHT
+bool REEMProxyManager::enableHumanDetection( bool toEnable, bool enableTrackingNotif )
 {
   if (!htClient_.exists()) {
     return false;
@@ -1683,9 +1683,9 @@ bool PR2ProxyManager::enableHumanDetection( bool toEnable, bool enableTrackingNo
   
   if (htClient_.call( srvMsg ) && srvMsg.response.ret) {
     if (toEnable) {
-      htObjStatusSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "/pr2_ht/object_status", 1, &PR2ProxyManager::htObjStatusCB, this ) );
+      htObjStatusSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "/pr2_ht/object_status", 1, &REEMProxyManager::htObjStatusCB, this ) );
       if (enableTrackingNotif) {
-        htObjUpdateSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "/pr2_ht/object_update", 1, &PR2ProxyManager::htObjUpdateCB, this ) );
+        htObjUpdateSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "/pr2_ht/object_update", 1, &REEMProxyManager::htObjUpdateCB, this ) );
       }
     }
     else {
@@ -1707,7 +1707,7 @@ bool PR2ProxyManager::enableHumanDetection( bool toEnable, bool enableTrackingNo
 #endif
 
 #ifdef WITH_RHYTH_DMP
-void PR2ProxyManager::subscribeRawTrajInput( bool enable )
+void REEMProxyManager::subscribeRawTrajInput( bool enable )
 {
   if (enable) {
     if (dmpTrajDataSub_) { // should not happen, check here just in case.
@@ -1715,7 +1715,7 @@ void PR2ProxyManager::subscribeRawTrajInput( bool enable )
       return;
     }
     SubscribeOptions sopts = ros::SubscribeOptions::create<rhyth_dmp::OutputTrajData>( "/rhyth_dmp/output_trajectory",
-        1, boost::bind( &PR2ProxyManager::trajectoryDataInputCB, this, _1 ), ros::VoidPtr(), &dmpTrajQueue_ );
+        1, boost::bind( &REEMProxyManager::trajectoryDataInputCB, this, _1 ), ros::VoidPtr(), &dmpTrajQueue_ );
     dmpTrajDataSub_ = new ros::Subscriber( mCtrlNode_->subscribe( sopts ) );
   }
   else if (dmpTrajDataSub_) {
@@ -1726,7 +1726,7 @@ void PR2ProxyManager::subscribeRawTrajInput( bool enable )
 }
 #endif
 
-bool PR2ProxyManager::setTiltLaserPeriodicCmd( double amp, double period, double offset )
+bool REEMProxyManager::setTiltLaserPeriodicCmd( double amp, double period, double offset )
 {
   if (period < 0.1 || amp < 0.0) {
     return false;
@@ -1744,7 +1744,7 @@ bool PR2ProxyManager::setTiltLaserPeriodicCmd( double amp, double period, double
   return false;
 }
 
-bool PR2ProxyManager::setTiltLaserTrajCmd( std::vector<double> & positions, std::vector<Duration> & durations )
+bool REEMProxyManager::setTiltLaserTrajCmd( std::vector<double> & positions, std::vector<Duration> & durations )
 {
   if (positions.size() == 0 || durations.size() == 0 || positions.size() != durations.size()) {
     return false;
@@ -1763,7 +1763,7 @@ bool PR2ProxyManager::setTiltLaserTrajCmd( std::vector<double> & positions, std:
   return false;
 }
 
-void PR2ProxyManager::updateHeadPose( float yaw, float pitch )
+void REEMProxyManager::updateHeadPose( float yaw, float pitch )
 {
   if (headCtrlWithActionClient_ || headCtrlWithOdmetry_)
     return;
@@ -1774,7 +1774,7 @@ void PR2ProxyManager::updateHeadPose( float yaw, float pitch )
   cmdTimeStamp_ = ros::Time::now();
 }
 
-bool PR2ProxyManager::moveBodyTo( const RobotPose & pose, const float bestTime )
+bool REEMProxyManager::moveBodyTo( const RobotPose & pose, const float bestTime )
 {
   if (bodyCtrlWithOdmetry_ || bodyCtrlWithNavigation_)
     return false;
@@ -1815,7 +1815,7 @@ bool PR2ProxyManager::moveBodyTo( const RobotPose & pose, const float bestTime )
   return true;
 }
 
-void PR2ProxyManager::updateBodyPose( const RobotPose & speed, bool localupdate )
+void REEMProxyManager::updateBodyPose( const RobotPose & speed, bool localupdate )
 {
   if (localupdate) {
     geometry_msgs::Twist mCmd;
@@ -1824,7 +1824,7 @@ void PR2ProxyManager::updateBodyPose( const RobotPose & speed, bool localupdate 
     mCmd.linear.y = clamp( speed.y, kMaxWalkSpeed );
     mCmd.angular.z = clamp( speed.theta, kYawRate );
     
-    ROS_INFO( "PR2 Body moving speed update." );
+    ROS_INFO( "REEM Body moving speed update." );
     
     mPub_.publish( mCmd );  // publish once
   }
@@ -1840,7 +1840,7 @@ void PR2ProxyManager::updateBodyPose( const RobotPose & speed, bool localupdate 
   }
 }
 
-bool PR2ProxyManager::moveBodyTorsoBy( const float rel_pos, const float bestTime )
+bool REEMProxyManager::moveBodyTorsoBy( const float rel_pos, const float bestTime )
 {
   if (torsoCtrl_ || !torsoClient_)
     return false;
@@ -1870,7 +1870,7 @@ bool PR2ProxyManager::moveBodyTorsoBy( const float rel_pos, const float bestTime
   
   torsoGoal.max_velocity = torso_speed;
   torsoClient_->sendGoal( torsoGoal,
-                         boost::bind( &PR2ProxyManager::doneTorsoAction, this, _1, _2 ),
+                         boost::bind( &REEMProxyManager::doneTorsoAction, this, _1, _2 ),
                          TorsoClient::SimpleActiveCallback(),
                          TorsoClient::SimpleFeedbackCallback() );
   torsoCtrl_ = true;
@@ -1878,7 +1878,7 @@ bool PR2ProxyManager::moveBodyTorsoBy( const float rel_pos, const float bestTime
   return true;
 }
 
-void PR2ProxyManager::jointStateDataCB( const sensor_msgs::JointStateConstPtr & msg )
+void REEMProxyManager::jointStateDataCB( const sensor_msgs::JointStateConstPtr & msg )
 {
   boost::mutex::scoped_lock lock( joint_mutex_ );
   curJointNames_ = msg->name;
@@ -1886,20 +1886,20 @@ void PR2ProxyManager::jointStateDataCB( const sensor_msgs::JointStateConstPtr & 
 }
 
 /*! \typedef onPowerPluggedChange(is_plugged_in)
- *  \memberof PyPR2.
- *  \brief Callback function when PR2 power status changes.
+ *  \memberof PyREEM.
+ *  \brief Callback function when REEM power status changes.
  *  \param bool is_plugged_in. True if the robot is plugged in main power.
  *  \return None.
  *  \note Require low power threshold to be greater than zero.
  */
 /*! \typedef onBatteryChargeChange(battery_status)
- *  \memberof PyPR2.
- *  \brief Callback function when PR2 battery status changes.
+ *  \memberof PyREEM.
+ *  \brief Callback function when REEM battery status changes.
  *  \param tuple battery_status. A tuple of (battery percentage,is_charging,is_battery_below_threshold).
  *  \return None.
  *  \note Require low power threshold to be greater than zero.
  */
-void PR2ProxyManager::powerStateDataCB(const pr2_msgs::PowerStateConstPtr & msg )
+void REEMProxyManager::powerStateDataCB(const pr2_msgs::PowerStateConstPtr & msg )
 {
   boost::mutex::scoped_lock lock( bat_mutex_ );
 
@@ -1915,7 +1915,7 @@ void PR2ProxyManager::powerStateDataCB(const pr2_msgs::PowerStateConstPtr & msg 
       
       arg = Py_BuildValue( "(O)", charging ? Py_True : Py_False );
       
-      PyPR2Module::instance()->invokeCallback( "onPowerPluggedChange", arg );
+      PyREEMModule::instance()->invokeCallback( "onPowerPluggedChange", arg );
       Py_DECREF( arg );
       
       PyGILState_Release( gstate );
@@ -1927,7 +1927,7 @@ void PR2ProxyManager::powerStateDataCB(const pr2_msgs::PowerStateConstPtr & msg 
       arg = Py_BuildValue( "(iOO)", batpercent, charging ? Py_True : Py_False,
                           (batpercent < lowPowerThreshold_ ? Py_True : Py_False) );
 
-      PyPR2Module::instance()->invokeCallback( "onBatteryChargeChange", arg );
+      PyREEMModule::instance()->invokeCallback( "onBatteryChargeChange", arg );
       Py_DECREF( arg );
       
       PyGILState_Release( gstate );
@@ -1937,14 +1937,14 @@ void PR2ProxyManager::powerStateDataCB(const pr2_msgs::PowerStateConstPtr & msg 
   batCapacity_ = batpercent;
 }
 
-void PR2ProxyManager::setLowPowerThreshold( int percent )
+void REEMProxyManager::setLowPowerThreshold( int percent )
 {
   if (percent >= 0 && percent < 100) {
     lowPowerThreshold_ = percent;
   }
 }
 
-void PR2ProxyManager::getBatteryStatus( int & percentage, bool & isplugged, float & timeremain )
+void REEMProxyManager::getBatteryStatus( int & percentage, bool & isplugged, float & timeremain )
 {
   boost::mutex::scoped_lock lock( bat_mutex_ );
   isplugged = isCharging_;
@@ -1953,16 +1953,16 @@ void PR2ProxyManager::getBatteryStatus( int & percentage, bool & isplugged, floa
 }
 
 /*! \typedef onMoveBodySuccess()
- *  \memberof PyPR2.
- *  \brief Callback function when PyPR2.moveBodyTo method call is successful.
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.moveBodyTo method call is successful.
  *  \return None.
  */
 /*! \typedef onMoveBodyFailed()
- *  \memberof PyPR2.
- *  \brief Callback function when PyPR2.moveBodyTo method call is failed.
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.moveBodyTo method call is failed.
  *  \return None.
  */
-void PR2ProxyManager::publishCommands()
+void REEMProxyManager::publishCommands()
 {
   if (bodyCtrlWithOdmetry_) {
     mPub_.publish( mCmd_ );
@@ -2014,7 +2014,7 @@ void PR2ProxyManager::publishCommands()
       PyGILState_STATE gstate;
       gstate = PyGILState_Ensure();
       
-      PyPR2Module::instance()->invokeCallback( "onMoveBodySuccess", NULL );
+      PyREEMModule::instance()->invokeCallback( "onMoveBodySuccess", NULL );
       
       PyGILState_Release( gstate );
       
@@ -2025,7 +2025,7 @@ void PR2ProxyManager::publishCommands()
       PyGILState_STATE gstate;
       gstate = PyGILState_Ensure();
       
-      PyPR2Module::instance()->invokeCallback( "onMoveBodyFailed", NULL );
+      PyREEMModule::instance()->invokeCallback( "onMoveBodyFailed", NULL );
       
       PyGILState_Release( gstate );
       
@@ -2128,7 +2128,7 @@ void PR2ProxyManager::publishCommands()
         PyGILState_STATE gstate;
         gstate = PyGILState_Ensure();
 
-        PyPR2Module::instance()->invokeCallback( "onMoveHeadFailed", NULL );
+        PyREEMModule::instance()->invokeCallback( "onMoveHeadFailed", NULL );
 
         PyGILState_Release( gstate );
 
@@ -2158,7 +2158,7 @@ void PR2ProxyManager::publishCommands()
       PyGILState_STATE gstate;
       gstate = PyGILState_Ensure();
 
-      PyPR2Module::instance()->invokeCallback( "onMoveHeadSuccess", NULL );
+      PyREEMModule::instance()->invokeCallback( "onMoveHeadSuccess", NULL );
 
       PyGILState_Release( gstate );
 
@@ -2189,32 +2189,32 @@ void PR2ProxyManager::publishCommands()
   }
 }
   
-bool PR2ProxyManager::isBodyControlWithOdometryTimeExpired()
+bool REEMProxyManager::isBodyControlWithOdometryTimeExpired()
 {
   return (ros::Time::now() >= bcwoTimeToComplete_);
 }
 
-bool PR2ProxyManager::isHeadControlWithOdometryTimeExpired()
+bool REEMProxyManager::isHeadControlWithOdometryTimeExpired()
 {
   return (ros::Time::now() >= hcwoTimeToComplete_);
 }
 
-void PR2ProxyManager::getTFFrameList( std::vector<std::string> & list )
+void REEMProxyManager::getTFFrameList( std::vector<std::string> & list )
 {
   list.clear();
-  for (int i = 0; i < kPR2TFFrameListSize - 1 ; ++i) {
-    list.push_back( kPR2TFFrameList[i] );
+  for (int i = 0; i < kREEMTFFrameListSize - 1 ; ++i) {
+    list.push_back( kREEMTFFrameList[i] );
   }
 }
   
-bool PR2ProxyManager::isTFFrameSupported( const char * frame_name )
+bool REEMProxyManager::isTFFrameSupported( const char * frame_name )
 {
   if (!frame_name || strlen( frame_name ) == 0 || strlen( frame_name ) > 40) { //rudimentary check
     return false;
   }
   int i = 0;
-  while (kPR2TFFrameList[i]) {
-    if (strncmp( frame_name, kPR2TFFrameList[i], strlen( kPR2TFFrameList[i]) ) == 0) {
+  while (kREEMTFFrameList[i]) {
+    if (strncmp( frame_name, kREEMTFFrameList[i], strlen( kREEMTFFrameList[i]) ) == 0) {
       return true;
     }
     i++;
@@ -2222,7 +2222,7 @@ bool PR2ProxyManager::isTFFrameSupported( const char * frame_name )
   return false;
 }
 
-bool PR2ProxyManager::addSolidObject( const std::string & name, std::vector<double> & volume,
+bool REEMProxyManager::addSolidObject( const std::string & name, std::vector<double> & volume,
     std::vector<double> & position, std::vector<double> & orientation )
 {
   if (!rarmGroup_ || !larmGroup_) {
@@ -2261,7 +2261,7 @@ bool PR2ProxyManager::addSolidObject( const std::string & name, std::vector<doub
   return true;
 }
 
-void PR2ProxyManager::removeSolidObject( const std::string & name )
+void REEMProxyManager::removeSolidObject( const std::string & name )
 {
   if (!rarmGroup_ || !larmGroup_) {
     ROS_ERROR( "removeSolidObject: MoveIt is not in use." );
@@ -2282,7 +2282,7 @@ void PR2ProxyManager::removeSolidObject( const std::string & name )
   colObjPub_.publish(co);
 }
 
-void PR2ProxyManager::listSolidObjects( std::vector<std::string> & list )
+void REEMProxyManager::listSolidObjects( std::vector<std::string> & list )
 {
   list.clear();
   size_t ssize = solidObjectsInScene_.size();
@@ -2291,7 +2291,7 @@ void PR2ProxyManager::listSolidObjects( std::vector<std::string> & list )
   }
 }
 
-bool PR2ProxyManager::pickupObject( const std::string & name, const std::string & place, std::vector<double> & grasp_pose,
+bool REEMProxyManager::pickupObject( const std::string & name, const std::string & place, std::vector<double> & grasp_pose,
     bool isLeftArm, double approach_dist )
 {
   if (!rarmGroup_ || !larmGroup_) {
@@ -2368,7 +2368,7 @@ bool PR2ProxyManager::pickupObject( const std::string & name, const std::string 
   return success;
 }
 
-bool PR2ProxyManager::placeObject( const std::string & name, const std::string & place, std::vector<double> & place_pose,
+bool REEMProxyManager::placeObject( const std::string & name, const std::string & place, std::vector<double> & place_pose,
     bool isLeftArm, double approach_dist )
 {
   if (!rarmGroup_ || !larmGroup_) {
@@ -2457,7 +2457,7 @@ bool PR2ProxyManager::placeObject( const std::string & name, const std::string &
   return success;
 }
 
-bool PR2ProxyManager::findSolidObjectInScene( const std::string & name )
+bool REEMProxyManager::findSolidObjectInScene( const std::string & name )
 {
   bool found = false;
   size_t ssize = solidObjectsInScene_.size();

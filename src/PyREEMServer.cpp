@@ -1,6 +1,6 @@
 /*
- *  PyPR2Server.cpp
- *  PyPR2Server
+ *  PyREEMServer.cpp
+ *  PyREEMServer
  *
  *  Created by Xun Wang on 09/03/2012.
  *  Copyright 2012 Galaxy Network. All rights reserved.
@@ -10,11 +10,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "PyPR2Server.h"
+#include "PyREEMServer.h"
 #include "PythonServer.h"
-#include "PR2ProxyManager.h"
+#include "REEMProxyManager.h"
 #include "AppConfigManager.h"
-#include "PyPR2Module.h"
+#include "PyREEMModule.h"
 #include "VideoObject.h"
 
 PYRIDE_LOGGING_DECLARE( "pyride_pr2.log" );
@@ -23,18 +23,18 @@ namespace pyride {
 static const float kHFOV_Wide = 90.0;
 static const float kHFOV_Narrow = 55.0;
 
-PyPR2Server::PyPR2Server() :
+PyREEMServer::PyREEMServer() :
   isRunning_( true )
 {
   hcNodeHandle_ = new NodeHandle();
 }
 
-PyPR2Server::~PyPR2Server()
+PyREEMServer::~PyREEMServer()
 {
   delete hcNodeHandle_;
 }
 
-bool PyPR2Server::init()
+bool PyREEMServer::init()
 {
   PYRIDE_LOGGING_INIT;
 
@@ -55,39 +55,39 @@ bool PyPR2Server::init()
     ERROR_MSG( "Unable to find any active robot camera.\n" );
   }
 
-  nodeStatusSub_ = hcNodeHandle_->subscribe( "pyride_pr2/node_status", 1, &PyPR2Server::nodeStatusCB, this );
+  nodeStatusSub_ = hcNodeHandle_->subscribe( "pyride_pr2/node_status", 1, &PyREEMServer::nodeStatusCB, this );
 
-  PR2ProxyManager::instance()->initWithNodeHandle( hcNodeHandle_, useOptionNodes, useMoveIt );
+  REEMProxyManager::instance()->initWithNodeHandle( hcNodeHandle_, useOptionNodes, useMoveIt );
   ServerDataProcessor::instance()->init( activeVideoDevices_, activeAudioDevices_ );
   ServerDataProcessor::instance()->addCommandHandler( this );
   ServerDataProcessor::instance()->setClientID( AppConfigManager::instance()->clientID() );
-  ServerDataProcessor::instance()->setDefaultRobotInfo( PR2, AppConfigManager::instance()->startPosition() );
+  ServerDataProcessor::instance()->setDefaultRobotInfo( REEM, AppConfigManager::instance()->startPosition() );
   
   PythonServer::instance()->init( AppConfigManager::instance()->enablePythonConsole(),
-      PyPR2Module::instance(), scriptdir.c_str() );
+      PyREEMModule::instance(), scriptdir.c_str() );
   ServerDataProcessor::instance()->discoverConsoles();
   return true;
 }
 
-void PyPR2Server::stopProcess()
+void PyREEMServer::stopProcess()
 {
   isRunning_ = false;
 }
 
-void PyPR2Server::continueProcessing()
+void PyREEMServer::continueProcessing()
 {
   ros::Rate publish_rate( kPublishFreq );
 
   while (isRunning_) {
     ros::spinOnce();
 
-    PR2ProxyManager::instance()->publishCommands();
+    REEMProxyManager::instance()->publishCommands();
 
     publish_rate.sleep();
   }
 }
 
-void PyPR2Server::fini()
+void PyREEMServer::fini()
 {
   INFO_MSG( "Disconnect to the controllers gracefully...\n" );
 
@@ -98,12 +98,12 @@ void PyPR2Server::fini()
 
   nodeStatusSub_.shutdown();
 
-  PR2ProxyManager::instance()->fini();
+  REEMProxyManager::instance()->fini();
   AppConfigManager::instance()->fini();
   ServerDataProcessor::instance()->fini();
 }
 
-bool PyPR2Server::executeRemoteCommand( PyRideExtendedCommand command,
+bool PyREEMServer::executeRemoteCommand( PyRideExtendedCommand command,
                                            const unsigned char * optionalData,
                                            const int optionalDataLength )
 {
@@ -117,7 +117,7 @@ bool PyPR2Server::executeRemoteCommand( PyRideExtendedCommand command,
       float volume = *((float *)optionalData);
       //DEBUG_MSG( "received volume %f\n", volume );
       char * text = (char *)optionalData + sizeof( float );
-      PR2ProxyManager::instance()->sayWithVolume( std::string( text, optionalDataLength - sizeof( float ) ), volume );
+      REEMProxyManager::instance()->sayWithVolume( std::string( text, optionalDataLength - sizeof( float ) ), volume );
     }
       break;
     case HEAD_MOVE_TO: // position
@@ -128,14 +128,14 @@ bool PyPR2Server::executeRemoteCommand( PyRideExtendedCommand command,
       yaw = kHFOV_Wide * yaw * kDegreeToRAD;
       pitch = kHFOV_Wide * pitch * kDegreeToRAD;
 
-      status = PR2ProxyManager::instance()->moveHeadTo( yaw, pitch, true );
+      status = REEMProxyManager::instance()->moveHeadTo( yaw, pitch, true );
     }
       break;
     case UPDATE_HEAD_POSE: // velocity vector
     {
       float newHeadYaw = *((float *)optionalData);
       float newHeadPitch = *((float *)optionalData+1);
-      PR2ProxyManager::instance()->updateHeadPose( newHeadYaw, newHeadPitch );
+      REEMProxyManager::instance()->updateHeadPose( newHeadYaw, newHeadPitch );
     }
       break;
     case BODY_MOVE_TO: // position
@@ -145,7 +145,7 @@ bool PyPR2Server::executeRemoteCommand( PyRideExtendedCommand command,
       memcpy( &newPose, dataPtr, sizeof( RobotPose ) );
       dataPtr += sizeof( RobotPose );
       float bestTime = *((float *)dataPtr);
-      status = PR2ProxyManager::instance()->moveBodyTo( newPose, bestTime );
+      status = REEMProxyManager::instance()->moveBodyTo( newPose, bestTime );
     }
       break;
     case UPDATE_BODY_POSE: // velocity vector
@@ -153,7 +153,7 @@ bool PyPR2Server::executeRemoteCommand( PyRideExtendedCommand command,
       unsigned char * dataPtr = (unsigned char *)optionalData;
       RobotPose newPose;
       memcpy( &newPose, dataPtr, sizeof( RobotPose ) );
-      PR2ProxyManager::instance()->updateBodyPose( newPose );
+      REEMProxyManager::instance()->updateBodyPose( newPose );
     }
       break;
     default:
@@ -163,13 +163,13 @@ bool PyPR2Server::executeRemoteCommand( PyRideExtendedCommand command,
   return status;
 }
 
-void PyPR2Server::cancelCurrentOperation()
+void PyREEMServer::cancelCurrentOperation()
 {
-  PR2ProxyManager::instance()->sayWithVolume( "Emergency Stop!" );
+  REEMProxyManager::instance()->sayWithVolume( "Emergency Stop!" );
 }
 
 // helper function
-bool PyPR2Server::initVideoDevices()
+bool PyREEMServer::initVideoDevices()
 {
   const DeviceInfoList * devlist = AppConfigManager::instance()->deviceInfoList();
   for (size_t i = 0; i < devlist->size(); i++) {
@@ -186,7 +186,7 @@ bool PyPR2Server::initVideoDevices()
   return (activeVideoDevices_.size() != 0);
 }
 
-void PyPR2Server::finiVideoDevices()
+void PyREEMServer::finiVideoDevices()
 {
   VideoDevice * videoObj = NULL;
   
@@ -198,28 +198,28 @@ void PyPR2Server::finiVideoDevices()
   activeVideoDevices_.clear();
 }
 
-void PyPR2Server::notifySystemShutdown()
+void PyREEMServer::notifySystemShutdown()
 {
-  INFO_MSG( "PyPR2Server is shutting down..\n" );
+  INFO_MSG( "PyREEMServer is shutting down..\n" );
   
   PyObject * arg = NULL;
   
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
 
-  PyPR2Module::instance()->invokeCallback( "onSystemShutdown", arg );
+  PyREEMModule::instance()->invokeCallback( "onSystemShutdown", arg );
   
   PyGILState_Release( gstate );
 }
 
 /*! \typedef onNodeStatusUpdate( data )
- *  \memberof PyPR2.
+ *  \memberof PyREEM.
  *  \brief Callback function invoked when an external ROS node dispatch status update message
  *   to PyRIDE on pyride_pr2/node_status topic.
  *  \param dictionary data. node status message in the format of {'node', 'timestamp', 'priority', 'message' }.
  *  \return None.
  */
-void PyPR2Server::nodeStatusCB( const pyride_pr2::NodeStatusConstPtr & msg )
+void PyREEMServer::nodeStatusCB( const pyride_pr2::NodeStatusConstPtr & msg )
 {
   if (msg->for_console) { // reformat the string using colon separated format and pass directly to console
     stringstream ss;
@@ -255,7 +255,7 @@ void PyPR2Server::nodeStatusCB( const pyride_pr2::NodeStatusConstPtr & msg )
 
   arg = Py_BuildValue( "(O)", retObj );
 
-  PyPR2Module::instance()->invokeCallback( "onNodeStatusUpdate", arg );
+  PyREEMModule::instance()->invokeCallback( "onNodeStatusUpdate", arg );
   
   Py_DECREF( retObj );
   Py_DECREF( arg );
