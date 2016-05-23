@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(pyride_pr2)
+project(pyride_reem)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -82,7 +82,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   #INCLUDE_DIRS include
-  #LIBRARIES pyride_pr2
+  #LIBRARIES pyride_reem
 #  CATKIN_DEPENDS actionlib cv_bridge image_transport laser_geometry move_base_msgs moveit_core moveit_msgs pr2_common_action_msgs pr2_controllers_msgs pr2_msgs pr2_power_board roscpp sensor_msgs sound_play std_msgs tf topic_tools
   CATKIN_DEPENDS message_runtime
 #  DEPENDS system_lib
@@ -104,12 +104,12 @@ include_directories(
 )
 
 ## Declare a cpp library
-# add_library(pyride_pr2
-#   src/${PROJECT_NAME}/pyride_pr2.cpp
+# add_library(pyride_reem
+#   src/${PROJECT_NAME}/pyride_reem.cpp
 # )
 
 ## Declare a cpp executable
-add_executable(pyride_pr2 pyridecore/AppConfigManager.cpp
+add_executable(pyride_reem pyridecore/AppConfigManager.cpp
                           pyridecore/PyRideCommon.cpp
                           pyridecore/jdatabufferdst.cpp
                           pyridecore/DeviceController.cpp
@@ -117,21 +117,21 @@ add_executable(pyride_pr2 pyridecore/AppConfigManager.cpp
                           pyridecore/PyRideNetComm.cpp
                           pyridecore/PythonServer.cpp
                           pyridecore/PyModuleStub.cpp
-                          src/PyPR2Server.cpp
-                          src/PR2ProxyManager.cpp
-                          src/PyPR2Module.cpp
+                          src/PyREEMServer.cpp
+                          src/REEMProxyManager.cpp
+                          src/PyREEMModule.cpp
                           src/VideoObject.cpp
                           src/main.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-add_dependencies(pyride_pr2 ${catkin_EXPORTED_TARGETS})
-add_dependencies(pyride_pr2 ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(pyride_reem ${catkin_EXPORTED_TARGETS})
+add_dependencies(pyride_reem ${PROJECT_NAME}_generate_messages_cpp)
 
 add_library(celt STATIC IMPORTED)
 set_target_properties(celt PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/lib/libcelt0.a)
 ## Specify libraries to link a library or executable target against
-target_link_libraries(pyride_pr2 
+target_link_libraries(pyride_reem 
    ccrtp1 ccgnu2
    crypto python2.7
    jpeg tinyxml celt
@@ -153,7 +153,7 @@ target_link_libraries(pyride_pr2
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS pyride_pr2 pyride_pr2
+install(TARGETS pyride_reem pyride_reem
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -191,7 +191,7 @@ install(FILES
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_pyride_pr2.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_pyride_reem.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
