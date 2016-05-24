@@ -2,8 +2,8 @@
  *  PyREEMServer.h
  *  PyREEMServer
  *
- *  Created by Xun Wang on 09/03/2012.
- *  Copyright 2012 Galaxy Network. All rights reserved.
+ *  Created by Xun Wang on 24/05/2016.
+ *  Copyright 2016 Galaxy Network. All rights reserved.
  *
  */
 

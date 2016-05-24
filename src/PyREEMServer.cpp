@@ -17,7 +17,7 @@
 #include "PyREEMModule.h"
 #include "VideoObject.h"
 
-PYRIDE_LOGGING_DECLARE( "pyride_pr2.log" );
+PYRIDE_LOGGING_DECLARE( "pyride_reem.log" );
 
 namespace pyride {
 static const float kHFOV_Wide = 90.0;

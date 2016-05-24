@@ -13,13 +13,11 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_core
   moveit_msgs
   moveit_ros_planning_interface
-  pr2_common_action_msgs
-  pr2_controllers_msgs
-  pr2_msgs
-  pr2_power_board
+  control_msgs
+  pal_navigation_msgs
   roscpp
   sensor_msgs
-  sound_play
+  pal_interaction_msgs
   std_msgs
   tf
   topic_tools
@@ -83,7 +81,7 @@ generate_messages(
 catkin_package(
   #INCLUDE_DIRS include
   #LIBRARIES pyride_reem
-#  CATKIN_DEPENDS actionlib cv_bridge image_transport laser_geometry move_base_msgs moveit_core moveit_msgs pr2_common_action_msgs pr2_controllers_msgs pr2_msgs pr2_power_board roscpp sensor_msgs sound_play std_msgs tf topic_tools
+#  CATKIN_DEPENDS actionlib cv_bridge image_transport laser_geometry move_base_msgs moveit_core moveit_msgs pr2_common_action_msgs pr2_controllers_msgs pr2_msgs pr2_power_board roscpp sensor_msgs pal_interaction_msgs std_msgs tf topic_tools
   CATKIN_DEPENDS message_runtime
 #  DEPENDS system_lib
 )

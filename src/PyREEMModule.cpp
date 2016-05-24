@@ -24,8 +24,8 @@ PyDoc_STRVAR( PyREEM_doc, \
  */
 PyREEMModule * PyREEMModule::s_pyREEMModule = NULL;
 
-static const char *kLeftArmKWlist[] = { "l_shoulder_pan_joint", "l_shoulder_lift_joint", "l_upper_arm_roll_joint", "l_elbow_flex_joint", "l_forearm_roll_joint", "l_wrist_flex_joint", "l_wrist_roll_joint", "time_to_reach", NULL };
-static const char *kRightArmKWlist[] = { "r_shoulder_pan_joint", "r_shoulder_lift_joint", "r_upper_arm_roll_joint", "r_elbow_flex_joint", "r_forearm_roll_joint", "r_wrist_flex_joint", "r_wrist_roll_joint", "time_to_reach", NULL };
+static const char *kLeftArmKWlist[] = { "arm_left_1_joint", "arm_left_2_joint", "arm_left_3_joint", "arm_left_4_joint", "arm_left_5_joint", "arm_left_6_joint", "arm_left_7_joint", "time_to_reach", NULL };
+static const char *kRightArmKWlist[] = { "arm_right_1_joint", "arm_right_2_joint", "arm_right_3_joint", "arm_right_4_joint", "arm_right_5_joint", "arm_right_6_joint", "arm_right_7_joint", "time_to_reach", NULL };
 static const char *kPoseKWlist[] = { "position", "orientation", NULL };
 static const char *kPickAndPlaceKWlist[] = { "name", "place", "grasp_position", "grasp_orientation", "use_left_arm", "distance_from", NULL };
 static const char *kObjectKWlist[] = { "name", "volume", "position", "orientation", NULL };
@@ -655,21 +655,6 @@ static PyObject * PyModule_REEMGetRelativeTF( PyObject * self, PyObject * args )
   }
 }
 
-/*! \fn tuckBothArms()
- *  \memberof PyREEM
- *  \brief Tuck both REEM arms to their safe positions.
- *  \return None.
- */
-static PyObject * PyModule_REEMTuckBothArms( PyObject * self )
-{
-  if (REEMProxyManager::instance()->tuckArms( true, true )) {
-    Py_RETURN_TRUE;
-  }
-  else {
-    Py_RETURN_FALSE;
-  }
-}
-
 /*! \fn navigateBodyTo(target_position, target_orientation)
  *  \memberof PyREEM
  *  \brief Navigate REEM body to a specified pose.
@@ -1078,13 +1063,13 @@ static PyObject * PyModule_REEMCancelMoveBodyAction( PyObject * self )
   Py_RETURN_NONE;
 }
 
-/*! \fn openGripper(which_gripper)
+/*! \fn openHand(which_gripper)
  *  \memberof PyREEM
  *  \brief Opens one or both REEM grippers.
  *  \param int which_gripper. 1 = left gripper, 2 = right gripper and 3 = both grippers.
  *  \return bool. True == valid command; False == invalid command.
  */
-static PyObject * PyModule_REEMOpenGripper( PyObject * self, PyObject * args )
+static PyObject * PyModule_REEMOpenHand( PyObject * self, PyObject * args )
 {
   int mode = 0;
   if (!PyArg_ParseTuple( args, "i", &mode )) {
@@ -1093,23 +1078,23 @@ static PyObject * PyModule_REEMOpenGripper( PyObject * self, PyObject * args )
   }
 
   if (mode < 1 || mode > 3) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.openGripper: invalid gripper number! 1 = left gripper, 2 = right gripper and 3 = both grippers." );
+    PyErr_Format( PyExc_ValueError, "PyREEM.openHand: invalid gripper number! 1 = left gripper, 2 = right gripper and 3 = both grippers." );
     return NULL;
   }
     
-  if (REEMProxyManager::instance()->setGripperPosition( mode, 0.08 ))
+  if (REEMProxyManager::instance()->setHandPosition( mode, 0.08 ))
     Py_RETURN_TRUE;
   else
     Py_RETURN_FALSE;
 }
 
-/*! \fn closeGripper(which_gripper)
+/*! \fn closeHand(which_gripper)
  *  \memberof PyREEM
  *  \brief Closes one or both REEM grippers.
  *  \param int which_gripper. 1 = left gripper, 2 = right gripper and 3 = both grippers.
  *  \return bool. True == valid command; False == invalid command.
  */
-static PyObject * PyModule_REEMCloseGripper( PyObject * self, PyObject * args )
+static PyObject * PyModule_REEMCloseHand( PyObject * self, PyObject * args )
 {
   int mode = 0;
   if (!PyArg_ParseTuple( args, "i", &mode )) {
@@ -1118,24 +1103,24 @@ static PyObject * PyModule_REEMCloseGripper( PyObject * self, PyObject * args )
   }
   
   if (mode < 1 || mode > 3) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.closeGripper: invalid gripper number! 1 = left gripper, 2 = right gripper and 3 = both grippers." );
+    PyErr_Format( PyExc_ValueError, "PyREEM.closeHand: invalid gripper number! 1 = left gripper, 2 = right gripper and 3 = both grippers." );
     return NULL;
   }
   
-  if (REEMProxyManager::instance()->setGripperPosition( mode, 0.0 ))
+  if (REEMProxyManager::instance()->setHandPosition( mode, 0.0 ))
     Py_RETURN_TRUE;
   else
     Py_RETURN_FALSE;
 }
 
-/*! \fn setGripperPosition(which_gripper, position)
+/*! \fn setHandPosition(which_gripper, position)
  *  \memberof PyREEM
  *  \brief Opens one or both REEM grippers.
  *  \param int which_gripper. 1 = left gripper, 2 = right gripper and 3 = both grippers.
  *  \param float position. Must be in range of [0.0,0.08].
  *  \return bool. True == valid command; False == invalid command.
  */
-static PyObject * PyModule_REEMSetGripperPosition( PyObject * self, PyObject * args )
+static PyObject * PyModule_REEMSetHandPosition( PyObject * self, PyObject * args )
 {
   int mode = 0;
   double value = 0.0;
@@ -1146,106 +1131,16 @@ static PyObject * PyModule_REEMSetGripperPosition( PyObject * self, PyObject * a
   }
   
   if (mode < 1 || mode > 3) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.setGripperPosition: invalid gripper number! 1 = left gripper, 2 = right gripper and 3 = both grippers." );
+    PyErr_Format( PyExc_ValueError, "PyREEM.setHandPosition: invalid gripper number! 1 = left gripper, 2 = right gripper and 3 = both grippers." );
     return NULL;
   }
 
   if (value < 0.0 || value > 0.08) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.setGripperPosition: invalid gripper position. Must be between 0.0 and 0.08." );
+    PyErr_Format( PyExc_ValueError, "PyREEM.setHandPosition: invalid gripper position. Must be between 0.0 and 0.08." );
     return NULL;
   }
 
-  if (REEMProxyManager::instance()->setGripperPosition( mode, value ))
-    Py_RETURN_TRUE;
-  else
-    Py_RETURN_FALSE;
-}
-
-/*! \fn setTiltLaserPeriodic(amplitude, period)
- *  \memberof PyREEM
- *  \brief Set the REEM tilt laser in a pure periodic movement.
- *  \param float amplitude. Must be non-negative. Amplitude of the periodic movement.
- *  \param float period. Must be non-negative. Time period of the movement.
- *  \return bool. True == valid command; False == invalid command.
- */
-static PyObject * PyModule_REEMSetTiltLaserPeriodic( PyObject * self, PyObject * args )
-{
-  double amp = 0;
-  double period = 0.0;
-  
-  if (!PyArg_ParseTuple( args, "dd", &amp, &period )) {
-    // PyArg_ParseTuple will set the error status.
-    return NULL;
-  }
-  
-  if (amp < 0.0 || period < 0.0) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.setTiltLaserPeriodic: invalid amplitude or period." );
-    return NULL;
-  }
-
-  if (REEMProxyManager::instance()->setTiltLaserPeriodicCmd( amp, period ))
-    Py_RETURN_TRUE;
-  else
-    Py_RETURN_FALSE;
-}
-
-/*! \fn setTiltLaserTraj(positions, durations)
- *  \memberof PyREEM
- *  \brief Set a specific sequence of repeated REEM tilt laser position.
- *  \param list positions. A list of (minimum two) tilt laser positions.
- *  \param list durations. A list of corresponding durations at the defined tilt laser position.
- *  \return bool. True == valid command; False == invalid command.
- */
-static PyObject * PyModule_REEMSetTiltLaserTraj( PyObject * self, PyObject * args )
-{
-  PyObject * pos = NULL;
-  PyObject * dur = NULL;
-  
-  if (!PyArg_ParseTuple( args, "OO", &pos, &dur )) {
-    // PyArg_ParseTuple will set the error status.
-    return NULL;
-  }
-  
-  if (!PyList_Check( pos ) || PyList_Size( pos ) <= 1) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.setTiltLaserTraj: must provide positions as a list with (at least) two elements as the first argument." );
-    return NULL;
-  }
-  if (!PyList_Check( dur ) || PyList_Size( dur ) <= 1) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.setTiltLaserTraj: must provide durations as a list with (at least) two elements as the second argument." );
-    return NULL;
-  }
-  
-  int listSize = PyList_Size( pos );
-  if (listSize != PyList_Size( dur )) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.setTiltLaserTraj: position and durations must be equal size lists." );
-    return NULL;
-  }
-  
-  std::vector<double> positions;
-  std::vector<Duration> durations;
-
-  PyObject * ckObj = NULL;
-
-  for (int i = 0; i < listSize; i++) {
-    ckObj = PyList_GetItem( pos, i );
-    if (PyFloat_Check( ckObj )) {
-      positions.push_back( PyFloat_AsDouble( ckObj ) );
-    }
-    else {
-      PyErr_Format( PyExc_ValueError, "PyREEM.setTiltLaserTraj: position at index %d is not a float/double number.", i );
-      return NULL;
-    }
-    ckObj = PyList_GetItem( dur, i );
-    if (PyFloat_Check( ckObj )) {
-      durations.push_back( Duration(PyFloat_AsDouble( ckObj )) );
-    }
-    else {
-      PyErr_Format( PyExc_ValueError, "PyREEM.setTiltLaserTraj: duration at index %d is not a float/double number.", i );
-      return NULL;
-    }
-  }
-
-  if (REEMProxyManager::instance()->setTiltLaserTrajCmd( positions, durations ))
+  if (REEMProxyManager::instance()->setHandPosition( mode, value ))
     Py_RETURN_TRUE;
   else
     Py_RETURN_FALSE;
@@ -1708,8 +1603,6 @@ static PyMethodDef PyModule_methods[] = {
     "Navigate REEM base to a new pose." },
   { "cancelMoveBodyAction", (PyCFunction)PyModule_REEMCancelMoveBodyAction, METH_NOARGS,
     "Cancel the active move body actions." },
-  { "tuckBothArms", (PyCFunction)PyModule_REEMTuckBothArms, METH_NOARGS,
-    "Tuck both REEM arms." },
   { "moveTorsoBy", (PyCFunction)PyModule_REEMMoveTorsoBy, METH_VARARGS,
     "Move REEM torso up or down." },
   { "moveArmPoseTo", (PyCFunction)PyModule_REEMMoveArmPoseTo, METH_VARARGS|METH_KEYWORDS,
@@ -1722,16 +1615,12 @@ static PyMethodDef PyModule_methods[] = {
     "Move one of REEM arms in a specific joint trajectory with joint velocity (a list of joint positions with associated velocity)." },
   { "cancelMoveArmAction", (PyCFunction)PyModule_REEMCancelMoveArmAction, METH_VARARGS,
     "Cancel the active move arm actions." },
-  { "openGripper", (PyCFunction)PyModule_REEMOpenGripper, METH_VARARGS,
+  { "openHand", (PyCFunction)PyModule_REEMOpenHand, METH_VARARGS,
     "Open one or both REEM grippers." },
-  { "closeGripper", (PyCFunction)PyModule_REEMCloseGripper, METH_VARARGS,
+  { "closeHand", (PyCFunction)PyModule_REEMCloseHand, METH_VARARGS,
     "Close one or both REEM grippers." },
-  { "setGripperPosition", (PyCFunction)PyModule_REEMSetGripperPosition, METH_VARARGS,
+  { "setHandPosition", (PyCFunction)PyModule_REEMSetHandPosition, METH_VARARGS,
     "Set specific position on one or both REEM grippers." },
-  { "setTiltLaserPeriodic", (PyCFunction)PyModule_REEMSetTiltLaserPeriodic, METH_VARARGS,
-    "Set periodic movement on REEM tilt laser." },
-  { "setTiltLaserTraj", (PyCFunction)PyModule_REEMSetTiltLaserTraj, METH_VARARGS,
-    "Set specific REEM tilt laser trajectory." },
   { "getBatteryStatus", (PyCFunction)PyModule_REEMGetBatteryStatus, METH_NOARGS,
     "Get the current battery status." },
   { "getLowPowerThreshold", (PyCFunction)PyModule_REEMGetLowPowerThreshold, METH_NOARGS,

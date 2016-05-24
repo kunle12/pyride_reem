@@ -5,33 +5,21 @@
   <RemotePythonAccess> enable </RemotePythonAccess>
   <DeviceInfo>
     <Video>
-      <ID> /wide_stereo/left/image_color </ID>
-      <Name> PR2 Left Wide Stereo Camera </Name>
-      <Label> PR2 Left Wide Stereo Camera </Label>
+      <ID> /stereo/left/image </ID>
+      <Name> REEM Left Stereo Camera </Name>
+      <Label> REEM Left Stereo Camera </Label>
       <IsActive> Yes </IsActive>
     </Video>
     <Video>
-      <ID> /wide_stereo/right/image_color </ID>
-      <Name> PR2 Right Wide Stereo Camera </Name>
-      <Label> PR2 Right Wide Stereo Camera </Label>
+      <ID> /stereo/right/image </ID>
+      <Name> REEM Right Stereo Camera </Name>
+      <Label> REEM Right Stereo Camera </Label>
       <IsActive> Yes </IsActive>
     </Video>
     <Video>
-      <ID> /l_forearm_cam/image_color </ID>
-      <Name> PR2 Left Forearm Camera </Name>
-      <Label> PR2 Left Forearm Camera </Label>
-      <IsActive> Yes </IsActive>
-    </Video>
-    <Video>
-      <ID> /r_forearm_cam/image_color </ID>
-      <Name> PR2 Right Forearm Camera </Name>
-      <Label> PR2 Right Forearm Camera </Label>
-      <IsActive> Yes </IsActive>
-    </Video>
-    <Video>
-      <ID> /narrow_stereo/left/image_mono </ID>
-      <Name> PR2 Left Narrow Stereo Camera </Name>
-      <Label> PR2 Left Narrow Stereo Camera </Label>
+      <ID> /back_camera/image </ID>
+      <Name> REEM Back Camera </Name>
+      <Label> REEM Back Camera </Label>
       <IsActive> Yes </IsActive>
     </Video>
   </DeviceInfo>

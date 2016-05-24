@@ -2,8 +2,8 @@
  *  REEMProxyManager.h
  *  PyREEMServer
  *
- *  Created by Xun Wang on 9/03/2012.
- *  Copyright 2012 Galaxy Network. All rights reserved.
+ *  Created by Xun Wang on 24/05/2016.
+ *  Copyright 2016 Galaxy Network. All rights reserved.
  *
  */
 
@@ -18,13 +18,10 @@
 #include <actionlib/client/simple_action_client.h>
 
 #include <pr2_msgs/PowerState.h>
-#include <pr2_common_action_msgs/TuckArmsAction.h>
-#include <pr2_common_action_msgs/TuckArmsGoal.h>
-#include <pr2_controllers_msgs/SingleJointPositionAction.h>
-#include <pr2_controllers_msgs/PointHeadAction.h>
-#include <pr2_controllers_msgs/Pr2GripperCommandAction.h>
-#include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
-#include <pr2_controllers_msgs/JointTrajectoryAction.h>
+#include <control_msgs/PointHeadAction.h>
+#include <control_msgs/FollowJointTrajectoryAction.h>
+#include <control_msgs/JointTrajectoryControllerState.h>
+#include <control_msgs/JointTrajectoryAction.h>
 
 #include <move_base_msgs/MoveBaseAction.h>
 
@@ -63,17 +60,14 @@
 
 using namespace std;
 using namespace ros;
-using namespace pr2_controllers_msgs;
-using namespace pr2_common_action_msgs;
+using namespace control_msgs;
 using namespace move_base_msgs;
 
 namespace pyride {
 
-typedef actionlib::SimpleActionClient<pr2_controllers_msgs::SingleJointPositionAction> TorsoClient;
-typedef actionlib::SimpleActionClient<pr2_controllers_msgs::PointHeadAction> PointHeadClient;
-typedef actionlib::SimpleActionClient<pr2_controllers_msgs::Pr2GripperCommandAction> GripperClient;
-typedef actionlib::SimpleActionClient<pr2_common_action_msgs::TuckArmsAction> TuckArmsActionClient;
-typedef actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction> TrajectoryClient;
+typedef actionlib::SimpleActionClient<control_msgs::PointHeadAction> PointHeadClient;
+typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> FollowJointTrajectoryClient;
+typedef actionlib::SimpleActionClient<control_msgs::JointTrajectoryAction> TrajectoryClient;
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
   
 class REEMProxyManager
@@ -103,7 +97,6 @@ public:
   bool pointHeadTo( const std::string & frame, float x, float y, float z );
   void updateHeadPose( float yaw, float pitch );
   
-  bool tuckArms( bool tuckleft, bool tuckright );
   bool moveArmWithGoalPose( bool isLeftArm, std::vector<double> & position,
                            std::vector<double> & orientation, float time_to_reach = 10.0 );
   void moveArmWithJointPos( bool isLeftArm, std::vector<double> & positions,
@@ -131,10 +124,7 @@ public:
   bool placeObject( const std::string & name, const std::string & place, std::vector<double> & place_pose,
       bool isLeftArm = false, double approach_dist = 0.4 );
 
-  bool setGripperPosition( int whichgripper, double position );
-  bool setTiltLaserPeriodicCmd( double amp, double period, double offset = 0.0 );
-  bool setTiltLaserTrajCmd( std::vector<double> & positions,
-                           std::vector<Duration> & durations );
+  bool setHandPosition( int whichgripper, double position );
 
   bool moveBodyTo( const RobotPose & pose, const float bestTime );
   bool moveBodyTorsoBy( const float rel_pos, const float bestTime );
@@ -223,9 +213,8 @@ private:
   bool torsoCtrl_;
   bool headCtrlWithOdmetry_;
   bool headCtrlWithActionClient_;
-  bool tuckArmCtrl_;
-  bool lGripperCtrl_;
-  bool rGripperCtrl_;
+  bool lHandCtrl_;
+  bool rHandCtrl_;
   bool lArmCtrl_;
   bool rArmCtrl_;
   
@@ -242,11 +231,10 @@ private:
   tf::TransformListener tflistener_;
   tf::StampedTransform startTransform_;
   
-  TorsoClient * torsoClient_;
+  TrajectoryClient * torsoClient_;
   PointHeadClient * phClient_;
-  TuckArmsActionClient * tacClient_;
-  GripperClient * lgripperClient_;
-  GripperClient * rgripperClient_;
+  TrajectoryClient * lhandClient_;
+  TrajectoryClient * rhandClient_;
   
   moveit::planning_interface::MoveGroup * rarmGroup_;
   moveit::planning_interface::MoveGroup * larmGroup_;
@@ -289,19 +277,16 @@ private:
                       const PointHeadResultConstPtr & result );
   void doneTorsoAction( const actionlib::SimpleClientGoalState & state,
                        const SingleJointPositionResultConstPtr & result );
-  
-  void doneTuckArmAction( const actionlib::SimpleClientGoalState & state,
-                         const TuckArmsResultConstPtr & result );
 
   void doneMoveLArmAction( const actionlib::SimpleClientGoalState & state,
                           const JointTrajectoryResultConstPtr & result );
   void doneMoveRArmAction( const actionlib::SimpleClientGoalState & state,
                           const JointTrajectoryResultConstPtr & result );
   
-  void doneLGripperAction( const actionlib::SimpleClientGoalState & state,
-                          const Pr2GripperCommandResultConstPtr & result );
-  void doneRGripperAction( const actionlib::SimpleClientGoalState & state,
-                          const Pr2GripperCommandResultConstPtr & result );
+  void doneLHandAction( const actionlib::SimpleClientGoalState & state,
+                          const Pr2HandCommandResultConstPtr & result );
+  void doneRHandAction( const actionlib::SimpleClientGoalState & state,
+                          const Pr2HandCommandResultConstPtr & result );
 
   void doneNavgiateBodyAction( const actionlib::SimpleClientGoalState & state,
                               const MoveBaseResultConstPtr & result );

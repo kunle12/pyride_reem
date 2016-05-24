@@ -15,8 +15,8 @@ PyRIDE on ROS/PR2 uses the standard ROS catkin build system. It requires a full 
 - libccrtp-dev
 
 To compile PyRIDE on PR2, do:
--# Get source code: <b>git clone https://github.com/uts-magic-lab/pyride_pr2.git</b> under an existing catkin_workspace src directory.
--# Compile: <b>catkin_make pyride_pr2</b>.
+-# Get source code: <b>git clone https://github.com/kunle12/pyride_reem.git</b> under an existing catkin_workspace src directory.
+-# Compile: <b>catkin_make pyride_reem</b>.
 
 \section operation Running PyRIDE
 

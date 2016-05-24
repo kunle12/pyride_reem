@@ -2,12 +2,10 @@
  *  REEMProxyManager.cpp
  *  PyREEMServer
  *
- *  Created by Xun Wang on 9/03/2012.
- *  Copyright 2012 Galaxy Network. All rights reserved.
+ *  Created by Xun Wang on 24/05/2016.
+ *  Copyright 2016 Galaxy Network. All rights reserved.
  *
  */
-#include <pr2_msgs/SetPeriodicCmd.h>
-#include <pr2_msgs/SetLaserTrajCmd.h>
 #include "REEMProxyManager.h"
 #include "PyREEMModule.h"
 
@@ -36,15 +34,16 @@ static const double kMaxHeadPan = 2.7;
 static const double kMaxTorsoHeight = 1.06; // w.r.t. base_link frame
 static const double kMinTorsoHeight = 0.75;
 
-static const char *kREEMTFFrameList[] = { "map", "odom_combined", "base_footprint", "base_link",
-  "torso_lift_link", "head_pan_link", "head_tilt_link", "head_mount_link", "double_stereo_link",
-  "r_forearm_cam_frame", "l_forearm_cam_frame", "r_forearm_link", "l_forearm_link",
-  "r_upper_arm_link", "l_upper_arm_link", "r_gripper_tool_frame", "l_gripper_tool_frame",
-  "wide_stereo_r_stereo_camera_frame", "wide_stereo_l_stereo_camera_frame",
-  "narrow_stereo_r_stereo_camera_frame", "narrow_stereo_l_stereo_camera_frame",
-  "wide_stereo_link", "narrow_stereo_link", "high_def_frame", "high_def_optical_frame",
-  "wide_stereo_optical_frame", "narrow_stereo_optical_frame", "imu_link", "sensor_mount_link",
-  "laser_tilt_link", "base_laser_link",
+static const char *kREEMTFFrameList[] = { "map", "odom", "base_footprint", "base_link",
+  "torso_1_link", "torso_2_link", "head_sonar_16_link", "head_1_link", "head_2_link",
+  "back_camera_link", "back_camera_optical_frame", "arm_left_1_link", "arm_left_2_link"
+  "arm_left_3_link", "arm_left_4_link","arm_left_5_link", "arm_left_6_link", "arm_left_7_link",
+  "arm_right_1_link", "arm_right_2_link", "arm_right_3_link", "arm_right_4_link",
+  "arm_right_5_link","arm_right_6_link","arm_right_7_link",
+  "arm_right_tool_link", "arm_left_tool_link",
+  "hand_right_grasping_frame", "hand_left_grasping_frame", "stereo_optical_frame",
+  "stereo_gazebo_left_camera_optical_frame", "stereo_gazebo_right_camera_optical_frame",
+  "base_torso_laser_link", "base_laser_link",
   NULL };
 
 static const int kREEMTFFrameListSize = sizeof( kREEMTFFrameList ) / sizeof( kREEMTFFrameList[0] );
@@ -89,9 +88,8 @@ REEMProxyManager::REEMProxyManager() :
   torsoCtrl_( false ),
   headCtrlWithOdmetry_( false ),
   headCtrlWithActionClient_( false ),
-  tuckArmCtrl_( false ),
-  lGripperCtrl_( false ),
-  rGripperCtrl_( false ),
+  lHandCtrl_( false ),
+  rHandCtrl_( false ),
   lArmCtrl_( false ),
   rArmCtrl_( false ),
   lArmActionTimeout_( 20 ),
@@ -99,9 +97,8 @@ REEMProxyManager::REEMProxyManager() :
   bodyActionTimeout_( 100 ),
   torsoClient_( NULL ),
   phClient_( NULL ),
-  tacClient_( NULL ),
-  lgripperClient_( NULL ),
-  rgripperClient_( NULL ),
+  lhandClient_( NULL ),
+  rhandClient_( NULL ),
   rarmGroup_( NULL ),
   larmGroup_( NULL ),
   mlacClient_( NULL ),
@@ -168,7 +165,7 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   targetYaw_ = targetPitch_ = 0.0;
   
   int trials = 0;
-  phClient_ = new PointHeadClient( "/head_traj_controller/point_head_action", true );
+  phClient_ = new PointHeadClient( "head_controller/point_head_action", true );
   while (!phClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for the point head action server to come up." );
     trials++;
@@ -180,7 +177,7 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   }
 
   trials = 0;
-  torsoClient_ = new TorsoClient( "torso_controller/position_joint_action", true );
+  torsoClient_ = new TrajectoryClient( "torso_controller/follow_joint_trajectory", true );
   
   while (!torsoClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for the torso action server to come up." );
@@ -188,36 +185,36 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   }
   if (!torsoClient_->isServerConnected()) {
     ROS_INFO( "Torso action server is down." );
-    delete tacClient_;
-    tacClient_ = NULL;
+    delete torsoClient_;
+    torsoClient_ = NULL;
   }
 
   trials = 0;
-  lgripperClient_ = new GripperClient( "l_gripper_controller/gripper_action", true );
-  while (!lgripperClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
-    ROS_INFO( "Waiting for left gripper action server to come up." );
+  lhandClient_ = new TrajectoryClient( "left_hand_controller/command", true );
+  while (!lhandClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
+    ROS_INFO( "Waiting for left hand action server to come up." );
     trials++;
   }
-  if (!lgripperClient_->isServerConnected()) {
-    ROS_INFO( "Left gripper action server is down." );
-    delete lgripperClient_;
-    lgripperClient_ = NULL;
+  if (!lhandClient_->isServerConnected()) {
+    ROS_INFO( "Left hand action server is down." );
+    delete lhandClient_;
+    lhandClient_ = NULL;
   }
   
   trials = 0;
-  rgripperClient_ = new GripperClient( "r_gripper_controller/gripper_action", true );
-  while (!rgripperClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
-    ROS_INFO( "Waiting for right gripper action server to come up." );
+  rhandClient_ = new TrajectoryClient( "right_hand_controller/command", true );
+  while (!rhandClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
+    ROS_INFO( "Waiting for right hand action server to come up." );
     trials++;
   }
-  if (!rgripperClient_->isServerConnected()) {
-    ROS_INFO( "Right gripper action server is down." );
-    delete rgripperClient_;
-    rgripperClient_ = NULL;
+  if (!rhandClient_->isServerConnected()) {
+    ROS_INFO( "Right hand action server is down." );
+    delete rhandClient_;
+    rhandClient_ = NULL;
   }
 
   trials = 0;
-  mlacClient_ = new TrajectoryClient( "l_arm_controller/joint_trajectory_action", true );
+  mlacClient_ = new TrajectoryClient( "left_arm_controller/command", true );
   while (!mlacClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for move left arm by joint action server to come up." );
     trials++;
@@ -229,7 +226,7 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   }
 
   trials = 0;
-  mracClient_ = new TrajectoryClient( "r_arm_controller/joint_trajectory_action", true );
+  mracClient_ = new TrajectoryClient( "right_arm_controller/command", true );
   while (!mracClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for move right arm by joint action server to come up." );
     trials++;
@@ -238,19 +235,6 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
     ROS_INFO( "Move right arm by joint action server is down." );
     delete mracClient_;
     mracClient_ = NULL;
-  }
-
-  trials = 0;
-  tacClient_ = new TuckArmsActionClient( "tuck_arms", true );
-  
-  while (!tacClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
-    ROS_INFO( "Waiting for the tuck arm action server to come up." );
-    trials++;
-  }
-  if (!tacClient_->isServerConnected()) {
-    ROS_INFO( "Tuck arm action server is down." );
-    delete tacClient_;
-    tacClient_ = NULL;
   }
 
   if (useOptionNodes) {
@@ -316,17 +300,13 @@ void REEMProxyManager::fini()
     delete phClient_;
     phClient_ = NULL;
   }
-  if (tacClient_) {
-    delete tacClient_;
-    tacClient_ = NULL;
+  if (lhandClient_) {
+    delete lhandClient_;
+    lhandClient_ = NULL;
   }
-  if (lgripperClient_) {
-    delete lgripperClient_;
-    lgripperClient_ = NULL;
-  }
-  if (rgripperClient_) {
-    delete rgripperClient_;
-    rgripperClient_ = NULL;
+  if (rhandClient_) {
+    delete rhandClient_;
+    rhandClient_ = NULL;
   }
   if (mlacClient_) {
     delete mlacClient_;
@@ -403,26 +383,6 @@ void REEMProxyManager::doneHeadAction( const actionlib::SimpleClientGoalState & 
   PyGILState_Release( gstate );
   
   ROS_INFO("Head action finished in state [%s]", state.toString().c_str());
-}
-
-void REEMProxyManager::doneTuckArmAction( const actionlib::SimpleClientGoalState & state,
-                                        const TuckArmsResultConstPtr & result )
-{
-  tuckArmCtrl_ = false;
-  
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
-  
-  if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
-    PyREEMModule::instance()->invokeCallback( "onTuckArmActionSuccess", NULL );
-  }
-  else {
-    PyREEMModule::instance()->invokeCallback( "onTuckArmActionFailed", NULL );
-  }
-  
-  PyGILState_Release( gstate );
-  
-  ROS_INFO( "Tuck arm action finished in state [%s]", state.toString().c_str());
 }
 
 /*! \typedef onMoveArmActionSuccess(is_left_arm)
@@ -590,22 +550,22 @@ void REEMProxyManager::moveRArmActionFeedback( const JointTrajectoryFeedbackCons
    */
 }
 
-/*! \typedef onGripperActionSuccess(is_left_gripper)
+/*! \typedef onHandActionSuccess(is_left_hand)
  *  \memberof PyREEM.
- *  \brief Callback function when PyREEM.openGripper, PyREEM.closeGripper and PyREEM.setGripperPosition method call is successful.
- *  \param bool is_left_gripper. True means left gripper; False means right gripper.
+ *  \brief Callback function when PyREEM.openHand, PyREEM.closeHand and PyREEM.setHandPosition method call is successful.
+ *  \param bool is_left_hand. True means left hand; False means right hand.
  *  \return None.
  */
-/*! \typedef onGripperActionFailed(is_left_gripper)
+/*! \typedef onHandActionFailed(is_left_hand)
  *  \memberof PyREEM.
- *  \brief Callback function when PyREEM.openGripper, PyREEM.closeGripper and PyREEM.setGripperPosition method call is failed.
- *  \param bool is_left_gripper. True means left gripper; False means right gripper.
+ *  \brief Callback function when PyREEM.openHand, PyREEM.closeHand and PyREEM.setHandPosition method call is failed.
+ *  \param bool is_left_hand. True means left hand; False means right hand.
  *  \return None.
  */
-void REEMProxyManager::doneLGripperAction( const actionlib::SimpleClientGoalState & state,
-                                         const Pr2GripperCommandResultConstPtr & result )
+void REEMProxyManager::doneLHandAction( const actionlib::SimpleClientGoalState & state,
+                                         const Pr2HandCommandResultConstPtr & result )
 {
-  lGripperCtrl_ = false;
+  lHandCtrl_ = false;
   
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
@@ -613,22 +573,22 @@ void REEMProxyManager::doneLGripperAction( const actionlib::SimpleClientGoalStat
   PyObject * arg = Py_BuildValue( "(O)", Py_True );
 
   if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
-    PyREEMModule::instance()->invokeCallback( "onGripperActionSuccess", arg );
+    PyREEMModule::instance()->invokeCallback( "onHandActionSuccess", arg );
   }
   else {
-    PyREEMModule::instance()->invokeCallback( "onGripperActionFailed", arg );
+    PyREEMModule::instance()->invokeCallback( "onHandActionFailed", arg );
   }
   Py_DECREF( arg );
   
   PyGILState_Release( gstate );
   
-  ROS_INFO( "Left gripper action finished in state [%s]", state.toString().c_str());
+  ROS_INFO( "Left hand action finished in state [%s]", state.toString().c_str());
 }
 
-void REEMProxyManager::doneRGripperAction( const actionlib::SimpleClientGoalState & state,
-                                         const Pr2GripperCommandResultConstPtr & result )
+void REEMProxyManager::doneRHandAction( const actionlib::SimpleClientGoalState & state,
+                                         const Pr2HandCommandResultConstPtr & result )
 {
-  rGripperCtrl_ = false;
+  rHandCtrl_ = false;
   
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
@@ -636,16 +596,16 @@ void REEMProxyManager::doneRGripperAction( const actionlib::SimpleClientGoalStat
   PyObject * arg = Py_BuildValue( "(O)", Py_False );
   
   if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
-    PyREEMModule::instance()->invokeCallback( "onGripperActionSuccess", arg );
+    PyREEMModule::instance()->invokeCallback( "onHandActionSuccess", arg );
   }
   else {
-    PyREEMModule::instance()->invokeCallback( "onGripperActionFailed", arg );
+    PyREEMModule::instance()->invokeCallback( "onHandActionFailed", arg );
   }
   Py_DECREF( arg );
   
   PyGILState_Release( gstate );
   
-  ROS_INFO( "Right gripper action finished in state [%s]", state.toString().c_str());
+  ROS_INFO( "Right hand action finished in state [%s]", state.toString().c_str());
 }
 
 void REEMProxyManager::sayWithVolume( const std::string & text, float volume, bool toBlock )
@@ -920,11 +880,11 @@ bool REEMProxyManager::getRobotPose( std::vector<double> & positions, std::vecto
   tf::StampedTransform curTransform;
   
   try {
-    tflistener_.waitForTransform( "odom_combined", "base_footprint",
+    tflistener_.waitForTransform( "odom", "base_footprint",
                                  ros::Time(0), ros::Duration( 1.0 ) );
     
     
-    tflistener_.lookupTransform( "odom_combined", "base_footprint",
+    tflistener_.lookupTransform( "odom", "base_footprint",
                                 ros::Time(0), curTransform );
   }
   catch (tf::TransformException ex) {
@@ -1076,7 +1036,7 @@ void REEMProxyManager::registerForBaseScanData()
     ROS_WARN( "Already registered for base laser scan." );
   }
   else {
-    rawBaseScanSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "base_scan", 1, &REEMProxyManager::baseScanDataCB, this ) );
+    rawBaseScanSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "scan", 1, &REEMProxyManager::baseScanDataCB, this ) );
   }
 }
 
@@ -1087,7 +1047,7 @@ void REEMProxyManager::registerForBaseScanData( const std::string & target_frame
   }
   else {
     baseScanTransformFrame_ = target_frame;
-    baseScanSub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>( *mCtrlNode_, "base_scan", 10 );
+    baseScanSub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>( *mCtrlNode_, "scan", 10 );
     baseScanNotifier_ = new tf::MessageFilter<sensor_msgs::LaserScan>( *baseScanSub_, tflistener_, baseScanTransformFrame_, 10 );
 
     baseScanNotifier_->registerCallback( boost::bind( &REEMProxyManager::baseScanDataCB, this, _1 ) );
@@ -1206,7 +1166,7 @@ bool REEMProxyManager::pointHeadTo( const std::string & frame, float x, float y,
 
   tf::StampedTransform transform;
 
-  pr2_controllers_msgs::PointHeadGoal goal;
+  control_msgs::PointHeadGoal goal;
   
   //the target point, expressed in the requested frame
   geometry_msgs::PointStamped point;
@@ -1242,32 +1202,13 @@ bool REEMProxyManager::pointHeadTo( const std::string & frame, float x, float y,
   return true;
 }
 
-bool REEMProxyManager::tuckArms( bool tuckleft, bool tuckright )
-{
-  if (!tacClient_ || tuckArmCtrl_ || lArmCtrl_ || rArmCtrl_)
-    return false;
-  
-  pr2_common_action_msgs::TuckArmsGoal goal;
-
-  goal.tuck_left = tuckleft;
-  goal.tuck_right = tuckright;
-
-  tuckArmCtrl_ = true;
-
-  tacClient_->sendGoal( goal,
-                       boost::bind( &REEMProxyManager::doneTuckArmAction, this, _1, _2 ),
-                       TuckArmsActionClient::SimpleActiveCallback(),
-                       TuckArmsActionClient::SimpleFeedbackCallback() );
-  return true;
-}
-
 void REEMProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> & positions, float time_to_reach )
 {
-  if (positions.size() != 7 || tuckArmCtrl_) {
+  if (positions.size() != 7) {
     return;
   }
   
-  pr2_controllers_msgs::JointTrajectoryGoal goal;
+  control_msgs::JointTrajectoryGoal goal;
   
   // First, the joint names, which apply to all waypoints
   if (isLeftArm) {
@@ -1340,11 +1281,7 @@ void REEMProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> 
 void REEMProxyManager::moveArmWithJointTrajectory( bool isLeftArm, std::vector< std::vector<double> > & trajectory,
                                                   std::vector<float> & times_to_reach )
 {
-  if (tuckArmCtrl_) {
-    return;
-  }
-  
-  pr2_controllers_msgs::JointTrajectoryGoal goal;
+  control_msgs::JointTrajectoryGoal goal;
   
   // First, the joint names, which apply to all waypoints
   if (isLeftArm) {
@@ -1420,11 +1357,7 @@ void REEMProxyManager::moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
                                         std::vector< std::vector<double> > & joint_velocities,
                                         std::vector<float> & times_to_reach )
 {
-  if (tuckArmCtrl_) {
-    return;
-  }
-  
-  pr2_controllers_msgs::JointTrajectoryGoal goal;
+  control_msgs::JointTrajectoryGoal goal;
   
   // First, the joint names, which apply to all waypoints
   if (isLeftArm) {
@@ -1501,7 +1434,7 @@ bool REEMProxyManager::moveArmWithGoalPose( bool isLeftArm, std::vector<double> 
   if (!rarmGroup_ || !larmGroup_)
     return false;
 
-  if (position.size() != 3 || orientation.size() != 4 || tuckArmCtrl_) {
+  if (position.size() != 3 || orientation.size() != 4) {
     return false;
   }
 
@@ -1599,61 +1532,61 @@ void REEMProxyManager::cancelBodyMovement()
   bodyCtrlWithOdmetry_ = false;
 }
   
-bool REEMProxyManager::setGripperPosition( int whichgripper, double position )
+bool REEMProxyManager::setHandPosition( int whichgripper, double position )
 {
   if (position > 0.08 || position < 0.0 )
     return false;
 
-  pr2_controllers_msgs::Pr2GripperCommandGoal gaction;
+  control_msgs::Pr2HandCommandGoal gaction;
   gaction.command.position = position;
-  gaction.command.max_effort = 60.0;  // not too harsh. TODO: use sensor gripper action later on.
+  gaction.command.max_effort = 60.0;  // not too harsh. TODO: use sensor hand action later on.
   
   switch (whichgripper) {
     case 1:
-      if (!lgripperClient_ || lGripperCtrl_) {
+      if (!lhandClient_ || lHandCtrl_) {
         return false;
       }
       else {
-        lGripperCtrl_ = true;
-        lgripperClient_->sendGoal( gaction,
-                                  boost::bind( &REEMProxyManager::doneLGripperAction, this, _1, _2 ),
-                                  GripperClient::SimpleActiveCallback(),
-                                  GripperClient::SimpleFeedbackCallback() );
+        lHandCtrl_ = true;
+        lhandClient_->sendGoal( gaction,
+                                  boost::bind( &REEMProxyManager::doneLHandAction, this, _1, _2 ),
+                                  TrajectoryClient::SimpleActiveCallback(),
+                                  TrajectoryClient::SimpleFeedbackCallback() );
       }
       break;
     case 2:
-      if (!rgripperClient_ || rGripperCtrl_) {
+      if (!rhandClient_ || rHandCtrl_) {
         return false;
       }
       else {
-        rGripperCtrl_ = true;
-        rgripperClient_->sendGoal( gaction,
-                                  boost::bind( &REEMProxyManager::doneRGripperAction, this, _1, _2 ),
-                                  GripperClient::SimpleActiveCallback(),
-                                  GripperClient::SimpleFeedbackCallback() );
+        rHandCtrl_ = true;
+        rhandClient_->sendGoal( gaction,
+                                  boost::bind( &REEMProxyManager::doneRHandAction, this, _1, _2 ),
+                                  TrajectoryClient::SimpleActiveCallback(),
+                                  TrajectoryClient::SimpleFeedbackCallback() );
       }
       break;
     case 3:
-      if (!lgripperClient_ || lGripperCtrl_ ||
-          !rgripperClient_ || rGripperCtrl_)
+      if (!lhandClient_ || lHandCtrl_ ||
+          !rhandClient_ || rHandCtrl_)
       {
         return false;
       }
       else {
-        lGripperCtrl_ = true;
-        rGripperCtrl_ = true;
-        lgripperClient_->sendGoal( gaction,
-                                  boost::bind( &REEMProxyManager::doneLGripperAction, this, _1, _2 ),
-                                  GripperClient::SimpleActiveCallback(),
-                                  GripperClient::SimpleFeedbackCallback() );
-        rgripperClient_->sendGoal( gaction,
-                                  boost::bind( &REEMProxyManager::doneRGripperAction, this, _1, _2 ),
-                                  GripperClient::SimpleActiveCallback(),
-                                  GripperClient::SimpleFeedbackCallback() );
+        lHandCtrl_ = true;
+        rHandCtrl_ = true;
+        lhandClient_->sendGoal( gaction,
+                                  boost::bind( &REEMProxyManager::doneLHandAction, this, _1, _2 ),
+                                  TrajectoryClient::SimpleActiveCallback(),
+                                  TrajectoryClient::SimpleFeedbackCallback() );
+        rhandClient_->sendGoal( gaction,
+                                  boost::bind( &REEMProxyManager::doneRHandAction, this, _1, _2 ),
+                                  TrajectoryClient::SimpleActiveCallback(),
+                                  TrajectoryClient::SimpleFeedbackCallback() );
       }
       break;
     default:
-      ROS_ERROR( "SetGripperPosition: unknown gripper" );
+      ROS_ERROR( "SetHandPosition: unknown hand" );
       return false;
       break;
   }
@@ -1725,43 +1658,6 @@ void REEMProxyManager::subscribeRawTrajInput( bool enable )
   }
 }
 #endif
-
-bool REEMProxyManager::setTiltLaserPeriodicCmd( double amp, double period, double offset )
-{
-  if (period < 0.1 || amp < 0.0) {
-    return false;
-  }
-  ServiceClient client = mCtrlNode_->serviceClient<pr2_msgs::SetPeriodicCmd>("laser_tilt_controller/set_periodic_cmd");
-  pr2_msgs::SetPeriodicCmd cmd;
-  cmd.request.command.profile = "linear";
-  cmd.request.command.period = period;
-  cmd.request.command.amplitude = amp;
-  cmd.request.command.offset = offset;
-  if (client.call( cmd )) {
-    ROS_INFO( "Start tilt laser periodic move at %f.", cmd.response.start_time.toSec() );
-    return true;
-  }
-  return false;
-}
-
-bool REEMProxyManager::setTiltLaserTrajCmd( std::vector<double> & positions, std::vector<Duration> & durations )
-{
-  if (positions.size() == 0 || durations.size() == 0 || positions.size() != durations.size()) {
-    return false;
-  }
-  ServiceClient client = mCtrlNode_->serviceClient<pr2_msgs::SetLaserTrajCmd>("laser_tilt_controller/set_traj_cmd");
-  pr2_msgs::SetLaserTrajCmd cmd;
-  cmd.request.command.profile = "linear";
-  cmd.request.command.position = positions;
-  cmd.request.command.time_from_start = durations;
-  cmd.request.command.max_velocity = -1.0;
-  cmd.request.command.max_acceleration = -1.0;
-
-  if (client.call( cmd )) {
-    return true;
-  }
-  return false;
-}
 
 void REEMProxyManager::updateHeadPose( float yaw, float pitch )
 {
@@ -1864,15 +1760,15 @@ bool REEMProxyManager::moveBodyTorsoBy( const float rel_pos, const float bestTim
   if (torso_speed > kTorsoMoveRate) {
     return false;
   }
-  pr2_controllers_msgs::SingleJointPositionGoal torsoGoal;
+  control_msgs::SingleJointPositionGoal torsoGoal;
   torsoGoal.position = torsoPos - kMinTorsoHeight;
   //up.min_duration = ros::Duration(2.0);
   
   torsoGoal.max_velocity = torso_speed;
   torsoClient_->sendGoal( torsoGoal,
                          boost::bind( &REEMProxyManager::doneTorsoAction, this, _1, _2 ),
-                         TorsoClient::SimpleActiveCallback(),
-                         TorsoClient::SimpleFeedbackCallback() );
+                         TrajectoryClient::SimpleActiveCallback(),
+                         TrajectoryClient::SimpleFeedbackCallback() );
   torsoCtrl_ = true;
 
   return true;
@@ -2342,13 +2238,13 @@ bool REEMProxyManager::pickupObject( const std::string & name, const std::string
 
   if (isLeftArm) {
     g.pre_grasp_approach.direction.header.frame_id = "l_wrist_roll_link";
-    g.pre_grasp_posture.joint_names.resize( 1, "l_gripper_joint" );
-    g.grasp_posture.joint_names.resize( 1, "l_gripper_joint" );
+    g.pre_grasp_posture.joint_names.resize( 1, "l_hand_joint" );
+    g.grasp_posture.joint_names.resize( 1, "l_hand_joint" );
   }
   else {
     g.pre_grasp_approach.direction.header.frame_id = "r_wrist_roll_link";
-    g.pre_grasp_posture.joint_names.resize( 1, "r_gripper_joint" );
-    g.grasp_posture.joint_names.resize( 1, "r_gripper_joint" );
+    g.pre_grasp_posture.joint_names.resize( 1, "r_hand_joint" );
+    g.grasp_posture.joint_names.resize( 1, "r_hand_joint" );
   }
 
   grasps.push_back( g );
@@ -2412,11 +2308,11 @@ bool REEMProxyManager::placeObject( const std::string & name, const std::string 
 
   if (isLeftArm) {
     g.pre_place_approach.direction.header.frame_id = "l_wrist_roll_link";
-    g.post_place_posture.joint_names.resize( 1, "l_gripper_joint" );
+    g.post_place_posture.joint_names.resize( 1, "l_hand_joint" );
   }
   else {
     g.pre_place_approach.direction.header.frame_id = "r_wrist_roll_link";
-    g.post_place_posture.joint_names.resize( 1, "r_gripper_joint" );
+    g.post_place_posture.joint_names.resize( 1, "r_hand_joint" );
   }
   location.push_back( g );
 
