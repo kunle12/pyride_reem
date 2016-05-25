@@ -2,7 +2,7 @@
 <package>
   <name>pyride_reem</name>
   <version>0.1.0</version>
-  <description>PyRIDE on ROS/PR2</description>
+  <description>PyRIDE on ROS/REEM</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->

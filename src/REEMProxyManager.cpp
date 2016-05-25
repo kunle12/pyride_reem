@@ -94,7 +94,10 @@ REEMProxyManager::REEMProxyManager() :
   rArmCtrl_( false ),
   lArmActionTimeout_( 20 ),
   rArmActionTimeout_( 20 ),
+  lHandActionTimeout_( 20 ),
+  rHandActionTimeout_( 20 ),
   bodyActionTimeout_( 100 ),
+  soundClient_( NULL ),
   torsoClient_( NULL ),
   phClient_( NULL ),
   lhandClient_( NULL ),
@@ -165,7 +168,7 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   targetYaw_ = targetPitch_ = 0.0;
   
   int trials = 0;
-  phClient_ = new PointHeadClient( "head_controller/point_head_action", true );
+  phClient_ = new PointHeadClient( "/head_controller/point_head_action", true );
   while (!phClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for the point head action server to come up." );
     trials++;
@@ -174,6 +177,18 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
     ROS_INFO( "Point head action server is down." );
     delete phClient_;
     phClient_ = NULL;
+  }
+
+  int trials = 0;
+  soundClient_ = new TTSClient( "/tts", true );
+  while (!soundClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
+    ROS_INFO( "Waiting for the TTS action server to come up." );
+    trials++;
+  }
+  if (!soundClient_->isServerConnected()) {
+    ROS_INFO( "TTS server is down." );
+    delete soundClient_;
+    soundClient_ = NULL;
   }
 
   trials = 0;
@@ -316,6 +331,10 @@ void REEMProxyManager::fini()
     delete mracClient_;
     mracClient_ = NULL;
   }
+  if (soundClient_) {
+    delete soundClient_;
+    soundClient_ = NULL;
+  }
   if (moveBaseClient_) {
     delete moveBaseClient_;
     moveBaseClient_ = NULL;
@@ -454,7 +473,7 @@ void REEMProxyManager::doneMoveRArmAction( const actionlib::SimpleClientGoalStat
  *  \return None.
  */
 void REEMProxyManager::doneTorsoAction( const actionlib::SimpleClientGoalState & state,
-                                      const SingleJointPositionResultConstPtr & result )
+                                      const JointTrajectoryResultConstPtr & result )
 {
   torsoCtrl_ = false;
   
@@ -550,6 +569,53 @@ void REEMProxyManager::moveRArmActionFeedback( const JointTrajectoryFeedbackCons
    */
 }
 
+void REEMProxyManager::moveLHandActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback )
+{
+  ROS_INFO( "Left hand trajectory move action feedback." );
+
+  /*
+  if (feedback->time_to_completion.toSec() > lArmActionTimeout_) {
+    ROS_INFO( "Left arm trajectory move action will exceed %f seconds, force cancellation.", lArmActionTimeout_);
+    mlacClient_->cancelGoal();
+    lArmCtrl_ = false;
+
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject * arg = Py_BuildValue( "(O)", Py_True );
+
+    PyREEMModule::instance()->invokeCallback( "onMoveArmActionFailed", arg );
+
+    Py_DECREF( arg );
+
+    PyGILState_Release( gstate );
+  }
+   */
+}
+
+void REEMProxyManager::moveRHandActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback )
+{
+  ROS_INFO( "Right hand trajectory move action feedback." );
+  /*
+  if (feedback->time_to_completion.toSec() > rArmActionTimeout_) {
+    ROS_INFO( "Right arm trajectory move action will exceed %f seconds, force cancellation.", rArmActionTimeout_);
+    mracClient_->cancelGoal();
+    rArmCtrl_ = false;
+
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject * arg = Py_BuildValue( "(O)", Py_False );
+
+    PyREEMModule::instance()->invokeCallback( "onMoveArmActionFailed", arg );
+
+    Py_DECREF( arg );
+
+    PyGILState_Release( gstate );
+  }
+   */
+}
+
 /*! \typedef onHandActionSuccess(is_left_hand)
  *  \memberof PyREEM.
  *  \brief Callback function when PyREEM.openHand, PyREEM.closeHand and PyREEM.setHandPosition method call is successful.
@@ -563,7 +629,7 @@ void REEMProxyManager::moveRArmActionFeedback( const JointTrajectoryFeedbackCons
  *  \return None.
  */
 void REEMProxyManager::doneLHandAction( const actionlib::SimpleClientGoalState & state,
-                                         const Pr2HandCommandResultConstPtr & result )
+                                         const JointTrajectoryResultConstPtr & result )
 {
   lHandCtrl_ = false;
   
@@ -586,7 +652,7 @@ void REEMProxyManager::doneLHandAction( const actionlib::SimpleClientGoalState &
 }
 
 void REEMProxyManager::doneRHandAction( const actionlib::SimpleClientGoalState & state,
-                                         const Pr2HandCommandResultConstPtr & result )
+                                         const JointTrajectoryResultConstPtr & result )
 {
   rHandCtrl_ = false;
   
@@ -608,9 +674,37 @@ void REEMProxyManager::doneRHandAction( const actionlib::SimpleClientGoalState &
   ROS_INFO( "Right hand action finished in state [%s]", state.toString().c_str());
 }
 
+void REEMProxyManager::doneSpeakAction( const actionlib::SimpleClientGoalState & state,
+                            const TtsResultConstPtr & result )
+{
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
+	PyREEMModule::instance()->invokeCallback( "onSpeakSuccess", NULL );
+  }
+  else {
+	PyREEMModule::instance()->invokeCallback( "onSpeakFailed", NULL );
+  }
+  Py_DECREF( arg );
+
+  PyGILState_Release( gstate );
+
+  //ROS_INFO( "On speak finished in state [%s]", state.toString().c_str());
+}
+
 void REEMProxyManager::sayWithVolume( const std::string & text, float volume, bool toBlock )
 {
-  soundClient_.say( text.c_str() );
+  if (!soundClient_)
+	return;
+
+  pal_interaction_msgs::TtsActionGoal goal;
+
+  goal.text = text;
+  soundClient_->sendGoal( goal,
+                        boost::bind( &REEMProxyManager::doneSpeakAction, this, _1, _2 ),
+                        TTSClient::SimpleActiveCallback(),
+                        boost::bind( &TTSClient::SimpleFeedbackCallback(), this, _1 ) );
 }
 
 void REEMProxyManager::setAudioVolume( const float vol )
@@ -1080,7 +1174,7 @@ void REEMProxyManager::registerForTiltScanData()
     ROS_WARN( "Already registered for tilt laser scan." );
   }
   else {
-    rawTiltScanSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "tilt_scan", 1, &REEMProxyManager::tiltScanDataCB, this ) );
+    rawTiltScanSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "hokuyo/LAS_01", 1, &REEMProxyManager::tiltScanDataCB, this ) );
   }
 }
 
@@ -1091,7 +1185,7 @@ void REEMProxyManager::registerForTiltScanData( const std::string & target_frame
   }
   else {
     tiltScanTransformFrame_ = target_frame;
-    tiltScanSub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>( *mCtrlNode_, "tilt_scan", 10 );
+    tiltScanSub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>( *mCtrlNode_, "hokuyo/LAS_01", 10 );
     tiltScanNotifier_ = new tf::MessageFilter<sensor_msgs::LaserScan>( *tiltScanSub_, tflistener_, tiltScanTransformFrame_, 10 );
     
     tiltScanNotifier_->registerCallback( boost::bind( &REEMProxyManager::tiltScanDataCB, this, _1 ) );
@@ -1219,13 +1313,13 @@ void REEMProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> 
       ROS_WARN( "Left arm is in motion." );
       return;
     }
-    goal.trajectory.joint_names.push_back( "l_shoulder_pan_joint" );
-    goal.trajectory.joint_names.push_back( "l_shoulder_lift_joint" );
-    goal.trajectory.joint_names.push_back( "l_upper_arm_roll_joint" );
-    goal.trajectory.joint_names.push_back( "l_elbow_flex_joint" );
-    goal.trajectory.joint_names.push_back( "l_forearm_roll_joint" );
-    goal.trajectory.joint_names.push_back( "l_wrist_flex_joint" );
-    goal.trajectory.joint_names.push_back( "l_wrist_roll_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_1_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_2_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_3_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_4_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_5_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_6_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_7_joint" );
     lArmCtrl_ = true;
   }
   else {
@@ -1236,13 +1330,13 @@ void REEMProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> 
       ROS_WARN( "Right arm is in motion." );
       return;
     }
-    goal.trajectory.joint_names.push_back( "r_shoulder_pan_joint" );
-    goal.trajectory.joint_names.push_back( "r_shoulder_lift_joint" );
-    goal.trajectory.joint_names.push_back( "r_upper_arm_roll_joint" );
-    goal.trajectory.joint_names.push_back( "r_elbow_flex_joint" );
-    goal.trajectory.joint_names.push_back( "r_forearm_roll_joint" );
-    goal.trajectory.joint_names.push_back( "r_wrist_flex_joint" );
-    goal.trajectory.joint_names.push_back( "r_wrist_roll_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_1_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_2_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_3_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_4_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_5_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_6_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_7_joint" );
     rArmCtrl_ = true;
   }
 
@@ -1292,13 +1386,13 @@ void REEMProxyManager::moveArmWithJointTrajectory( bool isLeftArm, std::vector< 
       ROS_WARN( "Left arm is in motion." );
       return;
     }
-    goal.trajectory.joint_names.push_back( "l_shoulder_pan_joint" );
-    goal.trajectory.joint_names.push_back( "l_shoulder_lift_joint" );
-    goal.trajectory.joint_names.push_back( "l_upper_arm_roll_joint" );
-    goal.trajectory.joint_names.push_back( "l_elbow_flex_joint" );
-    goal.trajectory.joint_names.push_back( "l_forearm_roll_joint" );
-    goal.trajectory.joint_names.push_back( "l_wrist_flex_joint" );
-    goal.trajectory.joint_names.push_back( "l_wrist_roll_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_1_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_2_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_3_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_4_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_5_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_6_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_7_joint" );
     lArmCtrl_ = true;
   }
   else {
@@ -1309,13 +1403,13 @@ void REEMProxyManager::moveArmWithJointTrajectory( bool isLeftArm, std::vector< 
       ROS_WARN( "Right arm is in motion." );
       return;
     }
-    goal.trajectory.joint_names.push_back( "r_shoulder_pan_joint" );
-    goal.trajectory.joint_names.push_back( "r_shoulder_lift_joint" );
-    goal.trajectory.joint_names.push_back( "r_upper_arm_roll_joint" );
-    goal.trajectory.joint_names.push_back( "r_elbow_flex_joint" );
-    goal.trajectory.joint_names.push_back( "r_forearm_roll_joint" );
-    goal.trajectory.joint_names.push_back( "r_wrist_flex_joint" );
-    goal.trajectory.joint_names.push_back( "r_wrist_roll_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_1_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_2_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_3_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_4_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_5_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_6_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_7_joint" );
     rArmCtrl_ = true;
   }
   
@@ -1368,13 +1462,13 @@ void REEMProxyManager::moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
       ROS_WARN( "Left arm is in motion." );
       return;
     }
-    goal.trajectory.joint_names.push_back( "l_shoulder_pan_joint" );
-    goal.trajectory.joint_names.push_back( "l_shoulder_lift_joint" );
-    goal.trajectory.joint_names.push_back( "l_upper_arm_roll_joint" );
-    goal.trajectory.joint_names.push_back( "l_elbow_flex_joint" );
-    goal.trajectory.joint_names.push_back( "l_forearm_roll_joint" );
-    goal.trajectory.joint_names.push_back( "l_wrist_flex_joint" );
-    goal.trajectory.joint_names.push_back( "l_wrist_roll_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_1_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_2_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_3_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_4_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_5_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_6_joint" );
+    goal.trajectory.joint_names.push_back( "arm_left_7_joint" );
     lArmCtrl_ = true;
   }
   else {
@@ -1385,13 +1479,13 @@ void REEMProxyManager::moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
       ROS_WARN( "Right arm is in motion." );
       return;
     }
-    goal.trajectory.joint_names.push_back( "r_shoulder_pan_joint" );
-    goal.trajectory.joint_names.push_back( "r_shoulder_lift_joint" );
-    goal.trajectory.joint_names.push_back( "r_upper_arm_roll_joint" );
-    goal.trajectory.joint_names.push_back( "r_elbow_flex_joint" );
-    goal.trajectory.joint_names.push_back( "r_forearm_roll_joint" );
-    goal.trajectory.joint_names.push_back( "r_wrist_flex_joint" );
-    goal.trajectory.joint_names.push_back( "r_wrist_roll_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_1_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_2_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_3_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_4_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_5_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_6_joint" );
+    goal.trajectory.joint_names.push_back( "arm_right_7_joint" );
     rArmCtrl_ = true;
   }
   
@@ -1532,64 +1626,69 @@ void REEMProxyManager::cancelBodyMovement()
   bodyCtrlWithOdmetry_ = false;
 }
   
-bool REEMProxyManager::setHandPosition( int whichgripper, double position )
+bool REEMProxyManager::setHandPosition( bool isLeftHand, double position )
 {
   if (position > 0.08 || position < 0.0 )
     return false;
 
-  control_msgs::Pr2HandCommandGoal gaction;
-  gaction.command.position = position;
-  gaction.command.max_effort = 60.0;  // not too harsh. TODO: use sensor hand action later on.
-  
-  switch (whichgripper) {
-    case 1:
-      if (!lhandClient_ || lHandCtrl_) {
-        return false;
-      }
-      else {
-        lHandCtrl_ = true;
-        lhandClient_->sendGoal( gaction,
-                                  boost::bind( &REEMProxyManager::doneLHandAction, this, _1, _2 ),
-                                  TrajectoryClient::SimpleActiveCallback(),
-                                  TrajectoryClient::SimpleFeedbackCallback() );
-      }
-      break;
-    case 2:
-      if (!rhandClient_ || rHandCtrl_) {
-        return false;
-      }
-      else {
-        rHandCtrl_ = true;
-        rhandClient_->sendGoal( gaction,
-                                  boost::bind( &REEMProxyManager::doneRHandAction, this, _1, _2 ),
-                                  TrajectoryClient::SimpleActiveCallback(),
-                                  TrajectoryClient::SimpleFeedbackCallback() );
-      }
-      break;
-    case 3:
-      if (!lhandClient_ || lHandCtrl_ ||
-          !rhandClient_ || rHandCtrl_)
-      {
-        return false;
-      }
-      else {
-        lHandCtrl_ = true;
-        rHandCtrl_ = true;
-        lhandClient_->sendGoal( gaction,
-                                  boost::bind( &REEMProxyManager::doneLHandAction, this, _1, _2 ),
-                                  TrajectoryClient::SimpleActiveCallback(),
-                                  TrajectoryClient::SimpleFeedbackCallback() );
-        rhandClient_->sendGoal( gaction,
-                                  boost::bind( &REEMProxyManager::doneRHandAction, this, _1, _2 ),
-                                  TrajectoryClient::SimpleActiveCallback(),
-                                  TrajectoryClient::SimpleFeedbackCallback() );
-      }
-      break;
-    default:
-      ROS_ERROR( "SetHandPosition: unknown hand" );
-      return false;
-      break;
+  control_msgs::JointTrajectoryGoal goal;
+
+  // First, the joint names, which apply to all waypoints
+  if (isLeftHand) {
+    if (!lhandClient_) {
+      return;
+    }
+    if (lHandCtrl_) {
+      ROS_WARN( "Left hand is in motion." );
+      return;
+    }
+    goal.trajectory.joint_names.push_back( "hand_left_index_joint" );
+    goal.trajectory.joint_names.push_back( "hand_left_middle_joint" );
+    goal.trajectory.joint_names.push_back( "hand_left_thumb_joint" );
+    lHandCtrl_ = true;
   }
+  else {
+    if (!rhandClient_) {
+      return;
+    }
+    if (rHandCtrl_) {
+      ROS_WARN( "Right hand is in motion." );
+      return;
+    }
+    goal.trajectory.joint_names.push_back( "hand_right_index_joint" );
+    goal.trajectory.joint_names.push_back( "hand_right_middle_joint" );
+    goal.trajectory.joint_names.push_back( "hand_right_thumb_joint" );
+    rHandCtrl_ = true;
+  }
+
+  goal.trajectory.points.resize( 1 );
+
+  goal.trajectory.points[0].positions.resize( 7 );
+    // Velocities
+  goal.trajectory.points[0].velocities.resize( 7 );
+
+  for (size_t j = 0; j < 7; ++j) {
+    goal.trajectory.points[0].positions[j] = positions[j];
+    goal.trajectory.points[0].velocities[j] = 0.0;
+  }
+  // To be reached 2 seconds after starting along the trajectory
+  goal.trajectory.points[0].time_from_start = ros::Duration( time_to_reach );
+
+  if (isLeftArm) {
+    lHandActionTimeout_ = time_to_reach * 1.05; // give additional 5% allowance
+    rhandClient_->sendGoal( goal,
+                          boost::bind( &REEMProxyManager::doneLHandAction, this, _1, _2 ),
+                          TrajectoryClient::SimpleActiveCallback(),
+                          boost::bind( &REEMProxyManager::moveLHandActionFeedback, this, _1 ) );
+  }
+  else {
+    rHandActionTimeout_ = time_to_reach * 1.05; // give additional 5% allowance
+    lhandClient_->sendGoal( goal,
+                          boost::bind( &REEMProxyManager::doneRHandAction, this, _1, _2 ),
+                          TrajectoryClient::SimpleActiveCallback(),
+                          boost::bind( &REEMProxyManager::moveRHandActionFeedback, this, _1 ) );
+  }
+  
   return true;
 }
 

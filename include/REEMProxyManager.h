@@ -13,13 +13,11 @@
 #include <string>
 #include <ros/ros.h>
 
-#include <sound_play/sound_play.h>
-
 #include <actionlib/client/simple_action_client.h>
 
 #include <pr2_msgs/PowerState.h>
 #include <control_msgs/PointHeadAction.h>
-#include <control_msgs/FollowJointTrajectoryAction.h>
+//#include <control_msgs/FollowJointTrajectoryAction.h>
 #include <control_msgs/JointTrajectoryControllerState.h>
 #include <control_msgs/JointTrajectoryAction.h>
 
@@ -65,6 +63,7 @@ using namespace move_base_msgs;
 
 namespace pyride {
 
+typedef actionlib::SimpleActionClient<pal_interaction_msgs::TtsAction> TTSClient;
 typedef actionlib::SimpleActionClient<control_msgs::PointHeadAction> PointHeadClient;
 typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> FollowJointTrajectoryClient;
 typedef actionlib::SimpleActionClient<control_msgs::JointTrajectoryAction> TrajectoryClient;
@@ -201,7 +200,7 @@ private:
   tf::MessageFilter<sensor_msgs::LaserScan> * baseScanNotifier_;
   tf::MessageFilter<sensor_msgs::LaserScan> * tiltScanNotifier_;
   
-  sound_play::SoundClient soundClient_;
+  TTSClient * soundClient_;
   
   laser_geometry::LaserProjection lprojector_;
   
@@ -220,6 +219,8 @@ private:
   
   float lArmActionTimeout_;
   float rArmActionTimeout_;
+  float lHandActionTimeout_;
+  float rHandActionTimeout_;
   float bodyActionTimeout_;
 
   std::string baseScanTransformFrame_;
@@ -232,21 +233,20 @@ private:
   tf::StampedTransform startTransform_;
   
   TrajectoryClient * torsoClient_;
-  PointHeadClient * phClient_;
   TrajectoryClient * lhandClient_;
   TrajectoryClient * rhandClient_;
-  
+  TrajectoryClient * mlacClient_;
+  TrajectoryClient * mracClient_;
+
+  PointHeadClient * phClient_;
+  MoveBaseClient * moveBaseClient_;
+
   moveit::planning_interface::MoveGroup * rarmGroup_;
   moveit::planning_interface::MoveGroup * larmGroup_;
 
   std::vector<std::string> solidObjectsInScene_;
 
   //moveit::planning_interface::PlanningSceneInterface planningSceneInf_;
-
-  TrajectoryClient * mlacClient_;
-  TrajectoryClient * mracClient_;
-  
-  MoveBaseClient * moveBaseClient_;
   
   RobotPose poseTrans_;
 
@@ -276,7 +276,7 @@ private:
   void doneHeadAction( const actionlib::SimpleClientGoalState & state,
                       const PointHeadResultConstPtr & result );
   void doneTorsoAction( const actionlib::SimpleClientGoalState & state,
-                       const SingleJointPositionResultConstPtr & result );
+                       const JointTrajectoryResultConstPtr & result );
 
   void doneMoveLArmAction( const actionlib::SimpleClientGoalState & state,
                           const JointTrajectoryResultConstPtr & result );
@@ -284,13 +284,19 @@ private:
                           const JointTrajectoryResultConstPtr & result );
   
   void doneLHandAction( const actionlib::SimpleClientGoalState & state,
-                          const Pr2HandCommandResultConstPtr & result );
+                          const JointTrajectoryResultConstPtr & result );
   void doneRHandAction( const actionlib::SimpleClientGoalState & state,
-                          const Pr2HandCommandResultConstPtr & result );
+                          const JointTrajectoryResultConstPtr & result );
+
+  void doneSpeakAction( const actionlib::SimpleClientGoalState & state,
+                              const TtsResultConstPtr & result );
 
   void doneNavgiateBodyAction( const actionlib::SimpleClientGoalState & state,
                               const MoveBaseResultConstPtr & result );
   
+  void moveLHandActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback );
+  void moveRHandActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback );
+
   void moveLArmActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback );
   void moveRArmActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback );
 
