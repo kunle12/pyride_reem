@@ -55,7 +55,7 @@ bool PyREEMServer::init()
     ERROR_MSG( "Unable to find any active robot camera.\n" );
   }
 
-  nodeStatusSub_ = hcNodeHandle_->subscribe( "pyride_pr2/node_status", 1, &PyREEMServer::nodeStatusCB, this );
+  nodeStatusSub_ = hcNodeHandle_->subscribe( "pyride_reem/node_status", 1, &PyREEMServer::nodeStatusCB, this );
 
   REEMProxyManager::instance()->initWithNodeHandle( hcNodeHandle_, useOptionNodes, useMoveIt );
   ServerDataProcessor::instance()->init( activeVideoDevices_, activeAudioDevices_ );
@@ -215,11 +215,11 @@ void PyREEMServer::notifySystemShutdown()
 /*! \typedef onNodeStatusUpdate( data )
  *  \memberof PyREEM.
  *  \brief Callback function invoked when an external ROS node dispatch status update message
- *   to PyRIDE on pyride_pr2/node_status topic.
+ *   to PyRIDE on pyride_reem/node_status topic.
  *  \param dictionary data. node status message in the format of {'node', 'timestamp', 'priority', 'message' }.
  *  \return None.
  */
-void PyREEMServer::nodeStatusCB( const pyride_pr2::NodeStatusConstPtr & msg )
+void PyREEMServer::nodeStatusCB( const pyride_reem::NodeStatusConstPtr & msg )
 {
   if (msg->for_console) { // reformat the string using colon separated format and pass directly to console
     stringstream ss;

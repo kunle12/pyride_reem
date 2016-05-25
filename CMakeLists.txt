@@ -14,10 +14,11 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_msgs
   moveit_ros_planning_interface
   control_msgs
-  pal_navigation_msgs
   roscpp
   sensor_msgs
   pal_interaction_msgs
+  pal_navigation_msgs
+  diagnostic_msgs
   std_msgs
   tf
   topic_tools
@@ -89,7 +90,7 @@ catkin_package(
 ###########
 ## Build ##
 ###########
-add_definitions(-DROS_BUILD -DUSE_ENCRYPTION)
+add_definitions(-DROS_BUILD -DUSE_ENCRYPTION -DDEFINED_ENCRYPTION_KEY)
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations

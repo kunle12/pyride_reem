@@ -21,18 +21,18 @@ namespace pyride {
 
 static const float kMaxWalkSpeed = 1.0;
 static const float kYawRate = 0.7;  // ~ 45 degree
-static const float kTorsoMoveRate = 0.05; // 5cm/s
 static const float kHeadYawRate = 1.5;
 static const float kHeadPitchRate = 1.5;
-static const float kHeadPosTolerance = 0.002; // ~0.1 degree
 static const float kMotionCommandGapTolerance = 1.2 / (float)kMotionCommandFreq;
 static const double kDT = 1.0/double( kPublishFreq );
 static const double kHorizon = 5.0 * kDT;
-static const double kMaxHeadTilt = 1.4;
-static const double kMinHeadTilt = -0.4;
-static const double kMaxHeadPan = 2.7;
-static const double kMaxTorsoHeight = 1.06; // w.r.t. base_link frame
-static const double kMinTorsoHeight = 0.75;
+
+static const double kMaxHeadTilt = 0.78;
+static const double kMinHeadTilt = -0.26;
+static const double kMaxHeadPan = 1.3;
+static const double kMaxTorsoTilt = 0.61;
+static const double kMinTorsoTilt = -0.26;
+static const double kMaxTorsoPan = 1.3;
 
 static const char *kREEMTFFrameList[] = { "map", "odom", "base_footprint", "base_link",
   "torso_1_link", "torso_2_link", "head_sonar_16_link", "head_1_link", "head_2_link",
@@ -86,7 +86,7 @@ REEMProxyManager::REEMProxyManager() :
   bodyCtrlWithOdmetry_( false ),
   bodyCtrlWithNavigation_( false ),
   torsoCtrl_( false ),
-  headCtrlWithOdmetry_( false ),
+  headCtrlWithTrajActionClient_( false ),
   headCtrlWithActionClient_( false ),
   lHandCtrl_( false ),
   rHandCtrl_( false ),
@@ -98,6 +98,7 @@ REEMProxyManager::REEMProxyManager() :
   rHandActionTimeout_( 20 ),
   bodyActionTimeout_( 100 ),
   soundClient_( NULL ),
+  headClient_( NULL ),
   torsoClient_( NULL ),
   phClient_( NULL ),
   lhandClient_( NULL ),
@@ -132,9 +133,8 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
 
   mPub_ = mCtrlNode_->advertise<geometry_msgs::Twist>( "cmd_vel", 1 );
   hPub_ = mCtrlNode_->advertise<trajectory_msgs::JointTrajectory>( "head_vel", 1 );
-  torsoPub_ = mCtrlNode_->advertise<trajectory_msgs::JointTrajectory>( "torso_vel", 1 );
 
-  powerSub_ = mCtrlNode_->subscribe( "power_state", 1, &REEMProxyManager::powerStateDataCB, this );
+  powerSub_ = mCtrlNode_->subscribe( "pal_diagnostic_aggregator", 1, &REEMProxyManager::powerStateDataCB, this );
 
   ros::SubscribeOptions sopts = ros::SubscribeOptions::create<sensor_msgs::JointState>( "joint_states",
         1, boost::bind( &REEMProxyManager::jointStateDataCB, this, _1 ), ros::VoidPtr(), &jointDataQueue_ );
@@ -179,7 +179,20 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
     phClient_ = NULL;
   }
 
-  int trials = 0;
+  trials = 0;
+  headClient_ = new TrajectoryClient( "head_controller/command", true );
+
+  while (!headClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
+    ROS_INFO( "Waiting for the head action server to come up." );
+    trials++;
+  }
+  if (!headClient_->isServerConnected()) {
+    ROS_INFO( "Head action server is down." );
+    delete headClient_;
+    headClient_ = NULL;
+  }
+
+  trials = 0;
   soundClient_ = new TTSClient( "/tts", true );
   while (!soundClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for the TTS action server to come up." );
@@ -192,7 +205,7 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   }
 
   trials = 0;
-  torsoClient_ = new TrajectoryClient( "torso_controller/follow_joint_trajectory", true );
+  torsoClient_ = new TrajectoryClient( "torso_controller/command", true );
   
   while (!torsoClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for the torso action server to come up." );
@@ -293,7 +306,8 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   }
 doneInit:
   this->getHeadPos( reqHeadYaw_, reqHeadPitch_ );
-  
+  this->getTorsoPos( reqTorsoYaw_, reqTorsoPitch_ );
+
   ROS_INFO( "REEM PyRIDE is fully initialised." );
 }
 
@@ -314,6 +328,10 @@ void REEMProxyManager::fini()
   if (phClient_) {
     delete phClient_;
     phClient_ = NULL;
+  }
+  if (headClient_) {
+    delete headClient_;
+    headClient_ = NULL;
   }
   if (lhandClient_) {
     delete lhandClient_;
@@ -404,6 +422,25 @@ void REEMProxyManager::doneHeadAction( const actionlib::SimpleClientGoalState & 
   ROS_INFO("Head action finished in state [%s]", state.toString().c_str());
 }
 
+void REEMProxyManager::doneHeadTrajAction( const actionlib::SimpleClientGoalState & state,
+            const JointTrajectoryResultConstPtr & result )
+{
+  headCtrlWithTrajActionClient_ = false;
+
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
+    PyREEMModule::instance()->invokeCallback( "onHeadActionSuccess", NULL );
+  }
+  else {
+    PyREEMModule::instance()->invokeCallback( "onHeadActionFailed", NULL );
+  }
+  PyGILState_Release( gstate );
+
+  ROS_INFO("Head traj action finished in state [%s]", state.toString().c_str());
+}
+
 /*! \typedef onMoveArmActionSuccess(is_left_arm)
  *  \memberof PyREEM.
  *  \brief Callback function when PyREEM.moveArmWithJointPos or PyREEM.moveArmWithJointTrajectory method call is successful.
@@ -464,12 +501,12 @@ void REEMProxyManager::doneMoveRArmAction( const actionlib::SimpleClientGoalStat
 
 /*! \typedef onMoveTorsoSuccess()
  *  \memberof PyREEM.
- *  \brief Callback function when PyREEM.moveTorsoBy method call is successful.
+ *  \brief Callback function when PyREEM.moveTorso method call is successful.
  *  \return None.
  */
 /*! \typedef onMoveTorsoFailed()
  *  \memberof PyREEM.
- *  \brief Callback function when PyREEM.moveTorsoBy method call is failed.
+ *  \brief Callback function when PyREEM.moveTorso method call is failed.
  *  \return None.
  */
 void REEMProxyManager::doneTorsoAction( const actionlib::SimpleClientGoalState & state,
@@ -686,7 +723,6 @@ void REEMProxyManager::doneSpeakAction( const actionlib::SimpleClientGoalState &
   else {
 	PyREEMModule::instance()->invokeCallback( "onSpeakFailed", NULL );
   }
-  Py_DECREF( arg );
 
   PyGILState_Release( gstate );
 
@@ -698,13 +734,15 @@ void REEMProxyManager::sayWithVolume( const std::string & text, float volume, bo
   if (!soundClient_)
 	return;
 
-  pal_interaction_msgs::TtsActionGoal goal;
+  pal_interaction_msgs::TtsGoal goal;
 
-  goal.text = text;
+  goal.rawtext.text = text;
+  goal.rawtext.lang_id = "en_GB";
+
   soundClient_->sendGoal( goal,
                         boost::bind( &REEMProxyManager::doneSpeakAction, this, _1, _2 ),
                         TTSClient::SimpleActiveCallback(),
-                        boost::bind( &TTSClient::SimpleFeedbackCallback(), this, _1 ) );
+                        TTSClient::SimpleFeedbackCallback() );
 }
 
 void REEMProxyManager::setAudioVolume( const float vol )
@@ -1078,11 +1116,11 @@ bool REEMProxyManager::getHeadPos( double & yaw, double & pitch )
 
   boost::mutex::scoped_lock lock( joint_mutex_ );
   for (size_t i = 0; i < curJointNames_.size(); i++) {
-    if (curJointNames_.at( i ).compare( "head_pan_joint" ) == 0) {
+    if (curJointNames_.at( i ).compare( "head_1_joint" ) == 0) {
       yaw = curJointPositions_.at( i );
       resCnt++;
     }
-    else if (curJointNames_.at( i ).compare( "head_tilt_joint" ) == 0) {
+    else if (curJointNames_.at( i ).compare( "head_2_joint" ) == 0) {
       pitch = curJointPositions_.at( i );
       resCnt++;
     }
@@ -1092,7 +1130,29 @@ bool REEMProxyManager::getHeadPos( double & yaw, double & pitch )
   }
   return false;
 }
-  
+
+bool REEMProxyManager::getTorsoPos( double & yaw, double & pitch )
+{
+  yaw = pitch = 0.0;
+  int resCnt = 0;
+
+  boost::mutex::scoped_lock lock( joint_mutex_ );
+  for (size_t i = 0; i < curJointNames_.size(); i++) {
+    if (curJointNames_.at( i ).compare( "torso_1_joint" ) == 0) {
+      yaw = curJointPositions_.at( i );
+      resCnt++;
+    }
+    else if (curJointNames_.at( i ).compare( "torso_2_joint" ) == 0) {
+      pitch = curJointPositions_.at( i );
+      resCnt++;
+    }
+    if (resCnt == 2) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool REEMProxyManager::getPositionForJoints( std::vector<std::string> & joint_names, std::vector<double> & positions )
 {
   positions.clear();
@@ -1214,7 +1274,7 @@ void REEMProxyManager::deregisterForTiltScanData()
 
 bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative )
 {
-  if (headCtrlWithActionClient_ || headCtrlWithOdmetry_)
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || !headClient_)
     return false;
   
   double newYaw, newPitch;
@@ -1236,26 +1296,37 @@ bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative )
     newPitch = kMaxHeadTilt;
   }
 
-  headYawRate_ = clamp( newYaw - reqHeadYaw_, kHeadYawRate );
-  headPitchRate_ = clamp( newPitch - reqHeadPitch_, kHeadPitchRate );
+  control_msgs::JointTrajectoryGoal goal;
 
-  if (fabs(headYawRate_) < kHeadPosTolerance)
-    headYawRate_ = 0.0;
-  if (fabs(headPitchRate_) < kHeadPosTolerance)
-    headPitchRate_ = 0.0;
-  //ROS_INFO( "tyaw, tpitch = %f, %f", targetYaw_, targetPitch_ );
-  headCtrlWithOdmetry_ = (headYawRate_ != 0.0 || headPitchRate_ != 0.0);
-  if (headCtrlWithOdmetry_) {
-    targetYaw_ = newYaw;
-    targetPitch_ = newPitch;
-    hcwoTimeToComplete_ = ros::Time::now() + ros::Duration( 2.5 );
-  }
+  goal.trajectory.joint_names.push_back( "head_1_joint" );
+  goal.trajectory.joint_names.push_back( "head_2_joint" );
+
+  goal.trajectory.points.resize( 1 );
+
+  goal.trajectory.points[0].positions.resize( 2 );
+    // Velocities
+  goal.trajectory.points[0].velocities.resize( 2 );
+
+  goal.trajectory.points[0].positions[0] = newYaw;
+  goal.trajectory.points[0].velocities[0] = 0.0;
+  goal.trajectory.points[1].positions[1] = newPitch;
+  goal.trajectory.points[1].velocities[1] = 0.0;
+  // To be reached 2 seconds after starting along the trajectory
+  //goal.trajectory.points[0].time_from_start = ros::Duration( time_to_reach );
+
+  headCtrlWithTrajActionClient_ = true;
+
+  headClient_->sendGoal( goal,
+                          boost::bind( &REEMProxyManager::doneHeadTrajAction, this, _1, _2 ),
+                          TrajectoryClient::SimpleActiveCallback(),
+                          TrajectoryClient::SimpleFeedbackCallback() );
+
   return true;
 }
 
 bool REEMProxyManager::pointHeadTo( const std::string & frame, float x, float y, float z )
 {
-  if (headCtrlWithActionClient_ || headCtrlWithOdmetry_)
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_)
     return false;
 
   tf::StampedTransform transform;
@@ -1274,7 +1345,7 @@ bool REEMProxyManager::pointHeadTo( const std::string & frame, float x, float y,
   
   //we are pointing the high-def camera frame
   //(pointing_axis defaults to X-axis)
-  goal.pointing_frame = "wide_stereo_link";
+  goal.pointing_frame = "stereo_optical_frame";
  
   goal.pointing_axis.x = 1;
   goal.pointing_axis.y = 0;
@@ -1626,21 +1697,22 @@ void REEMProxyManager::cancelBodyMovement()
   bodyCtrlWithOdmetry_ = false;
 }
   
-bool REEMProxyManager::setHandPosition( bool isLeftHand, double position )
+bool REEMProxyManager::setHandPosition( bool isLeftHand, std::vector<double> & positions, float time_to_reach )
 {
-  if (position > 0.08 || position < 0.0 )
-    return false;
+  if (positions.size() != 3) {
+	return false;
+  }
 
   control_msgs::JointTrajectoryGoal goal;
 
   // First, the joint names, which apply to all waypoints
   if (isLeftHand) {
     if (!lhandClient_) {
-      return;
+      return false;
     }
     if (lHandCtrl_) {
       ROS_WARN( "Left hand is in motion." );
-      return;
+      return false;
     }
     goal.trajectory.joint_names.push_back( "hand_left_index_joint" );
     goal.trajectory.joint_names.push_back( "hand_left_middle_joint" );
@@ -1649,11 +1721,11 @@ bool REEMProxyManager::setHandPosition( bool isLeftHand, double position )
   }
   else {
     if (!rhandClient_) {
-      return;
+      return false;
     }
     if (rHandCtrl_) {
       ROS_WARN( "Right hand is in motion." );
-      return;
+      return false;
     }
     goal.trajectory.joint_names.push_back( "hand_right_index_joint" );
     goal.trajectory.joint_names.push_back( "hand_right_middle_joint" );
@@ -1663,18 +1735,18 @@ bool REEMProxyManager::setHandPosition( bool isLeftHand, double position )
 
   goal.trajectory.points.resize( 1 );
 
-  goal.trajectory.points[0].positions.resize( 7 );
+  goal.trajectory.points[0].positions.resize( 3 );
     // Velocities
-  goal.trajectory.points[0].velocities.resize( 7 );
+  goal.trajectory.points[0].velocities.resize( 3 );
 
-  for (size_t j = 0; j < 7; ++j) {
+  for (size_t j = 0; j < 3; ++j) {
     goal.trajectory.points[0].positions[j] = positions[j];
     goal.trajectory.points[0].velocities[j] = 0.0;
   }
   // To be reached 2 seconds after starting along the trajectory
   goal.trajectory.points[0].time_from_start = ros::Duration( time_to_reach );
 
-  if (isLeftArm) {
+  if (isLeftHand) {
     lHandActionTimeout_ = time_to_reach * 1.05; // give additional 5% allowance
     rhandClient_->sendGoal( goal,
                           boost::bind( &REEMProxyManager::doneLHandAction, this, _1, _2 ),
@@ -1760,7 +1832,7 @@ void REEMProxyManager::subscribeRawTrajInput( bool enable )
 
 void REEMProxyManager::updateHeadPose( float yaw, float pitch )
 {
-  if (headCtrlWithActionClient_ || headCtrlWithOdmetry_)
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_)
     return;
   
   headYawRate_ = clamp( yaw, kHeadYawRate );
@@ -1774,11 +1846,11 @@ bool REEMProxyManager::moveBodyTo( const RobotPose & pose, const float bestTime 
   if (bodyCtrlWithOdmetry_ || bodyCtrlWithNavigation_)
     return false;
   
-  tflistener_.waitForTransform( "base_footprint", "odom_combined",
+  tflistener_.waitForTransform( "base_footprint", "odom",
                                ros::Time(0), ros::Duration( 1.0 ) );
   
   //we will record transforms here
-  tflistener_.lookupTransform( "base_footprint", "odom_combined",
+  tflistener_.lookupTransform( "base_footprint", "odom",
                               ros::Time(0), startTransform_ );
   
   poseTrans_ = pose;
@@ -1835,40 +1907,54 @@ void REEMProxyManager::updateBodyPose( const RobotPose & speed, bool localupdate
   }
 }
 
-bool REEMProxyManager::moveBodyTorsoBy( const float rel_pos, const float bestTime )
+bool REEMProxyManager::moveTorsoTo( double yaw, double pitch, bool relative )
 {
   if (torsoCtrl_ || !torsoClient_)
     return false;
 
-  tf::StampedTransform curTransform;
+  double newYaw, newPitch;
+  this->getTorsoPos( reqTorsoYaw_, reqTorsoPitch_ );
 
-  try {
-    tflistener_.lookupTransform( "base_link", "torso_lift_link",
-                                ros::Time(0), curTransform );
+  if (relative) {
+    newYaw = clamp( reqTorsoYaw_ + yaw, kMaxTorsoPan );
+    newPitch = reqTorsoPitch_ + pitch;
   }
-  catch (tf::TransformException ex) {
-    ROS_ERROR( "%s",ex.what() );
-    return false;
+  else {
+    newYaw = clamp( yaw, kMaxTorsoPan );
+    newPitch = pitch;
   }
 
-  double torsoPos = curTransform.getOrigin().getZ() + rel_pos;
-  if (torsoPos > kMaxTorsoHeight || torsoPos < kMinTorsoHeight) {
-    return false;
+  if (newPitch < kMinTorsoTilt) {
+	newPitch = kMinTorsoTilt;
   }
-  double torso_speed = fabs(rel_pos / bestTime);
-  if (torso_speed > kTorsoMoveRate) {
-    return false;
+  else if (newPitch > kMaxTorsoTilt) {
+	newPitch = kMaxTorsoTilt;
   }
-  control_msgs::SingleJointPositionGoal torsoGoal;
-  torsoGoal.position = torsoPos - kMinTorsoHeight;
-  //up.min_duration = ros::Duration(2.0);
-  
-  torsoGoal.max_velocity = torso_speed;
-  torsoClient_->sendGoal( torsoGoal,
-                         boost::bind( &REEMProxyManager::doneTorsoAction, this, _1, _2 ),
-                         TrajectoryClient::SimpleActiveCallback(),
-                         TrajectoryClient::SimpleFeedbackCallback() );
+
+  control_msgs::JointTrajectoryGoal goal;
+
+  goal.trajectory.joint_names.push_back( "torso_1_joint" );
+  goal.trajectory.joint_names.push_back( "torso_2_joint" );
+
+  goal.trajectory.points.resize( 1 );
+
+  goal.trajectory.points[0].positions.resize( 2 );
+	// Velocities
+  goal.trajectory.points[0].velocities.resize( 2 );
+
+  goal.trajectory.points[0].positions[0] = newYaw;
+  goal.trajectory.points[0].velocities[0] = 0.0;
+  goal.trajectory.points[1].positions[1] = newPitch;
+  goal.trajectory.points[1].velocities[1] = 0.0;
+  // To be reached 2 seconds after starting along the trajectory
+  //goal.trajectory.points[0].time_from_start = ros::Duration( time_to_reach );
+
   torsoCtrl_ = true;
+
+  torsoClient_->sendGoal( goal,
+						  boost::bind( &REEMProxyManager::doneTorsoAction, this, _1, _2 ),
+						  TrajectoryClient::SimpleActiveCallback(),
+						  TrajectoryClient::SimpleFeedbackCallback() );
 
   return true;
 }
@@ -1894,42 +1980,55 @@ void REEMProxyManager::jointStateDataCB( const sensor_msgs::JointStateConstPtr &
  *  \return None.
  *  \note Require low power threshold to be greater than zero.
  */
-void REEMProxyManager::powerStateDataCB(const pr2_msgs::PowerStateConstPtr & msg )
+void REEMProxyManager::powerStateDataCB( const diagnostic_msgs::DiagnosticArrayConstPtr & msg )
 {
-  boost::mutex::scoped_lock lock( bat_mutex_ );
+  for (size_t i = 0; i < msg->status.size(); i++) {
+    if (msg->status[i].name.compare( "/Hardware/Battery" ) != 0)
+      continue;
 
-  bool charging = (msg->AC_present > 0);
-  int batpercent = msg->relative_capacity;
-  batTimeRemain_ = msg->time_remaining;
+    const diagnostic_msgs::DiagnosticStatus & batStatus = msg->status[i];
+    for (size_t j = 0; j < batStatus.values.size(); j++) {
+      if (batStatus.values[i].key.compare( "Battery Level" ) == 0) {
+    	boost::mutex::scoped_lock lock( bat_mutex_ );
 
-  if (lowPowerThreshold_ > 0) {
-    PyObject * arg = NULL;
-    if (charging != isCharging_) {
-      PyGILState_STATE gstate;
-      gstate = PyGILState_Ensure();
-      
-      arg = Py_BuildValue( "(O)", charging ? Py_True : Py_False );
-      
-      PyREEMModule::instance()->invokeCallback( "onPowerPluggedChange", arg );
-      Py_DECREF( arg );
-      
-      PyGILState_Release( gstate );
-    }
-    if (batpercent != batCapacity_) {
-      PyGILState_STATE gstate;
-      gstate = PyGILState_Ensure();
-      
-      arg = Py_BuildValue( "(iOO)", batpercent, charging ? Py_True : Py_False,
-                          (batpercent < lowPowerThreshold_ ? Py_True : Py_False) );
+    	//bool charging = (msg->AC_present > 0);
+    	bool charging = false;
+    	int batpercent = (int)strtof( batStatus.values[i].value.c_str(), NULL );
+    	//batTimeRemain_ = msg->time_remaining;
 
-      PyREEMModule::instance()->invokeCallback( "onBatteryChargeChange", arg );
-      Py_DECREF( arg );
-      
-      PyGILState_Release( gstate );
+    	if (lowPowerThreshold_ > 0) {
+    	  PyObject * arg = NULL;
+    	  /*
+    	  if (charging != isCharging_) {
+    	    PyGILState_STATE gstate;
+    	    gstate = PyGILState_Ensure();
+
+    	    arg = Py_BuildValue( "(O)", charging ? Py_True : Py_False );
+
+    	    PyREEMModule::instance()->invokeCallback( "onPowerPluggedChange", arg );
+    	    Py_DECREF( arg );
+
+    	    PyGILState_Release( gstate );
+    	  }
+    	  */
+    	  if (batpercent != batCapacity_) {
+    	    PyGILState_STATE gstate;
+    	    gstate = PyGILState_Ensure();
+
+    	    arg = Py_BuildValue( "(iOO)", batpercent, charging ? Py_True : Py_False,
+    	                          (batpercent < lowPowerThreshold_ ? Py_True : Py_False) );
+
+    	    PyREEMModule::instance()->invokeCallback( "onBatteryChargeChange", arg );
+    	    Py_DECREF( arg );
+
+    	    PyGILState_Release( gstate );
+    	  }
+    	}
+    	isCharging_ = charging;
+    	batCapacity_ = batpercent;
+      }
     }
   }
-  isCharging_ = charging;
-  batCapacity_ = batpercent;
 }
 
 void REEMProxyManager::setLowPowerThreshold( int percent )
@@ -1965,7 +2064,7 @@ void REEMProxyManager::publishCommands()
     tf::StampedTransform curTransform;
     
     try {
-      tflistener_.lookupTransform( "base_footprint", "odom_combined",
+      tflistener_.lookupTransform( "base_footprint", "odom",
                                 ros::Time(0), curTransform );
     }
     catch (tf::TransformException ex) {
@@ -2065,100 +2164,8 @@ void REEMProxyManager::publishCommands()
     }
   }
   
-  if (headCtrlWithActionClient_) {
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_) {
     return;
-  }
-  else if (headCtrlWithOdmetry_) {
-
-    //this->getHeadPos( reqHeadYaw_, reqHeadPitch_ ); // get the latest data
-
-    if (headYawRate_ > 0.0) {
-      if (reqHeadYaw_ >= targetYaw_) {
-        headYawRate_ = 0.0;
-      }
-      else if ((targetYaw_ - reqHeadYaw_) < headYawRate_) {
-        headYawRate_ = (targetYaw_ - reqHeadYaw_);
-      }
-    }
-    else if (headYawRate_ < 0.0) {
-      if (reqHeadYaw_ <= targetYaw_) {
-        headYawRate_ = 0.0;
-      }
-      else if ((targetYaw_ - reqHeadYaw_) > headYawRate_) {
-        headYawRate_ = (targetYaw_ - reqHeadYaw_);
-      }
-    }
-    if (headPitchRate_ > 0.0) {
-      if (reqHeadPitch_ >= targetPitch_) {
-        headPitchRate_ = 0.0;
-      }
-      else if ((targetPitch_ - reqHeadPitch_) < headPitchRate_) {
-        headPitchRate_ = (targetPitch_ - reqHeadPitch_);
-      }
-    }
-    else if (headPitchRate_ < 0.0) {
-      if (reqHeadPitch_ <= targetPitch_) {
-        headPitchRate_ = 0.0;
-      }
-      else if ((targetPitch_ - reqHeadPitch_) > headYawRate_) {
-        headPitchRate_ = (targetPitch_ - reqHeadPitch_);
-      }
-    }
-
-    if (fabs(headYawRate_) < kHeadPosTolerance) {
-      headYawRate_ = 0.0;
-    }
-    if (fabs(headPitchRate_) < kHeadPosTolerance) {
-      headPitchRate_ = 0.0;
-    }
-
-    //printf( "corrected head move rate %f,%f\n", headYawRate_, headPitchRate_);
-    headCtrlWithOdmetry_ = (headYawRate_ != 0.0 || headPitchRate_ != 0.0);
-    
-    if (headCtrlWithOdmetry_) {
-      /*
-      if (this->isHeadControlWithOdometryTimeExpired()) {
-        headCtrlWithOdmetry_ = false;
-        headYawRate_ = headPitchRate_ = 0.0;
-        PyGILState_STATE gstate;
-        gstate = PyGILState_Ensure();
-
-        PyREEMModule::instance()->invokeCallback( "onMoveHeadFailed", NULL );
-
-        PyGILState_Release( gstate );
-
-        ROS_INFO( "Move head action failed." );
-        return;
-      }
-      */
-      trajectory_msgs::JointTrajectory traj;
-      traj.header.stamp = ros::Time::now() + ros::Duration(0.01);
-      traj.joint_names.push_back( "head_pan_joint" );
-      traj.joint_names.push_back( "head_tilt_joint" );
-      traj.points.resize(1);
-
-      traj.points[0].positions.push_back( reqHeadYaw_ + headYawRate_ * kHorizon );
-      traj.points[0].velocities.push_back( headYawRate_ );
-      traj.points[0].positions.push_back( reqHeadPitch_ + headPitchRate_ * kHorizon );
-      traj.points[0].velocities.push_back( headPitchRate_ );
-      traj.points[0].time_from_start = ros::Duration( kHorizon );
-      
-      // Updates the current positions
-      reqHeadYaw_ += headYawRate_ * kDT;
-      reqHeadPitch_ += headPitchRate_ * kDT;
-
-      hPub_.publish( traj );
-    }
-    else {
-      PyGILState_STATE gstate;
-      gstate = PyGILState_Ensure();
-
-      PyREEMModule::instance()->invokeCallback( "onMoveHeadSuccess", NULL );
-
-      PyGILState_Release( gstate );
-
-      ROS_INFO( "Move head action is finished." );
-    }
   }
   else if (headYawRate_ != 0.0 || headPitchRate_ != 0.0) {
     if ((ros::Time::now() - cmdTimeStamp_).toSec() < kMotionCommandGapTolerance) {
@@ -2183,15 +2190,10 @@ void REEMProxyManager::publishCommands()
     }
   }
 }
-  
+
 bool REEMProxyManager::isBodyControlWithOdometryTimeExpired()
 {
   return (ros::Time::now() >= bcwoTimeToComplete_);
-}
-
-bool REEMProxyManager::isHeadControlWithOdometryTimeExpired()
-{
-  return (ros::Time::now() >= hcwoTimeToComplete_);
 }
 
 void REEMProxyManager::getTFFrameList( std::vector<std::string> & list )

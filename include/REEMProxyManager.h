@@ -15,12 +15,13 @@
 
 #include <actionlib/client/simple_action_client.h>
 
-#include <pr2_msgs/PowerState.h>
 #include <control_msgs/PointHeadAction.h>
 //#include <control_msgs/FollowJointTrajectoryAction.h>
 #include <control_msgs/JointTrajectoryControllerState.h>
 #include <control_msgs/JointTrajectoryAction.h>
 
+#include <diagnostic_msgs/DiagnosticArray.h>
+#include <pal_interaction_msgs/TtsAction.h>
 #include <move_base_msgs/MoveBaseAction.h>
 
 #include <sensor_msgs/JointState.h>
@@ -59,13 +60,13 @@
 using namespace std;
 using namespace ros;
 using namespace control_msgs;
+using namespace pal_interaction_msgs;
 using namespace move_base_msgs;
 
 namespace pyride {
 
 typedef actionlib::SimpleActionClient<pal_interaction_msgs::TtsAction> TTSClient;
 typedef actionlib::SimpleActionClient<control_msgs::PointHeadAction> PointHeadClient;
-typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> FollowJointTrajectoryClient;
 typedef actionlib::SimpleActionClient<control_msgs::JointTrajectoryAction> TrajectoryClient;
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
   
@@ -85,6 +86,8 @@ public:
   bool getJointPos( const char * joint_name, double & value );
 
   bool getHeadPos( double & yaw, double & pitch );
+  bool getTorsoPos( double & yaw, double & pitch );
+
   bool getRobotPose( std::vector<double> & positions,
                     std::vector<double> & orientation );
   bool getRelativeTF( const char * frame1,
@@ -123,10 +126,11 @@ public:
   bool placeObject( const std::string & name, const std::string & place, std::vector<double> & place_pose,
       bool isLeftArm = false, double approach_dist = 0.4 );
 
-  bool setHandPosition( int whichgripper, double position );
+  bool setHandPosition( bool isLeftHand, std::vector<double> & positions, float time_to_reach );
 
   bool moveBodyTo( const RobotPose & pose, const float bestTime );
-  bool moveBodyTorsoBy( const float rel_pos, const float bestTime );
+
+  bool moveTorsoTo( double yaw, double pitch, bool relative = false );
 
   void updateBodyPose( const RobotPose & pose, bool localupdate = false );
   
@@ -166,7 +170,6 @@ public:
 private:
   NodeHandle * mCtrlNode_;
   Publisher mPub_;
-  Publisher torsoPub_;
   Publisher hPub_;
   Publisher colObjPub_;
   Subscriber jointSub_;
@@ -210,7 +213,7 @@ private:
   bool bodyCtrlWithOdmetry_;
   bool bodyCtrlWithNavigation_;
   bool torsoCtrl_;
-  bool headCtrlWithOdmetry_;
+  bool headCtrlWithTrajActionClient_;
   bool headCtrlWithActionClient_;
   bool lHandCtrl_;
   bool rHandCtrl_;
@@ -232,6 +235,7 @@ private:
   tf::TransformListener tflistener_;
   tf::StampedTransform startTransform_;
   
+  TrajectoryClient * headClient_;
   TrajectoryClient * torsoClient_;
   TrajectoryClient * lhandClient_;
   TrajectoryClient * rhandClient_;
@@ -252,11 +256,11 @@ private:
 
   ros::Time cmdTimeStamp_;
   ros::Time bcwoTimeToComplete_; // time to complete bodyCtrlWithOdmetry_
-  ros::Time hcwoTimeToComplete_; // time to complete headCtrlWithOdmetry_
 
   geometry_msgs::Twist mCmd_;
   double headYawRate_, headPitchRate_;
   double reqHeadYaw_, reqHeadPitch_;
+  double reqTorsoYaw_, reqTorsoPitch_;
   double targetYaw_, targetPitch_;
   
   // power state
@@ -275,6 +279,9 @@ private:
   
   void doneHeadAction( const actionlib::SimpleClientGoalState & state,
                       const PointHeadResultConstPtr & result );
+  void doneHeadTrajAction( const actionlib::SimpleClientGoalState & state,
+                       const JointTrajectoryResultConstPtr & result );
+
   void doneTorsoAction( const actionlib::SimpleClientGoalState & state,
                        const JointTrajectoryResultConstPtr & result );
 
@@ -301,7 +308,7 @@ private:
   void moveRArmActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback );
 
   void jointStateDataCB( const sensor_msgs::JointStateConstPtr & msg );
-  void powerStateDataCB( const pr2_msgs::PowerStateConstPtr & msg );
+  void powerStateDataCB( const diagnostic_msgs::DiagnosticArrayConstPtr & msg );
   void baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg );
   void tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg );
 

@@ -267,27 +267,39 @@ static PyObject * PyModule_REEMUseMoveIt( PyObject * self )
     Py_RETURN_FALSE;
 }
 
-/*! \fn moveTorsoBy(length, best_time)
+/*! \fn moveTorsoTo(length, best_time)
  *  \memberof PyREEM
- *  \brief Move the REEM torso height by a certain length.
- *  \param float length. The relative change in torso height.
- *  \param float best_time. Optional, ask the robot try its best to reach the input pose in this timeframe.
+ *  \brief Move the REEM torso to a specific yaw and pitch position.
+ *  \param float head_yaw. Must be in radian.
+ *  \param float head_pitch. Must be in radian.
+ *  \param bool relative. True == relative angle values; False == absolute angle values. Optional, default is False.
  *  \return bool. True == valid command; False == invalid command.
  */
-static PyObject * PyModule_REEMMoveTorsoBy( PyObject * self, PyObject * args )
+static PyObject * PyModule_REEMMoveTorsoTo( PyObject * self, PyObject * args )
 {
-  float length = 0.0;
-  float bestTime = 5.0; //seconds
+  double yaw = 0.0;
+  double pitch = 0.0;
+  PyObject * boolObj = NULL;
+  bool isRelative = false;
   
-  if (!PyArg_ParseTuple( args, "f|f", &length, &bestTime )) {
-    // PyArg_ParseTuple will set the error status.
-    return NULL;
+  if (!PyArg_ParseTuple( args, "dd|O", &yaw, &pitch, &boolObj )) {
+	// PyArg_ParseTuple will set the error status.
+	return NULL;
   }
-  
-  if (REEMProxyManager::instance()->moveBodyTorsoBy( length, bestTime ))
-    Py_RETURN_TRUE;
+
+  if (boolObj) {
+	if (PyBool_Check( boolObj )) {
+	  isRelative = PyObject_IsTrue( boolObj );
+	}
+	else {
+	  PyErr_Format( PyExc_ValueError, "PyREEM.moveTorsoTo: last input parameter must be a boolean." );
+	  return NULL;
+	}
+  }
+  if (REEMProxyManager::instance()->moveTorsoTo( yaw, pitch, isRelative ))
+	Py_RETURN_TRUE;
   else
-    Py_RETURN_FALSE;
+	Py_RETURN_FALSE;
 }
 
 /*! \fn moveBodyTo(x,y,theta,best_time)
@@ -358,7 +370,6 @@ static PyObject * PyModule_REEMMoveBodyWithSpeed( PyObject * self, PyObject * ar
  *  \param float head_pitch. Must be in radian.
  *  \param bool relative. True == relative angle values; False == absolute angle values. Optional, default is False.
  *  \return bool. True == valid command; False == invalid command.
- *  \todo This function has not been fully tested on REEM and is still buggy.
  */
 static PyObject * PyModule_REEMMoveHeadTo( PyObject * self, PyObject * args )
 {
@@ -1081,11 +1092,14 @@ static PyObject * PyModule_REEMOpenHand( PyObject * self, PyObject * args )
     PyErr_Format( PyExc_ValueError, "PyREEM.openHand: invalid gripper number! 1 = left gripper, 2 = right gripper and 3 = both grippers." );
     return NULL;
   }
-    
+
+  /* TODO: fix with hand traj
   if (REEMProxyManager::instance()->setHandPosition( mode, 0.08 ))
     Py_RETURN_TRUE;
   else
     Py_RETURN_FALSE;
+  */
+  Py_RETURN_TRUE;
 }
 
 /*! \fn closeHand(which_gripper)
@@ -1107,10 +1121,13 @@ static PyObject * PyModule_REEMCloseHand( PyObject * self, PyObject * args )
     return NULL;
   }
   
+  /* TODO: to be fixed
   if (REEMProxyManager::instance()->setHandPosition( mode, 0.0 ))
     Py_RETURN_TRUE;
   else
     Py_RETURN_FALSE;
+  */
+  Py_RETURN_TRUE;
 }
 
 /*! \fn setHandPosition(which_gripper, position)
@@ -1122,6 +1139,7 @@ static PyObject * PyModule_REEMCloseHand( PyObject * self, PyObject * args )
  */
 static PyObject * PyModule_REEMSetHandPosition( PyObject * self, PyObject * args )
 {
+/*
   int mode = 0;
   double value = 0.0;
   
@@ -1144,6 +1162,8 @@ static PyObject * PyModule_REEMSetHandPosition( PyObject * self, PyObject * args
     Py_RETURN_TRUE;
   else
     Py_RETURN_FALSE;
+  */
+  Py_RETURN_TRUE;
 }
 
 /*! \fn registerBaseScanCallback( callback_function, target_frame )
@@ -1603,8 +1623,8 @@ static PyMethodDef PyModule_methods[] = {
     "Navigate REEM base to a new pose." },
   { "cancelMoveBodyAction", (PyCFunction)PyModule_REEMCancelMoveBodyAction, METH_NOARGS,
     "Cancel the active move body actions." },
-  { "moveTorsoBy", (PyCFunction)PyModule_REEMMoveTorsoBy, METH_VARARGS,
-    "Move REEM torso up or down." },
+  { "moveTorsoTo", (PyCFunction)PyModule_REEMMoveTorsoTo, METH_VARARGS,
+    "Move REEM torso joints." },
   { "moveArmPoseTo", (PyCFunction)PyModule_REEMMoveArmPoseTo, METH_VARARGS|METH_KEYWORDS,
     "Move one of REEM arms end point pose to a coordinate wrt torso." },
   { "moveArmWithJointPos", (PyCFunction)PyModule_REEMMoveArmWithJointPos, METH_VARARGS|METH_KEYWORDS,

@@ -21,7 +21,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <ros/ros.h>
-#include <pyride_pr2/NodeStatus.h>
+#include <pyride_reem/NodeStatus.h>
 
 #include "ServerDataProcessor.h"
 
@@ -38,7 +38,7 @@ public:
   
   void continueProcessing();
   
-  void nodeStatusCB( const pyride_pr2::NodeStatusConstPtr & msg );
+  void nodeStatusCB( const pyride_reem::NodeStatusConstPtr & msg );
 
   void stopProcess();
 
