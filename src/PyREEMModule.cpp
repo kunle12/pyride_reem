@@ -168,13 +168,13 @@ static PyObject * PyModule_REEMSayWithVolume( PyObject * self, PyObject * args )
  */
 static PyObject * PyModule_REEMGetBatteryStatus( PyObject * self )
 {
-  int batpercent = 0;
+  float batpercent = 0;
   bool isplugged = false;
   float time_remain = 0.0;
   
   REEMProxyManager::instance()->getBatteryStatus( batpercent, isplugged, time_remain );
   
-  return Py_BuildValue( "(isf)", batpercent, isplugged ? "plugged in" :
+  return Py_BuildValue( "(fsf)", batpercent, isplugged ? "plugged in" :
                        "unplugged", time_remain );
 }
 
@@ -551,22 +551,22 @@ static PyObject * PyModule_REEMGetArmJointPositions( PyObject * self, PyObject *
   std::vector<double> positions;
 
   if (PyObject_IsTrue( armsel )) {
-    joints[0] = "l_shoulder_pan_joint";
-    joints[1] = "l_shoulder_lift_joint";
-    joints[2] = "l_upper_arm_roll_joint";
-    joints[3] = "l_elbow_flex_joint";
-    joints[4] = "l_forearm_roll_joint";
-    joints[5] = "l_wrist_flex_joint";
-    joints[6] = "l_wrist_roll_joint";
+    joints[0] = "arm_left_1_joint";
+    joints[1] = "arm_left_2_joint";
+    joints[2] = "arm_left_3_joint";
+    joints[3] = "arm_left_4_joint";
+    joints[4] = "arm_left_5_joint";
+    joints[5] = "arm_left_6_joint";
+    joints[6] = "arm_left_7_joint";
   }
   else {
-    joints[0] = "r_shoulder_pan_joint";
-    joints[1] = "r_shoulder_lift_joint";
-    joints[2] = "r_upper_arm_roll_joint";
-    joints[3] = "r_elbow_flex_joint";
-    joints[4] = "r_forearm_roll_joint";
-    joints[5] = "r_wrist_flex_joint";
-    joints[6] = "r_wrist_roll_joint";
+    joints[0] = "arm_right_1_joint";
+    joints[1] = "arm_right_2_joint";
+    joints[2] = "arm_right_3_joint";
+    joints[3] = "arm_right_4_joint";
+    joints[4] = "arm_right_5_joint";
+    joints[5] = "arm_right_6_joint";
+    joints[6] = "arm_right_7_joint";
   }
 
   if (REEMProxyManager::instance()->getPositionForJoints( joints, positions )) {

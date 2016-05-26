@@ -6,7 +6,7 @@ import constants
 import time
 import PyREEM
 
-RECORDED_DATA_DIR = '/removable/recordings'
+RECORDED_DATA_DIR = '/home/pal/recordings'
 
 class ProcConduit:
   def __init__( self ):

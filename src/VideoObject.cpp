@@ -61,8 +61,9 @@ bool VideoObject::initWorkerThread()
               devInfo_.deviceLabel.c_str() );
     return false;
   }
-  imgSub_ = imgTrans_.subscribe( devInfo_.deviceID, 1,
-                                  &VideoObject::continueProcessing, this );
+  image_transport::TransportHints hints( "compressed" );
+  imgSub_ = imgTrans_.subscribe( devInfo_.deviceID, 1, &VideoObject::continueProcessing, this,
+		  hints );
   
   streaming_data_thread_ = new boost::thread( &VideoObject::doImageStreaming, this );
 

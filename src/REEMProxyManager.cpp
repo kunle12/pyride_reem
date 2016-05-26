@@ -109,7 +109,7 @@ REEMProxyManager::REEMProxyManager() :
   mracClient_( NULL ),
   moveBaseClient_( NULL ),
   isCharging_( true ),
-  batCapacity_( 100 ),
+  batCapacity_( 100.0 ),
   lowPowerThreshold_( 0 ), // # no active power monitoring
   batTimeRemain_( Duration( 1.0 ) )
 {
@@ -168,8 +168,8 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   targetYaw_ = targetPitch_ = 0.0;
   
   int trials = 0;
-  phClient_ = new PointHeadClient( "/head_controller/point_head_action", true );
-  while (!phClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
+  phClient_ = new PointHeadClient( "head_controller/point_head_action", true );
+  while (!phClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for the point head action server to come up." );
     trials++;
   }
@@ -180,9 +180,9 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   }
 
   trials = 0;
-  headClient_ = new TrajectoryClient( "head_controller/command", true );
+  headClient_ = new FollowTrajectoryClient( "head_controller/follow_joint_trajectory", true );
 
-  while (!headClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
+  while (!headClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for the head action server to come up." );
     trials++;
   }
@@ -194,7 +194,7 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
 
   trials = 0;
   soundClient_ = new TTSClient( "/tts", true );
-  while (!soundClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
+  while (!soundClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for the TTS action server to come up." );
     trials++;
   }
@@ -205,9 +205,9 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   }
 
   trials = 0;
-  torsoClient_ = new TrajectoryClient( "torso_controller/command", true );
+  torsoClient_ = new FollowTrajectoryClient( "torso_controller/follow_joint_trajectory", true );
   
-  while (!torsoClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
+  while (!torsoClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for the torso action server to come up." );
     trials++;
   }
@@ -218,8 +218,8 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   }
 
   trials = 0;
-  lhandClient_ = new TrajectoryClient( "left_hand_controller/command", true );
-  while (!lhandClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
+  lhandClient_ = new FollowTrajectoryClient( "left_hand_controller/follow_joint_trajectory", true );
+  while (!lhandClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for left hand action server to come up." );
     trials++;
   }
@@ -230,8 +230,8 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   }
   
   trials = 0;
-  rhandClient_ = new TrajectoryClient( "right_hand_controller/command", true );
-  while (!rhandClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
+  rhandClient_ = new FollowTrajectoryClient( "right_hand_controller/follow_joint_trajectory", true );
+  while (!rhandClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for right hand action server to come up." );
     trials++;
   }
@@ -242,8 +242,8 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   }
 
   trials = 0;
-  mlacClient_ = new TrajectoryClient( "left_arm_controller/command", true );
-  while (!mlacClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
+  mlacClient_ = new FollowTrajectoryClient( "left_arm_controller/follow_joint_trajectory", true );
+  while (!mlacClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for move left arm by joint action server to come up." );
     trials++;
   }
@@ -254,8 +254,8 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   }
 
   trials = 0;
-  mracClient_ = new TrajectoryClient( "right_arm_controller/command", true );
-  while (!mracClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
+  mracClient_ = new FollowTrajectoryClient( "right_arm_controller/follow_joint_trajectory", true );
+  while (!mracClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
     ROS_INFO( "Waiting for move right arm by joint action server to come up." );
     trials++;
   }
@@ -268,7 +268,7 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   if (useOptionNodes) {
     trials = 0;
     moveBaseClient_ = new MoveBaseClient( "move_base", true );
-    while (!moveBaseClient_->waitForServer( ros::Duration( 2.0 ) ) && trials < 2) {
+    while (!moveBaseClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
       ROS_INFO( "Waiting for move base server to come up." );
       trials++;
     }
@@ -283,9 +283,9 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
     ROS_INFO( "Loading MoveIt service..." );
     try {
       rarmGroup_ = new moveit::planning_interface::MoveGroup( "right_arm",
-          boost::shared_ptr<tf::Transformer>(), ros::Duration( 2, 0 ) );
+          boost::shared_ptr<tf::Transformer>(), ros::Duration( 5, 0 ) );
       larmGroup_ = new moveit::planning_interface::MoveGroup( "left_arm",
-        boost::shared_ptr<tf::Transformer>(), ros::Duration( 2, 0 ) );
+        boost::shared_ptr<tf::Transformer>(), ros::Duration( 5, 0 ) );
     }
     catch (...) {
       try {
@@ -423,7 +423,7 @@ void REEMProxyManager::doneHeadAction( const actionlib::SimpleClientGoalState & 
 }
 
 void REEMProxyManager::doneHeadTrajAction( const actionlib::SimpleClientGoalState & state,
-            const JointTrajectoryResultConstPtr & result )
+            const FollowJointTrajectoryResultConstPtr & result )
 {
   headCtrlWithTrajActionClient_ = false;
 
@@ -454,7 +454,7 @@ void REEMProxyManager::doneHeadTrajAction( const actionlib::SimpleClientGoalStat
  *  \return None.
  */
 void REEMProxyManager::doneMoveLArmAction( const actionlib::SimpleClientGoalState & state,
-                                        const JointTrajectoryResultConstPtr & result)
+                                        const FollowJointTrajectoryResultConstPtr & result)
 {
   lArmCtrl_ = false;
 
@@ -477,7 +477,7 @@ void REEMProxyManager::doneMoveLArmAction( const actionlib::SimpleClientGoalStat
 }
 
 void REEMProxyManager::doneMoveRArmAction( const actionlib::SimpleClientGoalState & state,
-                                         const JointTrajectoryResultConstPtr & result)
+                                         const FollowJointTrajectoryResultConstPtr & result)
 {
   rArmCtrl_ = false;
   
@@ -510,7 +510,7 @@ void REEMProxyManager::doneMoveRArmAction( const actionlib::SimpleClientGoalStat
  *  \return None.
  */
 void REEMProxyManager::doneTorsoAction( const actionlib::SimpleClientGoalState & state,
-                                      const JointTrajectoryResultConstPtr & result )
+                                      const FollowJointTrajectoryResultConstPtr & result )
 {
   torsoCtrl_ = false;
   
@@ -559,7 +559,7 @@ void REEMProxyManager::doneNavgiateBodyAction( const actionlib::SimpleClientGoal
   ROS_INFO("nagivate body finished in state [%s]", state.toString().c_str());
 }
 
-void REEMProxyManager::moveLArmActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback )
+void REEMProxyManager::moveLArmActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback )
 {
   ROS_INFO( "Left arm trajectory move action feedback." );
 
@@ -583,7 +583,7 @@ void REEMProxyManager::moveLArmActionFeedback( const JointTrajectoryFeedbackCons
    */
 }
 
-void REEMProxyManager::moveRArmActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback )
+void REEMProxyManager::moveRArmActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback )
 {
   ROS_INFO( "Right arm trajectory move action feedback." );
   /*
@@ -606,7 +606,7 @@ void REEMProxyManager::moveRArmActionFeedback( const JointTrajectoryFeedbackCons
    */
 }
 
-void REEMProxyManager::moveLHandActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback )
+void REEMProxyManager::moveLHandActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback )
 {
   ROS_INFO( "Left hand trajectory move action feedback." );
 
@@ -630,7 +630,7 @@ void REEMProxyManager::moveLHandActionFeedback( const JointTrajectoryFeedbackCon
    */
 }
 
-void REEMProxyManager::moveRHandActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback )
+void REEMProxyManager::moveRHandActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback )
 {
   ROS_INFO( "Right hand trajectory move action feedback." );
   /*
@@ -666,7 +666,7 @@ void REEMProxyManager::moveRHandActionFeedback( const JointTrajectoryFeedbackCon
  *  \return None.
  */
 void REEMProxyManager::doneLHandAction( const actionlib::SimpleClientGoalState & state,
-                                         const JointTrajectoryResultConstPtr & result )
+                                         const FollowJointTrajectoryResultConstPtr & result )
 {
   lHandCtrl_ = false;
   
@@ -689,7 +689,7 @@ void REEMProxyManager::doneLHandAction( const actionlib::SimpleClientGoalState &
 }
 
 void REEMProxyManager::doneRHandAction( const actionlib::SimpleClientGoalState & state,
-                                         const JointTrajectoryResultConstPtr & result )
+                                         const FollowJointTrajectoryResultConstPtr & result )
 {
   rHandCtrl_ = false;
   
@@ -1296,7 +1296,7 @@ bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative )
     newPitch = kMaxHeadTilt;
   }
 
-  control_msgs::JointTrajectoryGoal goal;
+  control_msgs::FollowJointTrajectoryGoal goal;
 
   goal.trajectory.joint_names.push_back( "head_1_joint" );
   goal.trajectory.joint_names.push_back( "head_2_joint" );
@@ -1318,8 +1318,8 @@ bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative )
 
   headClient_->sendGoal( goal,
                           boost::bind( &REEMProxyManager::doneHeadTrajAction, this, _1, _2 ),
-                          TrajectoryClient::SimpleActiveCallback(),
-                          TrajectoryClient::SimpleFeedbackCallback() );
+                          FollowTrajectoryClient::SimpleActiveCallback(),
+                          FollowTrajectoryClient::SimpleFeedbackCallback() );
 
   return true;
 }
@@ -1373,7 +1373,7 @@ void REEMProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> 
     return;
   }
   
-  control_msgs::JointTrajectoryGoal goal;
+  control_msgs::FollowJointTrajectoryGoal goal;
   
   // First, the joint names, which apply to all waypoints
   if (isLeftArm) {
@@ -1431,14 +1431,14 @@ void REEMProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> 
     lArmActionTimeout_ = time_to_reach * 1.05; // give additional 5% allowance
     mlacClient_->sendGoal( goal,
                           boost::bind( &REEMProxyManager::doneMoveLArmAction, this, _1, _2 ),
-                          TrajectoryClient::SimpleActiveCallback(),
+                          FollowTrajectoryClient::SimpleActiveCallback(),
                           boost::bind( &REEMProxyManager::moveLArmActionFeedback, this, _1 ) );
   }
   else {
     rArmActionTimeout_ = time_to_reach * 1.05; // give additional 5% allowance
     mracClient_->sendGoal( goal,
                           boost::bind( &REEMProxyManager::doneMoveRArmAction, this, _1, _2 ),
-                          TrajectoryClient::SimpleActiveCallback(),
+                          FollowTrajectoryClient::SimpleActiveCallback(),
                           boost::bind( &REEMProxyManager::moveRArmActionFeedback, this, _1 ) );
   }
 }
@@ -1446,7 +1446,7 @@ void REEMProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> 
 void REEMProxyManager::moveArmWithJointTrajectory( bool isLeftArm, std::vector< std::vector<double> > & trajectory,
                                                   std::vector<float> & times_to_reach )
 {
-  control_msgs::JointTrajectoryGoal goal;
+  control_msgs::FollowJointTrajectoryGoal goal;
   
   // First, the joint names, which apply to all waypoints
   if (isLeftArm) {
@@ -1505,14 +1505,14 @@ void REEMProxyManager::moveArmWithJointTrajectory( bool isLeftArm, std::vector< 
     lArmActionTimeout_ = time_to_reach_for_pt * 1.05; // give additional 5% allowance
     mlacClient_->sendGoal( goal,
                           boost::bind( &REEMProxyManager::doneMoveLArmAction, this, _1, _2 ),
-                          TrajectoryClient::SimpleActiveCallback(),
+                          FollowTrajectoryClient::SimpleActiveCallback(),
                           boost::bind( &REEMProxyManager::moveLArmActionFeedback, this, _1 ) );
   }
   else {
     rArmActionTimeout_ = time_to_reach_for_pt * 1.05; // give additional 5% allowance
     mracClient_->sendGoal( goal,
                           boost::bind( &REEMProxyManager::doneMoveRArmAction, this, _1, _2 ),
-                          TrajectoryClient::SimpleActiveCallback(),
+                          FollowTrajectoryClient::SimpleActiveCallback(),
                           boost::bind( &REEMProxyManager::moveRArmActionFeedback, this, _1 ) );
   }
 }
@@ -1522,7 +1522,7 @@ void REEMProxyManager::moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
                                         std::vector< std::vector<double> > & joint_velocities,
                                         std::vector<float> & times_to_reach )
 {
-  control_msgs::JointTrajectoryGoal goal;
+  control_msgs::FollowJointTrajectoryGoal goal;
   
   // First, the joint names, which apply to all waypoints
   if (isLeftArm) {
@@ -1581,14 +1581,14 @@ void REEMProxyManager::moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
     lArmActionTimeout_ = time_to_reach_for_pt * 1.05; // give additional 5% allowance
     mlacClient_->sendGoal( goal,
                           boost::bind( &REEMProxyManager::doneMoveLArmAction, this, _1, _2 ),
-                          TrajectoryClient::SimpleActiveCallback(),
+                          FollowTrajectoryClient::SimpleActiveCallback(),
                           boost::bind( &REEMProxyManager::moveLArmActionFeedback, this, _1 ) );
   }
   else {
     rArmActionTimeout_ = time_to_reach_for_pt * 1.05; // give additional 5% allowance
     mracClient_->sendGoal( goal,
                           boost::bind( &REEMProxyManager::doneMoveRArmAction, this, _1, _2 ),
-                          TrajectoryClient::SimpleActiveCallback(),
+                          FollowTrajectoryClient::SimpleActiveCallback(),
                           boost::bind( &REEMProxyManager::moveRArmActionFeedback, this, _1 ) );
   }
 }
@@ -1703,7 +1703,7 @@ bool REEMProxyManager::setHandPosition( bool isLeftHand, std::vector<double> & p
 	return false;
   }
 
-  control_msgs::JointTrajectoryGoal goal;
+  control_msgs::FollowJointTrajectoryGoal goal;
 
   // First, the joint names, which apply to all waypoints
   if (isLeftHand) {
@@ -1750,14 +1750,14 @@ bool REEMProxyManager::setHandPosition( bool isLeftHand, std::vector<double> & p
     lHandActionTimeout_ = time_to_reach * 1.05; // give additional 5% allowance
     rhandClient_->sendGoal( goal,
                           boost::bind( &REEMProxyManager::doneLHandAction, this, _1, _2 ),
-                          TrajectoryClient::SimpleActiveCallback(),
+                          FollowTrajectoryClient::SimpleActiveCallback(),
                           boost::bind( &REEMProxyManager::moveLHandActionFeedback, this, _1 ) );
   }
   else {
     rHandActionTimeout_ = time_to_reach * 1.05; // give additional 5% allowance
     lhandClient_->sendGoal( goal,
                           boost::bind( &REEMProxyManager::doneRHandAction, this, _1, _2 ),
-                          TrajectoryClient::SimpleActiveCallback(),
+                          FollowTrajectoryClient::SimpleActiveCallback(),
                           boost::bind( &REEMProxyManager::moveRHandActionFeedback, this, _1 ) );
   }
   
@@ -1931,7 +1931,7 @@ bool REEMProxyManager::moveTorsoTo( double yaw, double pitch, bool relative )
 	newPitch = kMaxTorsoTilt;
   }
 
-  control_msgs::JointTrajectoryGoal goal;
+  control_msgs::FollowJointTrajectoryGoal goal;
 
   goal.trajectory.joint_names.push_back( "torso_1_joint" );
   goal.trajectory.joint_names.push_back( "torso_2_joint" );
@@ -1953,8 +1953,8 @@ bool REEMProxyManager::moveTorsoTo( double yaw, double pitch, bool relative )
 
   torsoClient_->sendGoal( goal,
 						  boost::bind( &REEMProxyManager::doneTorsoAction, this, _1, _2 ),
-						  TrajectoryClient::SimpleActiveCallback(),
-						  TrajectoryClient::SimpleFeedbackCallback() );
+						  FollowTrajectoryClient::SimpleActiveCallback(),
+						  FollowTrajectoryClient::SimpleFeedbackCallback() );
 
   return true;
 }
@@ -1993,7 +1993,7 @@ void REEMProxyManager::powerStateDataCB( const diagnostic_msgs::DiagnosticArrayC
 
     	//bool charging = (msg->AC_present > 0);
     	bool charging = false;
-    	int batpercent = (int)strtof( batStatus.values[i].value.c_str(), NULL );
+    	float batpercent = strtof( batStatus.values[i].value.c_str(), NULL );
     	//batTimeRemain_ = msg->time_remaining;
 
     	if (lowPowerThreshold_ > 0) {
@@ -2015,8 +2015,8 @@ void REEMProxyManager::powerStateDataCB( const diagnostic_msgs::DiagnosticArrayC
     	    PyGILState_STATE gstate;
     	    gstate = PyGILState_Ensure();
 
-    	    arg = Py_BuildValue( "(iOO)", batpercent, charging ? Py_True : Py_False,
-    	                          (batpercent < lowPowerThreshold_ ? Py_True : Py_False) );
+    	    arg = Py_BuildValue( "(fOO)", batpercent, charging ? Py_True : Py_False,
+    	                          (batpercent < (float)lowPowerThreshold_ ? Py_True : Py_False) );
 
     	    PyREEMModule::instance()->invokeCallback( "onBatteryChargeChange", arg );
     	    Py_DECREF( arg );
@@ -2038,7 +2038,7 @@ void REEMProxyManager::setLowPowerThreshold( int percent )
   }
 }
 
-void REEMProxyManager::getBatteryStatus( int & percentage, bool & isplugged, float & timeremain )
+void REEMProxyManager::getBatteryStatus( float & percentage, bool & isplugged, float & timeremain )
 {
   boost::mutex::scoped_lock lock( bat_mutex_ );
   isplugged = isCharging_;

@@ -16,7 +16,7 @@
 #include <actionlib/client/simple_action_client.h>
 
 #include <control_msgs/PointHeadAction.h>
-//#include <control_msgs/FollowJointTrajectoryAction.h>
+#include <control_msgs/FollowJointTrajectoryAction.h>
 #include <control_msgs/JointTrajectoryControllerState.h>
 #include <control_msgs/JointTrajectoryAction.h>
 
@@ -68,6 +68,7 @@ namespace pyride {
 typedef actionlib::SimpleActionClient<pal_interaction_msgs::TtsAction> TTSClient;
 typedef actionlib::SimpleActionClient<control_msgs::PointHeadAction> PointHeadClient;
 typedef actionlib::SimpleActionClient<control_msgs::JointTrajectoryAction> TrajectoryClient;
+typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> FollowTrajectoryClient;
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
   
 class REEMProxyManager
@@ -149,7 +150,7 @@ public:
 
   void publishCommands();
   
-  void getBatteryStatus( int & percentage, bool & isplugged, float & timeremain );
+  void getBatteryStatus( float & percentage, bool & isplugged, float & timeremain );
 
   int getLowPowerThreshold() { return lowPowerThreshold_; }
   void setLowPowerThreshold( int percent );
@@ -235,12 +236,12 @@ private:
   tf::TransformListener tflistener_;
   tf::StampedTransform startTransform_;
   
-  TrajectoryClient * headClient_;
-  TrajectoryClient * torsoClient_;
-  TrajectoryClient * lhandClient_;
-  TrajectoryClient * rhandClient_;
-  TrajectoryClient * mlacClient_;
-  TrajectoryClient * mracClient_;
+  FollowTrajectoryClient * headClient_;
+  FollowTrajectoryClient * torsoClient_;
+  FollowTrajectoryClient * lhandClient_;
+  FollowTrajectoryClient * rhandClient_;
+  FollowTrajectoryClient * mlacClient_;
+  FollowTrajectoryClient * mracClient_;
 
   PointHeadClient * phClient_;
   MoveBaseClient * moveBaseClient_;
@@ -265,7 +266,7 @@ private:
   
   // power state
   bool isCharging_;
-  int batCapacity_;
+  float batCapacity_;
   int lowPowerThreshold_;
   Duration batTimeRemain_;
 
@@ -280,20 +281,20 @@ private:
   void doneHeadAction( const actionlib::SimpleClientGoalState & state,
                       const PointHeadResultConstPtr & result );
   void doneHeadTrajAction( const actionlib::SimpleClientGoalState & state,
-                       const JointTrajectoryResultConstPtr & result );
+                       const FollowJointTrajectoryResultConstPtr & result );
 
   void doneTorsoAction( const actionlib::SimpleClientGoalState & state,
-                       const JointTrajectoryResultConstPtr & result );
+                       const FollowJointTrajectoryResultConstPtr & result );
 
   void doneMoveLArmAction( const actionlib::SimpleClientGoalState & state,
-                          const JointTrajectoryResultConstPtr & result );
+                          const FollowJointTrajectoryResultConstPtr & result );
   void doneMoveRArmAction( const actionlib::SimpleClientGoalState & state,
-                          const JointTrajectoryResultConstPtr & result );
+                          const FollowJointTrajectoryResultConstPtr & result );
   
   void doneLHandAction( const actionlib::SimpleClientGoalState & state,
-                          const JointTrajectoryResultConstPtr & result );
+                          const FollowJointTrajectoryResultConstPtr & result );
   void doneRHandAction( const actionlib::SimpleClientGoalState & state,
-                          const JointTrajectoryResultConstPtr & result );
+                          const FollowJointTrajectoryResultConstPtr & result );
 
   void doneSpeakAction( const actionlib::SimpleClientGoalState & state,
                               const TtsResultConstPtr & result );
@@ -301,11 +302,11 @@ private:
   void doneNavgiateBodyAction( const actionlib::SimpleClientGoalState & state,
                               const MoveBaseResultConstPtr & result );
   
-  void moveLHandActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback );
-  void moveRHandActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback );
+  void moveLHandActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback );
+  void moveRHandActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback );
 
-  void moveLArmActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback );
-  void moveRArmActionFeedback( const JointTrajectoryFeedbackConstPtr & feedback );
+  void moveLArmActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback );
+  void moveRArmActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback );
 
   void jointStateDataCB( const sensor_msgs::JointStateConstPtr & msg );
   void powerStateDataCB( const diagnostic_msgs::DiagnosticArrayConstPtr & msg );
