@@ -219,7 +219,7 @@ void PyREEMServer::notifySystemShutdown()
  *  \param dictionary data. node status message in the format of {'node', 'timestamp', 'priority', 'message' }.
  *  \return None.
  */
-void PyREEMServer::nodeStatusCB( const pyride_reem::NodeStatusConstPtr & msg )
+void PyREEMServer::nodeStatusCB( const pyride_common_msgs::NodeStatusConstPtr & msg )
 {
   if (msg->for_console) { // reformat the string using colon separated format and pass directly to console
     stringstream ss;

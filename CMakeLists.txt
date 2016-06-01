@@ -18,11 +18,11 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   pal_interaction_msgs
   pal_navigation_msgs
+  pyride_common_msgs
   diagnostic_msgs
   std_msgs
   tf
   topic_tools
-  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -59,16 +59,15 @@ find_package(PythonLibs)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-   FILES
-   NodeStatus.msg
- )
+#add_message_files(
+#   FILES
+#)
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-   DEPENDENCIES
-   std_msgs
- )
+#generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+#)
 
 ###################################
 ## catkin specific configuration ##
@@ -83,7 +82,7 @@ catkin_package(
   #INCLUDE_DIRS include
   #LIBRARIES pyride_reem
 #  CATKIN_DEPENDS actionlib cv_bridge image_transport laser_geometry move_base_msgs moveit_core moveit_msgs pr2_common_action_msgs pr2_controllers_msgs pr2_msgs pr2_power_board roscpp sensor_msgs pal_interaction_msgs std_msgs tf topic_tools
-  CATKIN_DEPENDS message_runtime
+#  CATKIN_DEPENDS message_runtime
 #  DEPENDS system_lib
 )
 
@@ -125,7 +124,6 @@ add_executable(pyride_reem pyridecore/AppConfigManager.cpp
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 add_dependencies(pyride_reem ${catkin_EXPORTED_TARGETS})
-add_dependencies(pyride_reem ${PROJECT_NAME}_generate_messages_cpp)
 
 add_library(celt STATIC IMPORTED)
 set_target_properties(celt PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/lib/libcelt0.a)
