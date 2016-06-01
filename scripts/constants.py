@@ -30,7 +30,7 @@ LEARNING_COMPLETE  = 2
 FAULTY_HARDWARE    = 3
 CUSTOM_STATE       = 4
 
-INTRO_TEXT = "Welcome to PyRIDE REEM."
+INTRO_TEXT = "Welcome to Py RIDE REEM."
 
 # record bag state
 REC_CAM    = 1
@@ -39,4 +39,3 @@ REC_KINECT = 4
 REC_IMU    = 8
 REC_JOINTS = 16
 REC_TF     = 32
-
