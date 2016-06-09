@@ -135,7 +135,7 @@ bool PyREEMServer::executeRemoteCommand( PyRideExtendedCommand command,
     {
       float newHeadYaw = *((float *)optionalData);
       float newHeadPitch = *((float *)optionalData+1);
-      REEMProxyManager::instance()->updateHeadPose( newHeadYaw, newHeadPitch );
+      REEMProxyManager::instance()->updateHeadPos( newHeadYaw, newHeadPitch );
     }
       break;
     case BODY_MOVE_TO: // position

@@ -4,6 +4,7 @@
   <!-- <include file="$(find pr2_2dnav_slam)/launch/pr2_2dnav.launch/> -->
   <node pkg="pyride_reem" type="pyride_reem" name="pyride_reem" output="screen">
     <remap from="cmd_vel" to="key_vel" />
+    <remap from="head_vel" to="head_controller/command" />
     <param name="_image_transport" type="str" value="compressed"/>
     <param name="config_file" type="str" value="$(find pyride_reem)/pyrideconfig.xml"/>
     <param name="script_dir" type="str" value="$(find pyride_reem)/scripts"/>

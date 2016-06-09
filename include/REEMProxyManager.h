@@ -107,9 +107,9 @@ public:
                          std::vector<double> & positions,
                          std::vector<double> & orientation );
 
-  bool moveHeadTo( double yaw, double pitch, bool relative = false );
+  bool moveHeadTo( double yaw, double pitch, bool relative = false, float time_to_reach = 0.5 );
   bool pointHeadTo( const std::string & frame, float x, float y, float z );
-  void updateHeadPose( float yaw, float pitch );
+  void updateHeadPos( float yaw, float pitch );
   
   bool moveArmWithGoalPose( bool isLeftArm, std::vector<double> & position,
                            std::vector<double> & orientation, float time_to_reach = 10.0 );

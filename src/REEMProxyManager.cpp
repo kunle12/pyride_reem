@@ -1320,14 +1320,13 @@ bool REEMProxyManager::pulseEarLED( const REEMLedColour colour1, const REEMLedCo
   return ledPulseClient_.call( srvMsg );
 }
 
-bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative )
+bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative, float time_to_reach )
 {
   if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || !headClient_)
     return false;
   
   double newYaw, newPitch;
   this->getHeadPos( reqHeadYaw_, reqHeadPitch_ );
-  
   if (relative) {
     newYaw = clamp( reqHeadYaw_ + yaw, kMaxHeadPan );
     newPitch = reqHeadPitch_ + pitch;
@@ -1357,10 +1356,10 @@ bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative )
 
   goal.trajectory.points[0].positions[0] = newYaw;
   goal.trajectory.points[0].velocities[0] = 0.0;
-  goal.trajectory.points[1].positions[1] = newPitch;
-  goal.trajectory.points[1].velocities[1] = 0.0;
+  goal.trajectory.points[0].positions[1] = newPitch;
+  goal.trajectory.points[0].velocities[1] = 0.0;
   // To be reached 2 seconds after starting along the trajectory
-  //goal.trajectory.points[0].time_from_start = ros::Duration( time_to_reach );
+  goal.trajectory.points[0].time_from_start = ros::Duration( time_to_reach );
 
   headCtrlWithTrajActionClient_ = true;
 
@@ -1878,7 +1877,7 @@ void REEMProxyManager::subscribeRawTrajInput( bool enable )
 }
 #endif
 
-void REEMProxyManager::updateHeadPose( float yaw, float pitch )
+void REEMProxyManager::updateHeadPos( float yaw, float pitch )
 {
   if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_)
     return;
@@ -2219,8 +2218,8 @@ void REEMProxyManager::publishCommands()
     if ((ros::Time::now() - cmdTimeStamp_).toSec() < kMotionCommandGapTolerance) {
       trajectory_msgs::JointTrajectory traj;
       traj.header.stamp = ros::Time::now() + ros::Duration(0.01);
-      traj.joint_names.push_back( "head_pan_joint" );
-      traj.joint_names.push_back( "head_tilt_joint" );
+      traj.joint_names.push_back( "head_1_joint" );
+      traj.joint_names.push_back( "head_2_joint" );
       traj.points.resize(1);
       traj.points[0].positions.push_back( reqHeadYaw_ + headYawRate_ * kHorizon );
       traj.points[0].velocities.push_back( headYawRate_ );

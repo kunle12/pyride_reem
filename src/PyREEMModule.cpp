@@ -395,6 +395,20 @@ static PyObject * PyModule_REEMMoveBodyWithSpeed( PyObject * self, PyObject * ar
   Py_RETURN_NONE;
 }
 
+static PyObject * PyModule_REEMUpdateHeadPos( PyObject * self, PyObject * args )
+{
+  double yaw = 0.0;
+  double pitch = 0.0;
+
+  if (!PyArg_ParseTuple( args, "dd", &yaw, &pitch )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  REEMProxyManager::instance()->updateHeadPos( yaw, pitch );
+  Py_RETURN_NONE;
+}
+
 /*! \fn moveHeadTo(head_yaw, head_pitch)
  *  \memberof PyREEM
  *  \brief Move the REEM head to a specific yaw and pitch position.
@@ -407,10 +421,11 @@ static PyObject * PyModule_REEMMoveHeadTo( PyObject * self, PyObject * args )
 {
   double yaw = 0.0;
   double pitch = 0.0;
+  double time_to_reach = 0.5;
   PyObject * boolObj = NULL;
   bool isRelative = false;
   
-  if (!PyArg_ParseTuple( args, "dd|O", &yaw, &pitch, &boolObj )) {
+  if (!PyArg_ParseTuple( args, "dd|Od", &yaw, &pitch, &boolObj, &time_to_reach )) {
     // PyArg_ParseTuple will set the error status.
     return NULL;
   }
@@ -424,7 +439,13 @@ static PyObject * PyModule_REEMMoveHeadTo( PyObject * self, PyObject * args )
       return NULL;
     }
   }
-  if (REEMProxyManager::instance()->moveHeadTo( yaw, pitch, isRelative ))
+
+  if (time_to_reach < 0.2) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.moveHeadTo: time to reach must be >= 0.2." );
+    return NULL;
+  }
+
+  if (REEMProxyManager::instance()->moveHeadTo( yaw, pitch, isRelative, time_to_reach ))
     Py_RETURN_TRUE;
   else
     Py_RETURN_FALSE;
@@ -1726,6 +1747,8 @@ static PyMethodDef PyModule_methods[] = {
     "Get the current REEM pose." },
   { "getRelativeTF", (PyCFunction)PyModule_REEMGetRelativeTF, METH_VARARGS,
     "Get the relative TF between two frames with the first frame as the reference frame." },
+  { "updateHeadPos", (PyCFunction)PyModule_REEMUpdateHeadPos, METH_VARARGS,
+    "Update REEM head position with a specific velocity in radian/s." },
   { "moveHeadTo", (PyCFunction)PyModule_REEMMoveHeadTo, METH_VARARGS,
     "Move REEM head to a new position (in degree)." },
   { "moveBodyTo", (PyCFunction)PyModule_REEMMoveBodyTo, METH_VARARGS,
