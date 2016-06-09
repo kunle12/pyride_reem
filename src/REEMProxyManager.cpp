@@ -9,6 +9,9 @@
 #include "REEMProxyManager.h"
 #include "PyREEMModule.h"
 
+#include <pal_device_msgs/TimedColourEffect.h>
+#include <pal_device_msgs/TimedFadeEffect.h>
+
 #ifdef WITH_REEMHT
 #include "pr2ht/DetectTrackControl.h"
 #endif
@@ -304,6 +307,17 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
           rarmGroup_->getEndEffectorLink().c_str(), larmGroup_->getEndEffectorLink().c_str() );
     }
   }
+  ledColourClient_ = mCtrlNode_->serviceClient<pal_device_msgs::TimedColourEffect>( "/ledManager/TimedColourEffect" );
+
+  if (!ledColourClient_.exists()) {
+    ROS_INFO( "No led colour effect service is available." );
+  }
+  ledPulseClient_ = mCtrlNode_->serviceClient<pal_device_msgs::TimedFadeEffect>( "/ledManager/TimedFadeEffect" );
+
+  if (!ledPulseClient_.exists()) {
+    ROS_INFO( "No led colour fade effect service is available." );
+  }
+
 doneInit:
   this->getHeadPos( reqHeadYaw_, reqHeadPitch_ );
   this->getTorsoPos( reqTorsoYaw_, reqTorsoPitch_ );
@@ -1270,6 +1284,40 @@ void REEMProxyManager::deregisterForTiltScanData()
     tiltScanNotifier_ = NULL;
     tiltScanSub_ = NULL;
   }
+}
+
+bool REEMProxyManager::setEarLED( const REEMLedColour colour, const int side )
+{
+  if (!ledColourClient_.exists()) {
+    return false;
+  }
+  pal_device_msgs::TimedColourEffect srvMsg;
+
+  srvMsg.request.leds.ledMask = side;
+  srvMsg.request.effectDuration = ros::Duration( 0.0 );
+  srvMsg.request.priority = 0; //fixed priority
+  srvMsg.request.color.r = 255.0; //= this->colour2RGB( colour );
+  srvMsg.request.color.b = 0.0;
+  srvMsg.request.color.g = 0.0;
+  srvMsg.request.color.a = 1.0;
+  return ledColourClient_.call( srvMsg );
+}
+
+bool REEMProxyManager::pulseEarLED( const REEMLedColour colour1, const REEMLedColour colour2, const int side, const float period )
+{
+  if (!ledPulseClient_.exists()) {
+    return false;
+  }
+  pal_device_msgs::TimedFadeEffect srvMsg;
+
+  srvMsg.request.leds.ledMask = side;
+  srvMsg.request.colorChangeDuration = ros::Duration( period );
+  srvMsg.request.priority = 120; //fixed priority
+  srvMsg.request.reverseFade = true;
+  srvMsg.request.firstColor = this->colour2RGB( colour1 );
+  srvMsg.request.secondColor = this->colour2RGB( colour2 );
+
+  return ledPulseClient_.call( srvMsg );
 }
 
 bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative )
@@ -2464,6 +2512,40 @@ bool REEMProxyManager::findSolidObjectInScene( const std::string & name )
       break;
   }
   return found;
+}
+
+std_msgs::ColorRGBA REEMProxyManager::colour2RGB( const REEMLedColour colour )
+{
+  std_msgs::ColorRGBA rgba;
+  rgba.a = 1.0;
+  switch (colour) {
+    case WHITE:
+      rgba.r = rgba.g = rgba.b = 255.0;
+      break;
+    case RED:
+      rgba.r = 255.0;
+      rgba.g = rgba.b = 0.0;
+      break;
+    case BLUE:
+      rgba.r = rgba.g = 0.0;
+      rgba.b = 255.0;
+      break;
+    case GREEN:
+      rgba.r = rgba.b = 0.0;
+      rgba.g = 255.0;
+      break;
+    case YELLOW:
+      rgba.r = rgba.g = 255.0;
+      rgba.b = 0.0;
+      break;
+    case PINK:
+      rgba.r = 255.0; rgba.g = 192.0;
+      rgba.b = 203.0;
+      break;
+    default:
+      break;
+  }
+  return rgba;
 }
 
 /**@}*/

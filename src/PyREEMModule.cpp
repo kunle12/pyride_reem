@@ -31,6 +31,38 @@ static const char *kPickAndPlaceKWlist[] = { "name", "place", "grasp_position", 
 static const char *kObjectKWlist[] = { "name", "volume", "position", "orientation", NULL };
 static const char *kArmPoseKWlist[] = { "position", "orientation", "use_left_arm", "time_to_reach", NULL };
 
+static bool colourStr2ID( const char * colourStr, REEMLedColour & colourID )
+{
+  if (!colourStr)
+    return false;
+
+  if (!strcasecmp( colourStr, "red" )) {
+    colourID = RED;
+  }
+  else if (!strcasecmp( colourStr, "green" )) {
+    colourID = GREEN;
+  }
+  else if (!strcasecmp( colourStr, "blue" )) {
+    colourID = BLUE;
+  }
+  else if (!strcasecmp( colourStr, "white" )) {
+    colourID = WHITE;
+  }
+  else if (!strcasecmp( colourStr, "yellow" )) {
+    colourID = YELLOW;
+  }
+  else if (!strcasecmp( colourStr, "pink" )) {
+    colourID = PINK;
+  }
+  else if (!strcasecmp( colourStr, "blank" )) {
+    colourID = BLANK;
+  }
+  else {
+    return false;
+  }
+  return true;
+}
+
 static PyObject * PyModule_write( PyObject *self, PyObject * args )
 {
   char * msg;
@@ -1506,6 +1538,87 @@ static PyObject * PyModule_REEMPlaceObject( PyObject * self, PyObject * args, Py
   return PyModule_REEMPickUpAndPlaceObject( true, self, args, keywds );
 }
 
+/** @name Miscellaneous Functions
+ *
+ */
+/**@{*/
+/*! \fn setEarLED(colour, side)
+ *  \memberof PyREEM
+ *  \brief Set REEM's ear LED to a colour.
+ *  \param str colour. Colour must be 'red','green', 'blue', 'white', 'blank', 'yellow' or 'pink'.
+ *  \param int side. 1 = left side, 2 = right sight and3 = both, default = 3.
+ *  \return None.
+ */
+static PyObject * PyModule_REEMSetEarLED( PyObject * self, PyObject * args )
+{
+  char * colourStr = NULL;
+  REEMLedColour colourID;
+  int headSide = 3;
+
+  if (!PyArg_ParseTuple( args, "s|i", &colourStr, &headSide )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+  if (!colourStr2ID( colourStr, colourID )) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.setEarLED: invalid input colour. "
+                 "Colour must be 'red','green', 'blue', 'white', 'blank', 'yellow' or 'pink'." );
+    return NULL;
+  }
+
+  if (headSide > 3 || headSide < 0) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.setEarLED: invalid side of head: 1 = left, 2 = right, 3 = both." );
+    return NULL;
+  }
+  if (REEMProxyManager::instance()->setEarLED( colourID, headSide )) {
+    Py_RETURN_TRUE;
+  }
+
+  Py_RETURN_FALSE;
+}
+
+/*! \fn pulseEarLED(colour_one, colour_two, side, period)
+ *  \memberof PyREEM
+ *  \brief Periodically switch REEM's ear LED between the two input colours.
+ *  \param str colour_one. Colour label one.
+ *  \param str colour_two. Colour label two.
+ *  \param int side. 1 = left, 2 = right and3 = both, default = 3.
+ *  \param int period. Time (in seconds) before switching LED colour.
+ *  \return None.
+ *  \note Colour must be 'red','green', 'blue', 'white', 'blank', 'yellow' or 'pink'.
+ */
+static PyObject * PyModule_REEMPulseEarLED( PyObject * self, PyObject * args )
+{
+  char * colourStr1 = NULL;
+  char * colourStr2 = NULL;
+
+  float period = 0.5;
+  int headSide = 3;
+
+  REEMLedColour colourID1, colourID2;
+
+  if (!PyArg_ParseTuple( args, "ss|if", &colourStr1, &colourStr2, &headSide, &period )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+  if (!colourStr2ID( colourStr1, colourID1 ) || !colourStr2ID( colourStr2, colourID2 )) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.pluseEarLED: invalid input colour(s)."
+                 "Colour must be 'red','green', 'blue', 'white', 'blank', 'yellow' or 'pink'." );
+    return NULL;
+  }
+
+  if (headSide > 3 || headSide < 0) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.pluseEarLED: invalid side of head: 1 = left, 2 = right, 3 = both." );
+    return NULL;
+  }
+  if (period <= 0.0) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.pluseEarLED: invalid pulse period." );
+    return NULL;
+  }
+
+  REEMProxyManager::instance()->pulseEarLED( colourID1, colourID2, period, headSide );
+  Py_RETURN_NONE;
+}
+
 #ifdef WITH_REEMHT
 /*! \fn registerHumanDetectTracking( detection_callback, tracking_callback )
  *  \memberof PyREEM
@@ -1647,6 +1760,10 @@ static PyMethodDef PyModule_methods[] = {
     "Get the low power warning threshold." },
   { "setLowPowerThreshold", (PyCFunction)PyModule_REEMSetLowPowerThreshold, METH_VARARGS,
     "Set the low power warning threshold." },
+  { "setEarLED", (PyCFunction)PyModule_REEMSetEarLED, METH_VARARGS,
+      "Set the colour of the ear LEDs on REEM." },
+  { "pulseEarLED", (PyCFunction)PyModule_REEMPulseEarLED, METH_VARARGS,
+      "Pulse the ear LED of REEM between two colours." },
   { "listTFFrames", (PyCFunction)PyModule_REEMListTFFrames, METH_NOARGS,
     "List supported REEM TF frames." },
   { "isSupportedTFFrame", (PyCFunction)PyModule_REEMCheckTFFrame, METH_VARARGS,

@@ -29,6 +29,7 @@
 
 #include <std_msgs/String.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/ColorRGBA.h>
 
 #include <trajectory_msgs/JointTrajectory.h>
 #include <geometry_msgs/Twist.h>
@@ -70,7 +71,17 @@ typedef actionlib::SimpleActionClient<control_msgs::PointHeadAction> PointHeadCl
 typedef actionlib::SimpleActionClient<control_msgs::JointTrajectoryAction> TrajectoryClient;
 typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> FollowTrajectoryClient;
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
-  
+
+typedef enum {
+  WHITE = 0,
+  BLANK,
+  RED,
+  BLUE,
+  GREEN,
+  YELLOW,
+  PINK
+} REEMLedColour;
+
 class REEMProxyManager
 {
 public:
@@ -162,6 +173,10 @@ public:
   void deregisterForBaseScanData();
   void deregisterForTiltScanData();
   
+  bool setEarLED( const REEMLedColour colour, const int side = 3 );
+  bool pulseEarLED( const REEMLedColour colour1, const REEMLedColour colour2,
+      const int side = 3, const float period = 1.0 );
+
   void getTFFrameList( std::vector<std::string> & list );
   bool isTFFrameSupported( const char * frame_name );
 
@@ -181,6 +196,9 @@ private:
 
   AsyncSpinner * jointDataThread_;
   CallbackQueue jointDataQueue_;
+
+  ServiceClient ledColourClient_;
+  ServiceClient ledPulseClient_;
 
 #ifdef WITH_REEMHT
   Subscriber * htObjStatusSub_;
@@ -314,6 +332,7 @@ private:
   void tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg );
 
   bool findSolidObjectInScene( const std::string & name );
+  std_msgs::ColorRGBA colour2RGB( const REEMLedColour colour );
 
 #ifdef WITH_REEMHT
   void htObjStatusCB( const pr2ht::TrackedObjectStatusChangeConstPtr & msg );

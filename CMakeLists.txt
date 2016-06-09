@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   pal_interaction_msgs
   pal_navigation_msgs
+  pal_device_msgs
   pyride_common_msgs
   diagnostic_msgs
   std_msgs
