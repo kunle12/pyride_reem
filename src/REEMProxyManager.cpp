@@ -11,6 +11,9 @@
 
 #include <pal_device_msgs/TimedColourEffect.h>
 #include <pal_device_msgs/TimedFadeEffect.h>
+#include <pal_detection_msgs/Recognizer.h>
+#include <pal_detection_msgs/StartEnrollment.h>
+#include <pal_detection_msgs/StopEnrollment.h>
 
 #ifdef WITH_REEMHT
 #include "pr2ht/DetectTrackControl.h"
@@ -86,6 +89,7 @@ REEMProxyManager::REEMProxyManager() :
   tiltScanSub_( NULL ),
   baseScanNotifier_( NULL ),
   tiltScanNotifier_( NULL ),
+  faceDetectSub_( NULL ),
   bodyCtrlWithOdmetry_( false ),
   bodyCtrlWithNavigation_( false ),
   torsoCtrl_( false ),
@@ -318,6 +322,24 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
     ROS_INFO( "No led colour fade effect service is available." );
   }
 
+  palFaceEnablerClient_ = mCtrlNode_->serviceClient<pal_detection_msgs::Recognizer>( "/pal_face/recognizer" );
+
+  if (!palFaceEnablerClient_.exists()) {
+    ROS_INFO( "No Pal face recognizer service is available." );
+  }
+
+  palFaceEnrolStartClient_ = mCtrlNode_->serviceClient<pal_detection_msgs::StartEnrollment>( "/pal_face/start_enrollment" );
+
+  if (!palFaceEnrolStartClient_.exists()) {
+    ROS_INFO( "No Pal face start enrollment service is available." );
+  }
+
+  palFaceEnrolStopClient_ = mCtrlNode_->serviceClient<pal_detection_msgs::StopEnrollment>( "/pal_face/stop_enrollment" );
+
+  if (!palFaceEnrolStopClient_.exists()) {
+    ROS_INFO( "No Pal face stop enrollment service is available." );
+  }
+
 doneInit:
   this->getHeadPos( reqHeadYaw_, reqHeadPitch_ );
   this->getTorsoPos( reqTorsoYaw_, reqTorsoPitch_ );
@@ -374,6 +396,9 @@ void REEMProxyManager::fini()
   jointSub_.shutdown();
   powerSub_.shutdown();
 
+  deregisterForBaseScanData();
+  deregisterForTiltScanData();
+  deregisterForPalFaceData();
 #ifdef WITH_REEMHT
   if (htObjStatusSub_) {
     htObjStatusSub_->shutdown();
@@ -1286,6 +1311,25 @@ void REEMProxyManager::deregisterForTiltScanData()
   }
 }
 
+void REEMProxyManager::registerForPalFaceData()
+{
+  if (faceDetectSub_) {
+    ROS_WARN( "Already registered for face detection scan." );
+  }
+  else {
+    faceDetectSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "pal_face/faces", 1, &REEMProxyManager::palFaceDataCB, this ) );
+  }
+}
+
+void REEMProxyManager::deregisterForPalFaceData()
+{
+  if (faceDetectSub_) {
+    faceDetectSub_->shutdown();
+    delete faceDetectSub_;
+    faceDetectSub_ = NULL;
+  }
+}
+
 bool REEMProxyManager::setEarLED( const REEMLedColour colour, const int side )
 {
   if (!ledColourClient_.exists()) {
@@ -1744,10 +1788,46 @@ void REEMProxyManager::cancelBodyMovement()
   bodyCtrlWithOdmetry_ = false;
 }
   
+bool REEMProxyManager::palFaceStartEnrollment( const std::string & name )
+{
+  if (!palFaceEnrolStartClient_.exists())
+    return false;
+
+  pal_detection_msgs::StartEnrollment srvMsg;
+  srvMsg.request.name = name;
+
+  return (palFaceEnrolStartClient_.call( srvMsg ) && srvMsg.response.result);
+}
+
+bool REEMProxyManager::palFaceStopEnrollment()
+{
+  if (!palFaceEnrolStopClient_.exists())
+    return false;
+
+  pal_detection_msgs::StopEnrollment srvMsg;
+
+  if (palFaceEnrolStopClient_.call( srvMsg )) {
+    ROS_INFO( "Pal face enrollment total %d", srvMsg.response.numFacesEnrolled );
+    return srvMsg.response.enrollment_ok;
+  }
+  return false;
+}
+
+void REEMProxyManager::enablePalFaceDetection( bool enable, float confidence )
+{
+  if (!palFaceEnablerClient_.exists())
+    return;
+
+  pal_detection_msgs::Recognizer srvMsg;
+  srvMsg.request.enabled = enable;
+  srvMsg.request.minConfidence = confidence;
+  palFaceEnablerClient_.call( srvMsg );
+}
+
 bool REEMProxyManager::setHandPosition( bool isLeftHand, std::vector<double> & positions, float time_to_reach )
 {
   if (positions.size() != 3) {
-	return false;
+    return false;
   }
 
   control_msgs::FollowJointTrajectoryGoal goal;
@@ -1972,10 +2052,10 @@ bool REEMProxyManager::moveTorsoTo( double yaw, double pitch, bool relative )
   }
 
   if (newPitch < kMinTorsoTilt) {
-	newPitch = kMinTorsoTilt;
+    newPitch = kMinTorsoTilt;
   }
   else if (newPitch > kMaxTorsoTilt) {
-	newPitch = kMaxTorsoTilt;
+    newPitch = kMaxTorsoTilt;
   }
 
   control_msgs::FollowJointTrajectoryGoal goal;
@@ -2078,6 +2158,56 @@ void REEMProxyManager::powerStateDataCB( const diagnostic_msgs::DiagnosticArrayC
   }
 }
 
+void REEMProxyManager::palFaceDataCB( const pal_detection_msgs::FaceDetectionsConstPtr & msg )
+{
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  size_t rsize = msg->faces.size();
+
+  PyObject * retList = PyList_New( rsize );
+
+  for (size_t i = 0; i < rsize; i++) {
+    const pal_detection_msgs::FaceDetection & face = msg->faces[i];
+
+    PyObject * retObj = PyDict_New();
+    PyObject * elemObj = PyString_FromString( face.name.c_str() );
+    PyDict_SetItemString( retObj, "name", elemObj );
+    Py_DECREF( elemObj );
+
+    elemObj = PyFloat_FromDouble( face.confidence );
+    PyDict_SetItemString( retObj, "confidence", elemObj );
+    Py_DECREF( elemObj );
+
+    elemObj = PyString_FromString( face.expression.c_str() );
+    PyDict_SetItemString( retObj, "expression", elemObj );
+    Py_DECREF( elemObj );
+
+    elemObj = PyFloat_FromDouble( face.expression_confidence );
+    PyDict_SetItemString( retObj, "express_confidence", elemObj );
+    Py_DECREF( elemObj );
+
+    elemObj = PyTuple_New( 4 );
+    PyTuple_SetItem( elemObj, 0, PyInt_FromLong( face.x ) );
+    PyTuple_SetItem( elemObj, 1, PyInt_FromLong( face.y ) );
+    PyTuple_SetItem( elemObj, 2, PyInt_FromLong( face.width ) );
+    PyTuple_SetItem( elemObj, 3, PyInt_FromLong( face.height ) );
+    PyDict_SetItemString( retObj, "bound", elemObj );
+    Py_DECREF( elemObj );
+
+    PyList_SetItem( retList, i, retObj );
+  }
+
+  PyObject * arg = Py_BuildValue( "(O)", retList );
+
+  PyREEMModule::instance()->invokePalFaceCallback( arg );
+
+  Py_DECREF( arg );
+  Py_DECREF( retList );
+
+  PyGILState_Release( gstate );
+}
+
 void REEMProxyManager::setLowPowerThreshold( int percent )
 {
   if (percent >= 0 && percent < 100) {
@@ -2091,6 +2221,20 @@ void REEMProxyManager::getBatteryStatus( float & percentage, bool & isplugged, f
   isplugged = isCharging_;
   percentage = batCapacity_;
   timeremain = (float)batTimeRemain_.toSec();
+}
+
+void REEMProxyManager::setHeadStiffness( const float stiffness )
+{
+  // TODO: to be implemented
+  if (stiffness < 0.0 || stiffness > 1.0)
+    return;
+}
+
+void REEMProxyManager::setArmStiffness( bool isLeftArm, const float stiffness )
+{
+  // TODO: to be implemented
+  if (stiffness < 0.0 || stiffness > 1.0)
+    return;
 }
 
 /*! \typedef onMoveBodySuccess()

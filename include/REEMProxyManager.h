@@ -31,6 +31,8 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/ColorRGBA.h>
 
+#include <pal_detection_msgs/FaceDetections.h>
+
 #include <trajectory_msgs/JointTrajectory.h>
 #include <geometry_msgs/Twist.h>
 
@@ -125,6 +127,9 @@ public:
 
   void cancelArmMovement( bool isLeftArm );
   
+  void setHeadStiffness( const float stiffness );
+  void setArmStiffness( bool isLeftArm, const float stiffness );
+
   bool addSolidObject( const std::string & name, std::vector<double> & volume,
       std::vector<double> & position, std::vector<double> & orientation );
 
@@ -166,6 +171,9 @@ public:
   int getLowPowerThreshold() { return lowPowerThreshold_; }
   void setLowPowerThreshold( int percent );
   
+  void registerForPalFaceData();
+  void deregisterForPalFaceData();
+
   void registerForBaseScanData();
   void registerForTiltScanData();
   void registerForBaseScanData( const std::string & target_frame );
@@ -176,6 +184,10 @@ public:
   bool setEarLED( const REEMLedColour colour, const int side = 3 );
   bool pulseEarLED( const REEMLedColour colour1, const REEMLedColour colour2,
       const int side = 3, const float period = 1.0 );
+
+  bool palFaceStartEnrollment( const std::string & name );
+  bool palFaceStopEnrollment();
+  void enablePalFaceDetection( bool enable, float confidence = 0.4 );
 
   void getTFFrameList( std::vector<std::string> & list );
   bool isTFFrameSupported( const char * frame_name );
@@ -194,11 +206,17 @@ private:
   Subscriber * rawBaseScanSub_;
   Subscriber * rawTiltScanSub_;
 
+  Subscriber * faceDetectSub_;
+
   AsyncSpinner * jointDataThread_;
   CallbackQueue jointDataQueue_;
 
   ServiceClient ledColourClient_;
   ServiceClient ledPulseClient_;
+
+  ServiceClient palFaceEnablerClient_;
+  ServiceClient palFaceEnrolStartClient_;
+  ServiceClient palFaceEnrolStopClient_;
 
 #ifdef WITH_REEMHT
   Subscriber * htObjStatusSub_;
@@ -330,6 +348,7 @@ private:
   void powerStateDataCB( const diagnostic_msgs::DiagnosticArrayConstPtr & msg );
   void baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg );
   void tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg );
+  void palFaceDataCB( const pal_detection_msgs::FaceDetectionsConstPtr & msg );
 
   bool findSolidObjectInScene( const std::string & name );
   std_msgs::ColorRGBA colour2RGB( const REEMLedColour colour );

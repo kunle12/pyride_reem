@@ -22,9 +22,11 @@ public:
   
   void invokeBaseScanCallback( PyObject * arg );
   void invokeTiltScanCallback( PyObject * arg );
+  void invokePalFaceCallback( PyObject * arg );
   
   void setBaseScanCallback( PyObject * obj );
   void setTiltScanCallback( PyObject * obj );
+  void setPalFaceCallback( PyObject * obj );
 
 #ifdef WITH_REEMHT
   void setObjectDTCallback( PyObject * detectcb, PyObject * trackcb );
@@ -43,6 +45,7 @@ private:
   
   PyObject * baseScanCB_;
   PyObject * tiltScanCB_;
+  PyObject * palFaceCB_;
   
 #ifdef WITH_REEMHT
   PyObject * objectDetectCB_;

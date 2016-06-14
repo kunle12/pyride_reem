@@ -1311,6 +1311,50 @@ static PyObject * PyModule_REEMRegisterTiltScanData( PyObject * self, PyObject *
   Py_RETURN_NONE;
 }
 
+/*! \fn registerPalFaceCallback( callback_function, target_frame )
+ *  \memberof PyREEM
+ *  \brief Register a callback function for receiving tilt laser scan data.
+ *  None object can be used to stop receiving the scan data.
+ *  If target frame is provided, the 3D position (x,y,z) w.r.t the target
+ *  frame will be returned. Otherwise, raw laser scan data is returned.
+ *  \param callback function that takes a list of raw laser range data or 3D position data as the input.
+ *  \param string target_frame. Optional, the name of the target frame
+ *  \return None
+ */
+static PyObject * PyModule_REEMRegisterPalFaceData( PyObject * self, PyObject * args )
+{
+  PyObject * callbackFn = NULL;
+  double confidence = 0.3;
+
+  if (!PyArg_ParseTuple( args, "O|d", &callbackFn, &confidence )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  if (confidence < 0.0 || confidence > 1.0) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.registerPalFaceCallback: confidence must be within [0.0, 1.0]." );
+    return NULL;
+  }
+
+  if (callbackFn == Py_None) {
+    PyREEMModule::instance()->setPalFaceCallback( NULL );
+    REEMProxyManager::instance()->deregisterForPalFaceData();
+    REEMProxyManager::instance()->enablePalFaceDetection( false, confidence );
+    Py_RETURN_NONE;
+  }
+
+  if (!PyCallable_Check( callbackFn )) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.registerPalFaceCallback:: first input parameter is not a callable object" );
+    return NULL;
+  }
+
+  PyREEMModule::instance()->setPalFaceCallback( callbackFn );
+
+  REEMProxyManager::instance()->enablePalFaceDetection( true, confidence );
+  REEMProxyManager::instance()->registerForPalFaceData();
+  Py_RETURN_NONE;
+}
+
 /*! \fn addSolidObject(name,volume,position,orientation)
  *  \memberof PyREEM
  *  \brief Add a solid object to the current collision scene.
@@ -1559,6 +1603,60 @@ static PyObject * PyModule_REEMPlaceObject( PyObject * self, PyObject * args, Py
   return PyModule_REEMPickUpAndPlaceObject( true, self, args, keywds );
 }
 
+/*! \fn setHeadStiffness(stiffness)
+ *  \memberof PyREEM
+ *  \brief Set the stiffness of the REEM head.
+ *  \param float stiffness. Must be between [0.0,1.0].
+ *  \return None.
+ */
+static PyObject * PyModule_REEMSetHeadStiffness( PyObject * self, PyObject * args )
+{
+  float stiff = 0.0;
+
+  if (!PyArg_ParseTuple( args, "f", &stiff )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  if (stiff < 0.0 || stiff > 1.0) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.setHeadStiffness: the stiffness input must be within the range of [0.0, 1.0]!" );
+    return NULL;
+  }
+
+  REEMProxyManager::instance()->setHeadStiffness( stiff );
+  Py_RETURN_NONE;
+}
+
+/*! \fn setArmStiffness(left_arm,stiffness)
+ *  \memberof PyREEM
+ *  \brief Set the stiffness of a REEM' arm.
+ *  \param bool left_arm. True for left arm; False for right arm.
+ *  \param float stiffness. Must be between [0.0,1.0].
+ *  \return None.
+ */
+static PyObject * PyModule_REEMSetArmStiffness( PyObject * self, PyObject * args )
+{
+  PyObject * isYesObj = NULL;
+  float stiff = 0.0;
+
+  if (!PyArg_ParseTuple( args, "Of", &isYesObj, &stiff )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  if (!PyBool_Check( isYesObj )) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.setArmStiffness: the first parameter must be a boolean!" );
+    return NULL;
+  }
+  if (stiff < 0.0 || stiff > 1.0) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.setArmStiffness: the stiffness input must be within the range of [0.0, 1.0]!" );
+    return NULL;
+  }
+
+  REEMProxyManager::instance()->setArmStiffness( PyObject_IsTrue( isYesObj ), stiff );
+  Py_RETURN_NONE;
+}
+
 /** @name Miscellaneous Functions
  *
  */
@@ -1640,6 +1738,43 @@ static PyObject * PyModule_REEMPulseEarLED( PyObject * self, PyObject * args )
   Py_RETURN_NONE;
 }
 
+/*! \fn startPalFaceEnrollment(name)
+ *  \memberof PyREEM
+ *  \brief Start register face with a name
+ *  \param str name. Name of the user to be registered.
+ *  \return True = face enrollment started successfully, otherwise, False.
+ */
+static PyObject * PyModule_REEMStartPalFaceEnrollment( PyObject * self, PyObject * args )
+{
+  char * nameStr = NULL;
+
+  if (!PyArg_ParseTuple( args, "s", &nameStr )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+  if (REEMProxyManager::instance()->palFaceStartEnrollment( nameStr )) {
+    Py_RETURN_TRUE;
+  }
+
+  Py_RETURN_FALSE;
+}
+
+/*! \fn stopPalFaceEnrollment(name)
+ *  \memberof PyREEM
+ *  \brief Start register face with a name
+ *  \param str name. Name of the user to be registered.
+ *  \return True = face enrollment is successfully, otherwise, False.
+ */
+static PyObject * PyModule_REEMStopPalFaceEnrollment( PyObject * self )
+{
+  if (REEMProxyManager::instance()->palFaceStopEnrollment()) {
+    Py_RETURN_TRUE;
+  }
+
+  Py_RETURN_FALSE;
+}
+
+/**@}*/
 #ifdef WITH_REEMHT
 /*! \fn registerHumanDetectTracking( detection_callback, tracking_callback )
  *  \memberof PyREEM
@@ -1787,6 +1922,10 @@ static PyMethodDef PyModule_methods[] = {
       "Set the colour of the ear LEDs on REEM." },
   { "pulseEarLED", (PyCFunction)PyModule_REEMPulseEarLED, METH_VARARGS,
       "Pulse the ear LED of REEM between two colours." },
+  { "setHeadStiffness", (PyCFunction)PyModule_REEMSetHeadStiffness, METH_VARARGS,
+    "Set the stiffness of the REEM's head. " },
+  { "setArmStiffness", (PyCFunction)PyModule_REEMSetArmStiffness, METH_VARARGS,
+    "Set the stiffness of the one of REEM's arms. " },
   { "listTFFrames", (PyCFunction)PyModule_REEMListTFFrames, METH_NOARGS,
     "List supported REEM TF frames." },
   { "isSupportedTFFrame", (PyCFunction)PyModule_REEMCheckTFFrame, METH_VARARGS,
@@ -1807,6 +1946,12 @@ static PyMethodDef PyModule_methods[] = {
     "Register (or deregister) a callback function to get base laser scan data. If target frame is not given, raw data is returned." },
   { "registerTiltScanCallback", (PyCFunction)PyModule_REEMRegisterTiltScanData, METH_VARARGS,
     "Register (or deregister) a callback function to get tilt laser scan data. If target frame is not given, raw data is returned." },
+  { "registerPalFaceCallback", (PyCFunction)PyModule_REEMRegisterPalFaceData, METH_VARARGS,
+    "Register (or deregister) a callback function to get PAL built-in face detector." },
+  { "startPalFaceEnrollment", (PyCFunction)PyModule_REEMStartPalFaceEnrollment, METH_VARARGS,
+    "Start PAL built-in face enrollment." },
+  { "stopPalFaceEnrollment", (PyCFunction)PyModule_REEMStopPalFaceEnrollment, METH_NOARGS,
+    "Stop PAL built-in face enrollment." },
 #ifdef WITH_REEMHT
   { "registerHumanDetectTracking", (PyCFunction)PyModule_REEMRegisterObjectDetectTracking, METH_VARARGS,
     "Register (or deregister) callback functions to get human detection and tracking information." },
@@ -1883,7 +2028,12 @@ void PyREEMModule::invokeTiltScanCallback( PyObject * arg )
 {
   this->invokeCallbackHandler( tiltScanCB_, arg );
 }
-  
+
+void PyREEMModule::invokePalFaceCallback( PyObject * arg )
+{
+  this->invokeCallbackHandler( palFaceCB_, arg );
+}
+
 void PyREEMModule::setBaseScanCallback( PyObject * obj )
 {
   this->swapCallbackHandler( baseScanCB_, obj );
@@ -1892,6 +2042,11 @@ void PyREEMModule::setBaseScanCallback( PyObject * obj )
 void PyREEMModule::setTiltScanCallback( PyObject * obj )
 {
   this->swapCallbackHandler( tiltScanCB_, obj );
+}
+
+void PyREEMModule::setPalFaceCallback( PyObject * obj )
+{
+  this->swapCallbackHandler( palFaceCB_, obj );
 }
 
 #ifdef WITH_REEMHT
