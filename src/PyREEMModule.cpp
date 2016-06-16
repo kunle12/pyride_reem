@@ -1916,87 +1916,6 @@ static PyObject * PyModule_REEMStopPalFaceEnrollment( PyObject * self )
 }
 
 /**@}*/
-#ifdef WITH_REEMHT
-/*! \fn registerHumanDetectTracking( detection_callback, tracking_callback )
- *  \memberof PyREEM
- *  \brief Register callback functions to receive human detection and tracking information.
- *  Currently support only detection and tracking human (object).
- *  None object can be used to stop receiving human detection and tracking notifications.
- *  \param detection_callback function that takes inputs of (object_type, detection_id, identification_number, status)
- *  \param tracking_callback (optional) function that takes a list of dictionaries of { 'object_type', 'track_id',
- *  'bound' (in topleft x, y, width, height), 'est_pos' (in x, y z)}.
- *  \return None
- */
-static PyObject * PyModule_REEMRegisterObjectDetectTracking( PyObject * self, PyObject * args )
-{
-  PyObject * detectcb = NULL;
-  PyObject * trackcb = NULL;
-  
-  if (!PyArg_ParseTuple( args, "O|O", &detectcb, &detectcb )) {
-    // PyArg_ParseTuple will set the error status.
-    return NULL;
-  }
-  
-  if (detectcb == Py_None) {
-    PyREEMModule::instance()->setObjectDTCallback( NULL, NULL );
-    REEMProxyManager::instance()->enableHumanDetection( false );
-    Py_RETURN_NONE;
-  }
-  
-  if (!PyCallable_Check( detectcb )) {
-    PyErr_Format( PyExc_ValueError, "First input parameter is not a callable object" );
-    return NULL;
-  }
-
-  if (trackcb && !PyCallable_Check( trackcb )) {
-    PyErr_Format( PyExc_ValueError, "Secode input parameter is not a callable object" );
-    return NULL;
-  }
-
-  PyREEMModule::instance()->setObjectDTCallback( detectcb, trackcb );
-  
-  if (REEMProxyManager::instance()->enableHumanDetection( true, (trackcb != NULL) ))
-    Py_RETURN_TRUE;
-  else
-    Py_RETURN_FALSE;
-}
-#endif
-
-#ifdef WITH_RHYTH_DMP
-/*! \fn registerRawTrajectoryInput( traj_input_callback )
- *  \memberof PyREEM
- *  \brief Register callback function to receive raw trajectory input with respect to
- *  an end effector (and its reference frame).
- *  \param traj_input_callback function that takes a dictionaries of { 'traj_id', 'step',
- *  'position', 'velocity', 'acceleration' (all in tuples of x,y,z) }.
- *  \return None
- */
-static PyObject * PyModule_REEMRegisterRawTrajectoryInput( PyObject * self, PyObject * args )
-{
-  PyObject * trajincb = NULL;
-
-  if (!PyArg_ParseTuple( args, "O", &trajincb )) {
-    // PyArg_ParseTuple will set the error status.
-    return NULL;
-  }
-
-  if (trajincb == Py_None) {
-    PyREEMModule::instance()->setTrajectoryInputCallback( NULL );
-    REEMProxyManager::instance()->subscribeRawTrajInput( false );
-    Py_RETURN_NONE;
-  }
-
-  if (!PyCallable_Check( trajincb )) {
-    PyErr_Format( PyExc_ValueError, "Input parameter is not a callable object" );
-    return NULL;
-  }
-
-  PyREEMModule::instance()->setTrajectoryInputCallback( trajincb );
-  REEMProxyManager::instance()->subscribeRawTrajInput( true );
-  Py_RETURN_NONE;
-}
-#endif
-
 #define INCLUDE_COMMON_PYMODULE_MEHTODS
 #include "../pyridecore/PyModulePyCommon.cpp"
 
@@ -2097,14 +2016,6 @@ static PyMethodDef PyModule_methods[] = {
     "Start PAL built-in face enrollment." },
   { "stopPalFaceEnrollment", (PyCFunction)PyModule_REEMStopPalFaceEnrollment, METH_NOARGS,
     "Stop PAL built-in face enrollment." },
-#ifdef WITH_REEMHT
-  { "registerHumanDetectTracking", (PyCFunction)PyModule_REEMRegisterObjectDetectTracking, METH_VARARGS,
-    "Register (or deregister) callback functions to get human detection and tracking information." },
-#endif
-#ifdef WITH_RHYTH_DMP
-  { "registerRawTrajectoryInput", (PyCFunction)PyModule_REEMRegisterRawTrajectoryInput, METH_VARARGS,
-    "Register (or deregister) callback function to raw trajectory input data w.r.t to an end effector." },
-#endif
 #define DEFINE_COMMON_PYMODULE_METHODS
 #include "../pyridecore/PyModulePyCommon.cpp"
   { NULL, NULL, 0, NULL }           /* sentinel */
@@ -2113,12 +2024,6 @@ static PyMethodDef PyModule_methods[] = {
 PyREEMModule::PyREEMModule() : PyModuleExtension( "PyREEM" )
 {
   baseScanCB_ = tiltScanCB_ = NULL;
-#ifdef WITH_REEMHT
-  objectDetectCB_ = objectTrackCB_ = NULL;
-#endif
-#ifdef WITH_RHYTH_DMP
-  trajInputCB_ = NULL;
-#endif
 }
 
 PyREEMModule::~PyREEMModule()
@@ -2131,24 +2036,6 @@ PyREEMModule::~PyREEMModule()
     Py_DECREF( tiltScanCB_ );
     tiltScanCB_ = NULL;
   }
-
-#ifdef WITH_REEMHT
-  if (objectDetectCB_) {
-    Py_DECREF( objectDetectCB_ );
-    objectDetectCB_ = NULL;
-  }
-  if (objectTrackCB_) {
-    Py_DECREF( objectTrackCB_ );
-    objectTrackCB_ = NULL;
-  }
-#endif
-
-#ifdef WITH_RHYTH_DMP
-  if (trajInputCB_) {
-    Py_DECREF( trajInputCB_ );
-    trajInputCB_ = NULL;
-  }
-#endif
 }
 
 PyObject * PyREEMModule::createPyModule()
@@ -2193,34 +2080,4 @@ void PyREEMModule::setPalFaceCallback( PyObject * obj )
 {
   this->swapCallbackHandler( palFaceCB_, obj );
 }
-
-#ifdef WITH_REEMHT
-void PyREEMModule::invokeObjectDetectionCallback( PyObject * arg )
-{
-  this->InvokeCallbackHandler( objectDetectCB_, arg );
-}
-
-void PyREEMModule::invokeObjectTrackingCallback( PyObject * arg )
-{
-  this->InvokeCallbackHandler( objectTrackCB_, arg );
-}
-
-void PyREEMModule::setObjectDTCallback( PyObject * detectcb, PyObject * trackcb )
-{
-  this->swapCallbackHandler( objectDetectCB_, detectcb );
-  this->swapCallbackHandler( objectTrackCB_, trackcb );
-}
-#endif
-
-#ifdef WITH_RHYTH_DMP
-void PyREEMModule::setTrajectoryInputCallback( PyObject * inputcb )
-{
-  this->swapCallbackHandler( trajInputCB_, inputcb );
-}
-
-void PyREEMModule::invokeTrajectoryInputCallback( PyObject * arg )
-{
-  this->InvokeCallbackHandler( trajInputCB_, arg );
-}
-#endif
 } // namespace pyride

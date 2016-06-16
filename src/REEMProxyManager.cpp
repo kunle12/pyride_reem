@@ -17,14 +17,6 @@
 #include <pal_detection_msgs/StartEnrollment.h>
 #include <pal_detection_msgs/StopEnrollment.h>
 
-#ifdef WITH_REEMHT
-#include "pr2ht/DetectTrackControl.h"
-#endif
-
-#ifdef WITH_RHYTH_DMP
-#include "rhyth_dmp/RecallTraj.h"
-#endif
-
 namespace pyride {
 
 static const float kMaxWalkSpeed = 1.0;
@@ -80,13 +72,6 @@ REEMProxyManager * REEMProxyManager::s_pREEMProxyManager = NULL;
 REEMProxyManager::REEMProxyManager() :
   rawBaseScanSub_( NULL ),
   rawTiltScanSub_( NULL ),
-#ifdef WITH_REEMHT
-  htObjStatusSub_( NULL ),
-  htObjUpdateSub_( NULL ),
-#endif
-#ifdef WITH_RHYTH_DMP
-  dmpTrajDataSub_( NULL ),
-#endif
   baseScanSub_( NULL ),
   tiltScanSub_( NULL ),
   baseScanNotifier_( NULL ),
@@ -152,25 +137,6 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
 
   jointDataThread_ = new ros::AsyncSpinner( 1, &jointDataQueue_ );
   jointDataThread_->start();
-
-#ifdef WITH_REEMHT
-  htClient_ = mCtrlNode_->serviceClient<pr2ht::DetectTrackControl>( "enable_hdt" );
-
-  if (!htClient_.exists()) {
-    ROS_INFO( "No human detection service is available." );
-  }
-#endif
-
-#ifdef WITH_RHYTH_DMP
-  dmpClient_ = mCtrlNode_->serviceClient<rhyth_dmp::RecallTraj>( "/rhyth_dmp/recall_dmp_traj" );
-
-  if (!dmpClient_.exists()) {
-    ROS_INFO( "No rhyth_dmp service is available." );
-  }
-
-  dmpTrajThread_ = new AsyncSpinner( 1, &dmpTrajQueue_ );
-  dmpTrajThread_->start();
-#endif
 
   mCmd_.linear.x = mCmd_.linear.y = mCmd_.angular.z = 0;
   headPitchRate_ = headYawRate_ = 0.0;
@@ -409,29 +375,7 @@ void REEMProxyManager::fini()
   deregisterForBaseScanData();
   deregisterForTiltScanData();
   deregisterForPalFaceData();
-#ifdef WITH_REEMHT
-  if (htObjStatusSub_) {
-    htObjStatusSub_->shutdown();
-    delete htObjStatusSub_;
-    htObjStatusSub_ = NULL;
-  }
-  if (htObjUpdateSub_) {
-    htObjUpdateSub_->shutdown();
-    delete htObjUpdateSub_;
-    htObjUpdateSub_ = NULL;
-  }
-#endif
 
-#ifdef WITH_RHYTH_DMP
-  dmpTrajThread_->stop();
-  delete dmpTrajThread_;
-  dmpTrajThread_ = NULL;
-  if (dmpTrajDataSub_) {
-    dmpTrajDataSub_->shutdown();
-    delete dmpTrajDataSub_;
-    dmpTrajDataSub_ = NULL;
-  }
-#endif
   jointDataThread_->stop();
   delete jointDataThread_;
   jointDataThread_ = NULL;
@@ -942,119 +886,6 @@ void REEMProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & ms
     PyGILState_Release( gstate );
   }
 }
-
-#ifdef WITH_REEMHT
-void REEMProxyManager::htObjStatusCB( const pr2ht::TrackedObjectStatusChangeConstPtr & msg )
-{
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
-  
-  PyObject * arg = Py_BuildValue( "(iiii)", msg->objtype, msg->trackid,
-                                 msg->nameid, msg->status );
-  
-  PyREEMModule::instance()->invokeObjectDetectionCallback( arg );
-  
-  Py_DECREF( arg );
-  
-  PyGILState_Release( gstate );
-}
-
-void REEMProxyManager::htObjUpdateCB( const pr2ht::TrackedObjectUpdateConstPtr & msg )
-{
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-    
-    size_t rsize = msg->objects.size();
-  
-    PyObject * retList = PyList_New( rsize );
-  
-    for (size_t i = 0; i < rsize; ++i) {
-      pr2ht::TrackedObjectInfo obj = msg->objects[i];
-      
-      PyObject * retObj = PyDict_New();
-      PyObject * elemObj = PyInt_FromLong( obj.objtype );
-      PyDict_SetItemString( retObj, "object_type", elemObj );
-      Py_DECREF( elemObj );
-
-      elemObj = PyInt_FromLong( obj.id );
-      PyDict_SetItemString( retObj, "track_id", elemObj );
-      Py_DECREF( elemObj );
-
-      elemObj = PyTuple_New( 4 );
-      PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( obj.bound.tl_x ) );
-      PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( obj.bound.tl_y ) );
-      PyTuple_SetItem( elemObj, 2, PyFloat_FromDouble( obj.bound.width ) );
-      PyTuple_SetItem( elemObj, 3, PyFloat_FromDouble( obj.bound.height ) );
-      PyDict_SetItemString( retObj, "bound", elemObj );
-      Py_DECREF( elemObj );
-
-      elemObj = PyTuple_New( 3 );
-      PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( obj.est_pos.x ) );
-      PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( obj.est_pos.y ) );
-      PyTuple_SetItem( elemObj, 2, PyFloat_FromDouble( obj.est_pos.z ) );
-      PyDict_SetItemString( retObj, "est_pos", elemObj );
-      Py_DECREF( elemObj );
-
-      PyList_SetItem( retList, i, retObj );
-    }
-    
-    PyObject * arg = Py_BuildValue( "(O)", retList );
-    
-    PyREEMModule::instance()->invokeObjectTrackingCallback( arg );
-    
-    Py_DECREF( arg );
-    Py_DECREF( retList );
-  
-    PyGILState_Release( gstate );
-}
-#endif
-
-#ifdef WITH_RHYTH_DMP
-void REEMProxyManager::trajectoryDataInputCB( const rhyth_dmp::OutputTrajDataConstPtr & msg )
-{
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
-
-  PyObject * retObj = PyDict_New();
-  PyObject * elemObj = PyString_FromString( msg->traj_id.c_str() );
-  PyDict_SetItemString( retObj, "traj_id", elemObj );
-  Py_DECREF( elemObj );
-
-  elemObj = PyInt_FromLong( msg->step );
-  PyDict_SetItemString( retObj, "step", elemObj );
-  Py_DECREF( elemObj );
-
-  elemObj = PyTuple_New( 3 );
-  PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( msg->point.position.x ) );
-  PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( msg->point.position.y ) );
-  PyTuple_SetItem( elemObj, 2, PyFloat_FromDouble( msg->point.position.z ) );
-  PyDict_SetItemString( retObj, "position", elemObj );
-  Py_DECREF( elemObj );
-
-  elemObj = PyTuple_New( 3 );
-  PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( msg->point.velocity.x ) );
-  PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( msg->point.velocity.y ) );
-  PyTuple_SetItem( elemObj, 2, PyFloat_FromDouble( msg->point.velocity.z ) );
-  PyDict_SetItemString( retObj, "velocity", elemObj );
-  Py_DECREF( elemObj );
-
-  elemObj = PyTuple_New( 3 );
-  PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( msg->point.acceleration.x ) );
-  PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( msg->point.acceleration.y ) );
-  PyTuple_SetItem( elemObj, 2, PyFloat_FromDouble( msg->point.acceleration.z ) );
-  PyDict_SetItemString( retObj, "acceleration", elemObj );
-  Py_DECREF( elemObj );
-
-  PyObject * arg = Py_BuildValue( "(O)", retObj );
-
-  PyREEMModule::instance()->invokeTrajectoryInputCallback( arg );
-
-  Py_DECREF( arg );
-  Py_DECREF( retObj );
-
-  PyGILState_Release( gstate );
-}
-#endif
 
 bool REEMProxyManager::getRobotPose( std::vector<double> & positions, std::vector<double> & orientation )
 {
@@ -1928,72 +1759,6 @@ bool REEMProxyManager::setHandPosition( bool isLeftHand, std::vector<double> & p
   }
   return true;
 }
-
-#ifdef WITH_REEMHT
-bool REEMProxyManager::enableHumanDetection( bool toEnable, bool enableTrackingNotif )
-{
-  if (!htClient_.exists()) {
-    return false;
-  }
-  pr2ht::DetectTrackControl srvMsg;
-  
-  if (toEnable) {
-    if (htObjStatusSub_) {
-      ROS_WARN( "Human detection service is already enabled." );
-      return true;
-    }
-  }
-  else if (!htObjStatusSub_) {
-    ROS_WARN( "Human detection service is already disabled." );
-    return true;
-  }
-
-  srvMsg.request.tostart = toEnable;
-  
-  if (htClient_.call( srvMsg ) && srvMsg.response.ret) {
-    if (toEnable) {
-      htObjStatusSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "/pr2_ht/object_status", 1, &REEMProxyManager::htObjStatusCB, this ) );
-      if (enableTrackingNotif) {
-        htObjUpdateSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "/pr2_ht/object_update", 1, &REEMProxyManager::htObjUpdateCB, this ) );
-      }
-    }
-    else {
-      if (htObjStatusSub_) {
-        htObjStatusSub_->shutdown();
-        delete htObjStatusSub_;
-        htObjStatusSub_ = NULL;
-      }
-      if (htObjUpdateSub_) {
-        htObjUpdateSub_->shutdown();
-        delete htObjUpdateSub_;
-        htObjUpdateSub_ = NULL;
-      }
-    }
-    return true;
-  }
-  return false;
-}
-#endif
-
-#ifdef WITH_RHYTH_DMP
-void REEMProxyManager::subscribeRawTrajInput( bool enable )
-{
-  if (enable) {
-    if (dmpTrajDataSub_) { // should not happen, check here just in case.
-      ROS_WARN( "We have already subscribed to raw trajectory input." );
-      return;
-    }
-    SubscribeOptions sopts = ros::SubscribeOptions::create<rhyth_dmp::OutputTrajData>( "/rhyth_dmp/output_trajectory",
-        1, boost::bind( &REEMProxyManager::trajectoryDataInputCB, this, _1 ), ros::VoidPtr(), &dmpTrajQueue_ );
-    dmpTrajDataSub_ = new ros::Subscriber( mCtrlNode_->subscribe( sopts ) );
-  }
-  else if (dmpTrajDataSub_) {
-    dmpTrajDataSub_->shutdown();
-    delete dmpTrajDataSub_;
-    dmpTrajDataSub_ = NULL;
-  }
-}
-#endif
 
 void REEMProxyManager::updateHeadPos( float yaw, float pitch )
 {

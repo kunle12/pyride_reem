@@ -28,33 +28,12 @@ public:
   void setTiltScanCallback( PyObject * obj );
   void setPalFaceCallback( PyObject * obj );
 
-#ifdef WITH_REEMHT
-  void setObjectDTCallback( PyObject * detectcb, PyObject * trackcb );
-  
-  void invokeObjectDetectionCallback( PyObject * arg );
-  void invokeObjectTrackingCallback( PyObject * arg );
-#endif
-
-#ifdef WITH_RHYTH_DMP
-  void setTrajectoryInputCallback( PyObject * inputcb );
-  void invokeTrajectoryInputCallback( PyObject * arg );
-#endif
-
 private:
   static PyREEMModule * s_pyREEMModule;
   
   PyObject * baseScanCB_;
   PyObject * tiltScanCB_;
   PyObject * palFaceCB_;
-  
-#ifdef WITH_REEMHT
-  PyObject * objectDetectCB_;
-  PyObject * objectTrackCB_;
-#endif
-
-#ifdef WITH_RHYTH_DMP
-  PyObject * trajInputCB_;
-#endif
 
   PyREEMModule();
   PyObject * createPyModule();

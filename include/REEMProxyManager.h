@@ -49,15 +49,6 @@
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #include <shape_tools/solid_primitive_dims.h>
 
-#ifdef WITH_REEMHT
-#include <pr2ht/TrackedObjectStatusChange.h>
-#include <pr2ht/TrackedObjectUpdate.h>
-#endif
-
-#ifdef WITH_RHYTH_DMP
-#include <rhyth_dmp/OutputTrajData.h>
-#endif
-
 #include "PyRideCommon.h"
 
 using namespace std;
@@ -154,14 +145,6 @@ public:
   bool navigateBodyTo( const std::vector<double> & positions,
                       const std::vector<double> & orientation );
   
-#ifdef WITH_REEMHT
-  bool enableHumanDetection( bool enable, bool enableTrackingNotif = false );
-#endif
-  
-#ifdef WITH_RHYTH_DMP
-  void subscribeRawTrajInput( bool enable );
-#endif
-
   void cancelBodyMovement();
 
   void publishCommands();
@@ -200,6 +183,7 @@ private:
   NodeHandle * mCtrlNode_;
   Publisher mPub_;
   Publisher hPub_;
+  Publisher webPub_;
   Publisher colObjPub_;
   Subscriber jointSub_;
   Subscriber powerSub_;
@@ -219,22 +203,6 @@ private:
   ServiceClient palFaceEnablerClient_;
   ServiceClient palFaceEnrolStartClient_;
   ServiceClient palFaceEnrolStopClient_;
-
-#ifdef WITH_REEMHT
-  Subscriber * htObjStatusSub_;
-  Subscriber * htObjUpdateSub_;
-
-  ServiceClient htClient_;
-#endif
-
-#ifdef WITH_RHYTH_DMP
-  Subscriber * dmpTrajDataSub_;
-  // use separate thread and message queue to cope with possible high resolution inputs
-  AsyncSpinner * dmpTrajThread_;
-  CallbackQueue dmpTrajQueue_;
-
-  ServiceClient dmpClient_;
-#endif
 
   message_filters::Subscriber<sensor_msgs::LaserScan> * baseScanSub_;
   message_filters::Subscriber<sensor_msgs::LaserScan> * tiltScanSub_;
@@ -354,16 +322,6 @@ private:
 
   bool findSolidObjectInScene( const std::string & name );
   std_msgs::ColorRGBA colour2RGB( const REEMLedColour colour );
-
-#ifdef WITH_REEMHT
-  void htObjStatusCB( const pr2ht::TrackedObjectStatusChangeConstPtr & msg );
-  void htObjUpdateCB( const pr2ht::TrackedObjectUpdateConstPtr & msg );
-#endif
-
-#ifdef WITH_RHYTH_DMP
-  void trajectoryDataInputCB( const rhyth_dmp::OutputTrajDataConstPtr & msg );
-#endif
-
 };
 }; // namespace pyride
 
