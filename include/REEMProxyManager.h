@@ -143,7 +143,7 @@ public:
   bool placeObject( const std::string & name, const std::string & place, std::vector<double> & place_pose,
       bool isLeftArm = false, double approach_dist = 0.4 );
 
-  bool setHandPosition( bool isLeftHand, std::vector<double> & positions, float time_to_reach );
+  bool setHandPosition( bool isLeftHand, std::vector<double> & positions, float time_to_reach = 3.0 );
 
   bool moveBodyTo( const RobotPose & pose, const float bestTime );
 

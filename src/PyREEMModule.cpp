@@ -24,8 +24,18 @@ PyDoc_STRVAR( PyREEM_doc, \
  */
 PyREEMModule * PyREEMModule::s_pyREEMModule = NULL;
 
-static const char *kLeftArmKWlist[] = { "arm_left_1_joint", "arm_left_2_joint", "arm_left_3_joint", "arm_left_4_joint", "arm_left_5_joint", "arm_left_6_joint", "arm_left_7_joint", "time_to_reach", NULL };
-static const char *kRightArmKWlist[] = { "arm_right_1_joint", "arm_right_2_joint", "arm_right_3_joint", "arm_right_4_joint", "arm_right_5_joint", "arm_right_6_joint", "arm_right_7_joint", "time_to_reach", NULL };
+static const char *kLeftArmKWlist[] = { "arm_left_1_joint", "arm_left_2_joint", "arm_left_3_joint",
+    "arm_left_4_joint", "arm_left_5_joint", "arm_left_6_joint", "arm_left_7_joint", "time_to_reach", NULL };
+static const char *kRightArmKWlist[] = { "arm_right_1_joint", "arm_right_2_joint", "arm_right_3_joint",
+    "arm_right_4_joint", "arm_right_5_joint", "arm_right_6_joint", "arm_right_7_joint", "time_to_reach", NULL };
+
+static const char *kLeftHandKWlist[] = { "hand_left_index_1_joint", "hand_left_index_2_joint",
+    "hand_left_index_3_joint", "hand_left_index_joint", "hand_left_middle_1_joint", "hand_left_middle_2_joint",
+    "hand_left_middle_3_joint", "hand_left_middle_joint", "hand_left_thumb_joint" };
+static const char *kRightHandKWlist[] = { "hand_right_index_1_joint", "hand_right_index_2_joint",
+    "hand_right_index_3_joint", "hand_right_index_joint", "hand_right_middle_1_joint", "hand_right_middle_2_joint",
+    "hand_right_middle_3_joint", "hand_right_middle_joint", "hand_right_thumb_joint" };
+;
 static const char *kPoseKWlist[] = { "position", "orientation", NULL };
 static const char *kPickAndPlaceKWlist[] = { "name", "place", "grasp_position", "grasp_orientation", "use_left_arm", "distance_from", NULL };
 static const char *kObjectKWlist[] = { "name", "volume", "position", "orientation", NULL };
@@ -637,6 +647,68 @@ static PyObject * PyModule_REEMGetArmJointPositions( PyObject * self, PyObject *
   }
 }
 
+/*! \fn getHandJointPositions(left_hand)
+ *  \memberof PyREEM
+ *  \brief Get the current joint positions of one of the REEM hand.
+ *  \param bool left_hand. True for left hand; False for right hand.
+ *  \return dictionary(hand_joint_positions).
+ *  \note Returned dictionary use joint names as keys.
+ */
+static PyObject * PyModule_REEMGetHandJointPositions( PyObject * self, PyObject * args )
+{
+  PyObject * handsel = NULL;
+
+  if (!PyArg_ParseTuple( args, "O", &handsel )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  if (!PyBool_Check( handsel )) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.getHandJointPositions: input parameter must be a boolean!" );
+    return NULL;
+  }
+
+  std::vector<std::string> joints( 9 );
+  std::vector<double> positions;
+
+  if (PyObject_IsTrue( handsel )) {
+    joints[0] = "hand_left_index_1_joint";
+    joints[1] = "hand_left_index_2_joint";
+    joints[2] = "hand_left_index_3_joint";
+    joints[3] = "hand_left_index_joint";
+    joints[4] = "hand_left_middle_1_joint";
+    joints[5] = "hand_left_middle_2_joint";
+    joints[6] = "hand_left_middle_3_joint";
+    joints[7] = "hand_left_middle_joint";
+    joints[8] = "hand_left_thumb_joint";
+  }
+  else {
+    joints[0] = "hand_right_index_1_joint";
+    joints[1] = "hand_right_index_2_joint";
+    joints[2] = "hand_right_index_3_joint";
+    joints[3] = "hand_right_index_joint";
+    joints[4] = "hand_right_middle_1_joint";
+    joints[5] = "hand_right_middle_2_joint";
+    joints[6] = "hand_right_middle_3_joint";
+    joints[7] = "hand_right_middle_joint";
+    joints[8] = "hand_right_thumb_joint";
+  }
+
+  if (REEMProxyManager::instance()->getPositionForJoints( joints, positions )) {
+    PyObject * retObj = PyDict_New();
+    for (int i = 0; i < 9; i++) {
+      PyObject * numObj = PyFloat_FromDouble( positions.at( i ) );
+      PyDict_SetItemString( retObj, joints.at( i ).c_str(), numObj );
+      Py_DECREF( numObj );
+    }
+    return retObj;
+  }
+  else {
+    PyErr_Format( PyExc_SystemError, "PyREEM.getHandJointPositions: unable to get hand joint positions." );
+    return NULL;
+  }
+}
+
 /*! \fn getRobotPose()
  *  \memberof PyREEM
  *  \brief Get the current REEM body pose.
@@ -1127,10 +1199,10 @@ static PyObject * PyModule_REEMCancelMoveBodyAction( PyObject * self )
   Py_RETURN_NONE;
 }
 
-/*! \fn openHand(which_gripper)
+/*! \fn openHand(which_hand)
  *  \memberof PyREEM
  *  \brief Opens one or both REEM grippers.
- *  \param int which_gripper. 1 = left gripper, 2 = right gripper and 3 = both grippers.
+ *  \param int which_hand. 1 = left hand, 2 = right hand and 3 = both hand.
  *  \return bool. True == valid command; False == invalid command.
  */
 static PyObject * PyModule_REEMOpenHand( PyObject * self, PyObject * args )
@@ -1141,24 +1213,34 @@ static PyObject * PyModule_REEMOpenHand( PyObject * self, PyObject * args )
     return NULL;
   }
 
-  if (mode < 1 || mode > 3) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.openHand: invalid gripper number! 1 = left gripper, 2 = right gripper and 3 = both grippers." );
-    return NULL;
+  std::vector<double> hand_pos( 3, 0.0 );
+  switch (mode) {
+    case 1:
+      if (REEMProxyManager::instance()->setHandPosition( true, hand_pos ))
+        Py_RETURN_TRUE;
+      break;
+    case 2:
+      if (REEMProxyManager::instance()->setHandPosition( false, hand_pos ))
+        Py_RETURN_TRUE;
+      break;
+    case 3:
+      if (REEMProxyManager::instance()->setHandPosition( true, hand_pos ) ||
+          REEMProxyManager::instance()->setHandPosition( false, hand_pos ))
+      {
+        Py_RETURN_TRUE;
+      }
+      break;
+    default:
+      PyErr_Format( PyExc_ValueError, "PyREEM.openHand: invalid hand number! 1 = left hand, 2 = right hand and 3 = both hand." );
+      return NULL;
   }
-
-  /* TODO: fix with hand traj
-  if (REEMProxyManager::instance()->setHandPosition( mode, 0.08 ))
-    Py_RETURN_TRUE;
-  else
-    Py_RETURN_FALSE;
-  */
-  Py_RETURN_TRUE;
+  Py_RETURN_FALSE;
 }
 
-/*! \fn closeHand(which_gripper)
+/*! \fn closeHand(which_hand)
  *  \memberof PyREEM
- *  \brief Closes one or both REEM grippers.
- *  \param int which_gripper. 1 = left gripper, 2 = right gripper and 3 = both grippers.
+ *  \brief Closes one or both REEM hand.
+ *  \param int which_hand. 1 = left hand, 2 = right hand and 3 = both hands.
  *  \return bool. True == valid command; False == invalid command.
  */
 static PyObject * PyModule_REEMCloseHand( PyObject * self, PyObject * args )
@@ -1169,18 +1251,29 @@ static PyObject * PyModule_REEMCloseHand( PyObject * self, PyObject * args )
     return NULL;
   }
   
-  if (mode < 1 || mode > 3) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.closeHand: invalid gripper number! 1 = left gripper, 2 = right gripper and 3 = both grippers." );
-    return NULL;
+  std::vector<double> hand_pos( 3, 0.0 );
+  // TODO: set position
+  switch (mode) {
+    case 1:
+      if (REEMProxyManager::instance()->setHandPosition( true, hand_pos ))
+        Py_RETURN_TRUE;
+      break;
+    case 2:
+      if (REEMProxyManager::instance()->setHandPosition( false, hand_pos ))
+        Py_RETURN_TRUE;
+      break;
+    case 3:
+      if (REEMProxyManager::instance()->setHandPosition( true, hand_pos ) ||
+          REEMProxyManager::instance()->setHandPosition( false, hand_pos ))
+      {
+        Py_RETURN_TRUE;
+      }
+      break;
+    default:
+      PyErr_Format( PyExc_ValueError, "PyREEM.closeHand: invalid hand number! 1 = left hand, 2 = right hand and 3 = both hand." );
+      return NULL;
   }
-  
-  /* TODO: to be fixed
-  if (REEMProxyManager::instance()->setHandPosition( mode, 0.0 ))
-    Py_RETURN_TRUE;
-  else
-    Py_RETURN_FALSE;
-  */
-  Py_RETURN_TRUE;
+  Py_RETURN_FALSE;
 }
 
 /*! \fn setHandPosition(which_gripper, position)
@@ -1190,33 +1283,55 @@ static PyObject * PyModule_REEMCloseHand( PyObject * self, PyObject * args )
  *  \param float position. Must be in range of [0.0,0.08].
  *  \return bool. True == valid command; False == invalid command.
  */
-static PyObject * PyModule_REEMSetHandPosition( PyObject * self, PyObject * args )
+static PyObject * PyModule_REEMSetHandPosition( PyObject * self, PyObject * args, PyObject * keywds  )
 {
-/*
   int mode = 0;
-  double value = 0.0;
-  
-  if (!PyArg_ParseTuple( args, "id", &mode, &value )) {
-    // PyArg_ParseTuple will set the error status.
-    return NULL;
-  }
-  
-  if (mode < 1 || mode > 3) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.setHandPosition: invalid gripper number! 1 = left gripper, 2 = right gripper and 3 = both grippers." );
-    return NULL;
-  }
+  PyObject * posObj = NULL;
 
-  if (value < 0.0 || value > 0.08) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.setHandPosition: invalid gripper position. Must be between 0.0 and 0.08." );
-    return NULL;
+  double h_i_1_j, h_i_2_j, h_i_3_j, h_i_j;
+  double h_m_1_j, h_m_2_j, h_m_3_j, h_m_j, h_t_j;
+  double time_to_reach = 2.0;
+  
+  bool isLeftArm = false;
+  
+  if (PyArg_ParseTupleAndKeywords( args, keywds, "ddddddddd|d", (char**)kLeftHandKWlist,
+                                     &h_i_1_j, &h_i_2_j, &h_i_3_j, &h_i_j,
+                                     &h_m_1_j, &h_m_2_j, &h_m_3_j, &h_m_j,
+                                     &h_t_j, &time_to_reach ))
+  {
+    isLeftArm = true;
   }
+  else {
+    PyErr_Clear();
+    if (!PyArg_ParseTupleAndKeywords( args, keywds, "ddddddddd|d", (char**)kRightHandKWlist,
+                                        &h_i_1_j, &h_i_2_j, &h_i_3_j, &h_i_j,
+                                        &h_m_1_j, &h_m_2_j, &h_m_3_j, &h_m_j,
+                                        &h_t_j, &time_to_reach ))
+    {
+      // PyArg_ParseTuple will set the error status.
+      return NULL;
+    }
+  }
+  std::vector<double> hand_pos( 3, 0.0 );
+  /*
+  hand_pos[0] = h_i_1_j;
+  hand_pos[1] = h_i_2_j;
+  hand_pos[2] = h_i_3_j;
+  hand_pos[3] = h_i_j;
+  hand_pos[4] = h_m_1_j;
+  hand_pos[5] = h_m_2_j;
+  hand_pos[6] = h_m_3_j;
+  hand_pos[7] = h_m_j;
+  hand_pos[8] = h_t_j;
+  */
+  hand_pos[0] = h_i_j;
+  hand_pos[1] = h_m_j;
+  hand_pos[2] = h_t_j;
 
-  if (REEMProxyManager::instance()->setHandPosition( mode, value ))
+  if (REEMProxyManager::instance()->setHandPosition( isLeftArm, hand_pos ))
     Py_RETURN_TRUE;
   else
     Py_RETURN_FALSE;
-  */
-  Py_RETURN_TRUE;
 }
 
 /*! \fn registerBaseScanCallback( callback_function, target_frame )
@@ -1904,6 +2019,8 @@ static PyMethodDef PyModule_methods[] = {
     "Get positions for a list of joints." },
   { "getArmJointPositions", (PyCFunction)PyModule_REEMGetArmJointPositions, METH_VARARGS,
     "Get joint positions of REEM arms." },
+  { "getHandJointPositions", (PyCFunction)PyModule_REEMGetHandJointPositions, METH_VARARGS,
+    "Get joint positions of REEM hand." },
   { "getRobotPose", (PyCFunction)PyModule_REEMGetRobotPose, METH_NOARGS,
     "Get the current REEM pose." },
   { "getRelativeTF", (PyCFunction)PyModule_REEMGetRelativeTF, METH_VARARGS,
@@ -1936,7 +2053,7 @@ static PyMethodDef PyModule_methods[] = {
     "Open one or both REEM grippers." },
   { "closeHand", (PyCFunction)PyModule_REEMCloseHand, METH_VARARGS,
     "Close one or both REEM grippers." },
-  { "setHandPosition", (PyCFunction)PyModule_REEMSetHandPosition, METH_VARARGS,
+  { "setHandPosition", (PyCFunction)PyModule_REEMSetHandPosition, METH_VARARGS|METH_KEYWORDS,
     "Set specific position on one or both REEM grippers." },
   { "getBatteryStatus", (PyCFunction)PyModule_REEMGetBatteryStatus, METH_NOARGS,
     "Get the current battery status." },

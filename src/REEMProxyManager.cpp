@@ -1855,64 +1855,77 @@ bool REEMProxyManager::setHandPosition( bool isLeftHand, std::vector<double> & p
     return false;
   }
 
-  control_msgs::FollowJointTrajectoryGoal goal;
-
-  // First, the joint names, which apply to all waypoints
   if (isLeftHand) {
-    if (!lhandClient_) {
-      return false;
-    }
-    if (lHandCtrl_) {
-      ROS_WARN( "Left hand is in motion." );
-      return false;
-    }
-    goal.trajectory.joint_names.push_back( "hand_left_index_joint" );
-    goal.trajectory.joint_names.push_back( "hand_left_middle_joint" );
-    goal.trajectory.joint_names.push_back( "hand_left_thumb_joint" );
-    lHandCtrl_ = true;
+     if (!lhandClient_ || lHandCtrl_) {
+       return false;
+     }
+     else {
+       control_msgs::FollowJointTrajectoryGoal goal;
+       //goal.trajectory.joint_names.push_back( "hand_left_index_1_joint" );
+       //goal.trajectory.joint_names.push_back( "hand_left_index_2_joint" );
+       //goal.trajectory.joint_names.push_back( "hand_left_index_3_joint" );
+       goal.trajectory.joint_names.push_back( "hand_left_index_joint" );
+       //goal.trajectory.joint_names.push_back( "hand_left_middle_1_joint" );
+       //goal.trajectory.joint_names.push_back( "hand_left_middle_2_joint" );
+       //goal.trajectory.joint_names.push_back( "hand_left_middle_3_joint" );
+       goal.trajectory.joint_names.push_back( "hand_left_middle_joint" );
+       goal.trajectory.joint_names.push_back( "hand_left_thumb_joint" );
+       goal.trajectory.points.resize( 1 );
+
+       goal.trajectory.points[0].positions.resize( 3 );
+         // Velocities
+       goal.trajectory.points[0].velocities.resize( 3 );
+
+       for (size_t j = 0; j < 3; ++j) {
+         goal.trajectory.points[0].positions[j] = positions[j];
+         goal.trajectory.points[0].velocities[j] = 0.0;
+       }
+       // To be reached 2 seconds after starting along the trajectory
+       goal.trajectory.points[0].time_from_start = ros::Duration( time_to_reach );
+       lHandCtrl_ = true;
+       lHandActionTimeout_ = time_to_reach * 1.05; // give additional 5% allowance
+       lhandClient_->sendGoal( goal,
+                             boost::bind( &REEMProxyManager::doneLHandAction, this, _1, _2 ),
+                             FollowTrajectoryClient::SimpleActiveCallback(),
+                             boost::bind( &REEMProxyManager::moveLHandActionFeedback, this, _1 ) );
+     }
   }
   else {
-    if (!rhandClient_) {
-      return false;
-    }
-    if (rHandCtrl_) {
-      ROS_WARN( "Right hand is in motion." );
-      return false;
-    }
-    goal.trajectory.joint_names.push_back( "hand_right_index_joint" );
-    goal.trajectory.joint_names.push_back( "hand_right_middle_joint" );
-    goal.trajectory.joint_names.push_back( "hand_right_thumb_joint" );
-    rHandCtrl_ = true;
-  }
+     if (!rhandClient_ || rHandCtrl_) {
+       return false;
+     }
+     else {
+       control_msgs::FollowJointTrajectoryGoal goal;
 
-  goal.trajectory.points.resize( 1 );
+       //goal.trajectory.joint_names.push_back( "hand_right_index_1_joint" );
+       //goal.trajectory.joint_names.push_back( "hand_right_index_2_joint" );
+       //goal.trajectory.joint_names.push_back( "hand_right_index_3_joint" );
+       goal.trajectory.joint_names.push_back( "hand_right_index_joint" );
+       //goal.trajectory.joint_names.push_back( "hand_right_middle_1_joint" );
+       //goal.trajectory.joint_names.push_back( "hand_right_middle_2_joint" );
+       //goal.trajectory.joint_names.push_back( "hand_right_middle_3_joint" );
+       goal.trajectory.joint_names.push_back( "hand_right_middle_joint" );
+       goal.trajectory.joint_names.push_back( "hand_right_thumb_joint" );
+       goal.trajectory.points.resize( 1 );
 
-  goal.trajectory.points[0].positions.resize( 3 );
-    // Velocities
-  goal.trajectory.points[0].velocities.resize( 3 );
+       goal.trajectory.points[0].positions.resize( 3 );
+         // Velocities
+       goal.trajectory.points[0].velocities.resize( 3 );
 
-  for (size_t j = 0; j < 3; ++j) {
-    goal.trajectory.points[0].positions[j] = positions[j];
-    goal.trajectory.points[0].velocities[j] = 0.0;
+       for (size_t j = 0; j < 3; ++j) {
+         goal.trajectory.points[0].positions[j] = positions[j];
+         goal.trajectory.points[0].velocities[j] = 0.0;
+       }
+       // To be reached 2 seconds after starting along the trajectory
+       goal.trajectory.points[0].time_from_start = ros::Duration( time_to_reach );
+       rHandCtrl_ = true;
+       rHandActionTimeout_ = time_to_reach * 1.05; // give additional 5% allowance
+       rhandClient_->sendGoal( goal,
+                             boost::bind( &REEMProxyManager::doneRHandAction, this, _1, _2 ),
+                             FollowTrajectoryClient::SimpleActiveCallback(),
+                             boost::bind( &REEMProxyManager::moveRHandActionFeedback, this, _1 ) );
+     }
   }
-  // To be reached 2 seconds after starting along the trajectory
-  goal.trajectory.points[0].time_from_start = ros::Duration( time_to_reach );
-
-  if (isLeftHand) {
-    lHandActionTimeout_ = time_to_reach * 1.05; // give additional 5% allowance
-    rhandClient_->sendGoal( goal,
-                          boost::bind( &REEMProxyManager::doneLHandAction, this, _1, _2 ),
-                          FollowTrajectoryClient::SimpleActiveCallback(),
-                          boost::bind( &REEMProxyManager::moveLHandActionFeedback, this, _1 ) );
-  }
-  else {
-    rHandActionTimeout_ = time_to_reach * 1.05; // give additional 5% allowance
-    lhandClient_->sendGoal( goal,
-                          boost::bind( &REEMProxyManager::doneRHandAction, this, _1, _2 ),
-                          FollowTrajectoryClient::SimpleActiveCallback(),
-                          boost::bind( &REEMProxyManager::moveRHandActionFeedback, this, _1 ) );
-  }
-  
   return true;
 }
 
