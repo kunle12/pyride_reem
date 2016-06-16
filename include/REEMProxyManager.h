@@ -181,9 +181,10 @@ public:
   void deregisterForBaseScanData();
   void deregisterForTiltScanData();
   
-  bool setEarLED( const REEMLedColour colour, const int side = 3 );
-  bool pulseEarLED( const REEMLedColour colour1, const REEMLedColour colour2,
+  int setEarLED( const REEMLedColour colour, const int side = 3 );
+  int pulseEarLED( const REEMLedColour colour1, const REEMLedColour colour2,
       const int side = 3, const float period = 1.0 );
+  bool cancelEarLED( const int effectID );
 
   bool palFaceStartEnrollment( const std::string & name );
   bool palFaceStopEnrollment();
@@ -213,6 +214,7 @@ private:
 
   ServiceClient ledColourClient_;
   ServiceClient ledPulseClient_;
+  ServiceClient cancelLedClient_;
 
   ServiceClient palFaceEnablerClient_;
   ServiceClient palFaceEnrolStartClient_;

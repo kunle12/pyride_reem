@@ -1666,7 +1666,7 @@ static PyObject * PyModule_REEMSetArmStiffness( PyObject * self, PyObject * args
  *  \brief Set REEM's ear LED to a colour.
  *  \param str colour. Colour must be 'red','green', 'blue', 'white', 'blank', 'yellow' or 'pink'.
  *  \param int side. 1 = left side, 2 = right sight and3 = both, default = 3.
- *  \return None.
+ *  \return int effectId. The ID number of the effect.
  */
 static PyObject * PyModule_REEMSetEarLED( PyObject * self, PyObject * args )
 {
@@ -1688,11 +1688,8 @@ static PyObject * PyModule_REEMSetEarLED( PyObject * self, PyObject * args )
     PyErr_Format( PyExc_ValueError, "PyREEM.setEarLED: invalid side of head: 1 = left, 2 = right, 3 = both." );
     return NULL;
   }
-  if (REEMProxyManager::instance()->setEarLED( colourID, headSide )) {
-    Py_RETURN_TRUE;
-  }
 
-  Py_RETURN_FALSE;
+  return PyLong_FromLong(  REEMProxyManager::instance()->setEarLED( colourID, headSide ));
 }
 
 /*! \fn pulseEarLED(colour_one, colour_two, side, period)
@@ -1702,7 +1699,7 @@ static PyObject * PyModule_REEMSetEarLED( PyObject * self, PyObject * args )
  *  \param str colour_two. Colour label two.
  *  \param int side. 1 = left, 2 = right and3 = both, default = 3.
  *  \param int period. Time (in seconds) before switching LED colour.
- *  \return None.
+ *  \return int effectId. The ID number of the effect.
  *  \note Colour must be 'red','green', 'blue', 'white', 'blank', 'yellow' or 'pink'.
  */
 static PyObject * PyModule_REEMPulseEarLED( PyObject * self, PyObject * args )
@@ -1734,8 +1731,37 @@ static PyObject * PyModule_REEMPulseEarLED( PyObject * self, PyObject * args )
     return NULL;
   }
 
-  REEMProxyManager::instance()->pulseEarLED( colourID1, colourID2, period, headSide );
-  Py_RETURN_NONE;
+  return PyLong_FromLong( REEMProxyManager::instance()->pulseEarLED( colourID1, colourID2, period, headSide ) );
+}
+
+/** @name Miscellaneous Functions
+ *
+ */
+/**@{*/
+/*! \fn cancelEarLEDEffect(effect_id)
+ *  \memberof PyREEM
+ *  \brief Set REEM's ear LED to a colour.
+ *  \param int effect_id. ID of the effect to be cancelled.
+ *  \return bool True = successful, otherwise False.
+ */
+static PyObject * PyModule_REEMCancelEarLEDEffect( PyObject * self, PyObject * args )
+{
+  int effectId = 0;
+
+  if (!PyArg_ParseTuple( args, "i", &effectId )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  if (effectId <= 0) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.cancelEarLEDEffect: invalid effect ID number." );
+    return NULL;
+  }
+
+  if (REEMProxyManager::instance()->cancelEarLED( effectId ))
+    Py_RETURN_TRUE;
+
+  Py_RETURN_FALSE;
 }
 
 /*! \fn startPalFaceEnrollment(name)
@@ -1922,6 +1948,8 @@ static PyMethodDef PyModule_methods[] = {
       "Set the colour of the ear LEDs on REEM." },
   { "pulseEarLED", (PyCFunction)PyModule_REEMPulseEarLED, METH_VARARGS,
       "Pulse the ear LED of REEM between two colours." },
+  { "cancelEarLEDEffect", (PyCFunction)PyModule_REEMCancelEarLEDEffect, METH_VARARGS,
+      "Cancel an ear LED effect ." },
   { "setHeadStiffness", (PyCFunction)PyModule_REEMSetHeadStiffness, METH_VARARGS,
     "Set the stiffness of the REEM's head. " },
   { "setArmStiffness", (PyCFunction)PyModule_REEMSetArmStiffness, METH_VARARGS,

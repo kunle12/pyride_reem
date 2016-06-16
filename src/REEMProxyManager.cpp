@@ -11,6 +11,8 @@
 
 #include <pal_device_msgs/TimedColourEffect.h>
 #include <pal_device_msgs/TimedFadeEffect.h>
+#include <pal_device_msgs/CancelEffect.h>
+#include <pal_device_msgs/LedGroup.h>
 #include <pal_detection_msgs/Recognizer.h>
 #include <pal_detection_msgs/StartEnrollment.h>
 #include <pal_detection_msgs/StopEnrollment.h>
@@ -311,15 +313,23 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
           rarmGroup_->getEndEffectorLink().c_str(), larmGroup_->getEndEffectorLink().c_str() );
     }
   }
+
   ledColourClient_ = mCtrlNode_->serviceClient<pal_device_msgs::TimedColourEffect>( "/ledManager/TimedColourEffect" );
 
   if (!ledColourClient_.exists()) {
     ROS_INFO( "No led colour effect service is available." );
   }
+
   ledPulseClient_ = mCtrlNode_->serviceClient<pal_device_msgs::TimedFadeEffect>( "/ledManager/TimedFadeEffect" );
 
   if (!ledPulseClient_.exists()) {
     ROS_INFO( "No led colour fade effect service is available." );
+  }
+
+  cancelLedClient_ = mCtrlNode_->serviceClient<pal_device_msgs::CancelEffect>( "/ledManager/CancelEffect" );
+
+  if (!cancelLedClient_.exists()) {
+    ROS_INFO( "No led colour effect cancelling service is available." );
   }
 
   palFaceEnablerClient_ = mCtrlNode_->serviceClient<pal_detection_msgs::Recognizer>( "/pal_face/recognizer" );
@@ -1330,7 +1340,7 @@ void REEMProxyManager::deregisterForPalFaceData()
   }
 }
 
-bool REEMProxyManager::setEarLED( const REEMLedColour colour, const int side )
+int REEMProxyManager::setEarLED( const REEMLedColour colour, const int side )
 {
   if (!ledColourClient_.exists()) {
     return false;
@@ -1339,15 +1349,15 @@ bool REEMProxyManager::setEarLED( const REEMLedColour colour, const int side )
 
   srvMsg.request.leds.ledMask = side;
   srvMsg.request.effectDuration = ros::Duration( 0.0 );
-  srvMsg.request.priority = 0; //fixed priority
-  srvMsg.request.color.r = 255.0; //= this->colour2RGB( colour );
-  srvMsg.request.color.b = 0.0;
-  srvMsg.request.color.g = 0.0;
-  srvMsg.request.color.a = 1.0;
-  return ledColourClient_.call( srvMsg );
+  srvMsg.request.priority = 96; //fixed priority
+  srvMsg.request.color = this->colour2RGB( colour );
+  if (ledColourClient_.call( srvMsg )) {
+    return srvMsg.response.effectId;
+  }
+  return -1;
 }
 
-bool REEMProxyManager::pulseEarLED( const REEMLedColour colour1, const REEMLedColour colour2, const int side, const float period )
+int REEMProxyManager::pulseEarLED( const REEMLedColour colour1, const REEMLedColour colour2, const int side, const float period )
 {
   if (!ledPulseClient_.exists()) {
     return false;
@@ -1361,7 +1371,22 @@ bool REEMProxyManager::pulseEarLED( const REEMLedColour colour1, const REEMLedCo
   srvMsg.request.firstColor = this->colour2RGB( colour1 );
   srvMsg.request.secondColor = this->colour2RGB( colour2 );
 
-  return ledPulseClient_.call( srvMsg );
+  if (ledPulseClient_.call( srvMsg )) {
+    return srvMsg.response.effectId;
+  }
+  return -1;
+}
+
+bool REEMProxyManager::cancelEarLED( const int effectID )
+{
+  if (!cancelLedClient_.exists() || effectID <= 0) {
+    return false;
+  }
+  pal_device_msgs::CancelEffect srvMsg;
+
+  srvMsg.request.effectId = effectID;
+
+  return cancelLedClient_.call( srvMsg );
 }
 
 bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative, float time_to_reach )
@@ -2662,28 +2687,31 @@ std_msgs::ColorRGBA REEMProxyManager::colour2RGB( const REEMLedColour colour )
   std_msgs::ColorRGBA rgba;
   rgba.a = 1.0;
   switch (colour) {
+    case BLANK:
+      rgba.r = rgba.g = rgba.b = 0.0;
+      break;
     case WHITE:
-      rgba.r = rgba.g = rgba.b = 255.0;
+      rgba.r = rgba.g = rgba.b = 1.0;
       break;
     case RED:
-      rgba.r = 255.0;
+      rgba.r = 1.0;
       rgba.g = rgba.b = 0.0;
       break;
     case BLUE:
       rgba.r = rgba.g = 0.0;
-      rgba.b = 255.0;
+      rgba.b = 1.0;
       break;
     case GREEN:
       rgba.r = rgba.b = 0.0;
-      rgba.g = 255.0;
+      rgba.g = 1.0;
       break;
     case YELLOW:
-      rgba.r = rgba.g = 255.0;
+      rgba.r = rgba.g = 1.0;
       rgba.b = 0.0;
       break;
     case PINK:
-      rgba.r = 255.0; rgba.g = 192.0;
-      rgba.b = 203.0;
+      rgba.r = 1.0; rgba.g = 192.0/255.0;
+      rgba.b = 203.0/255.0;
       break;
     default:
       break;
