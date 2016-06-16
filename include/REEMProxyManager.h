@@ -164,6 +164,8 @@ public:
   void deregisterForBaseScanData();
   void deregisterForTiltScanData();
   
+  void directToWeb( const std::string & uri );
+
   int setEarLED( const REEMLedColour colour, const int side = 3 );
   int pulseEarLED( const REEMLedColour colour1, const REEMLedColour colour2,
       const int side = 3, const float period = 1.0 );
@@ -183,7 +185,7 @@ private:
   NodeHandle * mCtrlNode_;
   Publisher mPub_;
   Publisher hPub_;
-  Publisher webPub_;
+  Publisher wPub_;
   Publisher colObjPub_;
   Subscriber jointSub_;
   Subscriber powerSub_;

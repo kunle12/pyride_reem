@@ -1915,6 +1915,18 @@ static PyObject * PyModule_REEMStopPalFaceEnrollment( PyObject * self )
   Py_RETURN_FALSE;
 }
 
+static PyObject * PyModule_REEMDirectToWeb( PyObject * self, PyObject * args )
+{
+  char * uriStr = NULL;
+
+  if (!PyArg_ParseTuple( args, "s", &uriStr ) || strlen(uriStr) == 0) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+  REEMProxyManager::instance()->directToWeb( uriStr );
+    Py_RETURN_NONE;
+}
+
 /**@}*/
 #define INCLUDE_COMMON_PYMODULE_MEHTODS
 #include "../pyridecore/PyModulePyCommon.cpp"
@@ -2016,6 +2028,8 @@ static PyMethodDef PyModule_methods[] = {
     "Start PAL built-in face enrollment." },
   { "stopPalFaceEnrollment", (PyCFunction)PyModule_REEMStopPalFaceEnrollment, METH_NOARGS,
     "Stop PAL built-in face enrollment." },
+  { "directToWeb", (PyCFunction)PyModule_REEMDirectToWeb, METH_VARARGS,
+    "Direct REEM chest screen to a URI." },
 #define DEFINE_COMMON_PYMODULE_METHODS
 #include "../pyridecore/PyModulePyCommon.cpp"
   { NULL, NULL, 0, NULL }           /* sentinel */

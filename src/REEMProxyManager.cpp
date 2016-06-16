@@ -17,6 +17,8 @@
 #include <pal_detection_msgs/StartEnrollment.h>
 #include <pal_detection_msgs/StopEnrollment.h>
 
+#include <pal_web_msgs/WebGoTo.h>
+
 namespace pyride {
 
 static const float kMaxWalkSpeed = 1.0;
@@ -127,6 +129,7 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
 
   mPub_ = mCtrlNode_->advertise<geometry_msgs::Twist>( "cmd_vel", 1 );
   hPub_ = mCtrlNode_->advertise<trajectory_msgs::JointTrajectory>( "head_vel", 1 );
+  wPub_ = mCtrlNode_->advertise<pal_web_msgs::WebGoTo>( "web", 1 );
 
   powerSub_ = mCtrlNode_->subscribe( "pal_diagnostic_aggregator", 1, &REEMProxyManager::powerStateDataCB, this );
 
@@ -2458,6 +2461,14 @@ bool REEMProxyManager::findSolidObjectInScene( const std::string & name )
       break;
   }
   return found;
+}
+
+void REEMProxyManager::directToWeb( const std::string & uri )
+{
+  pal_web_msgs::WebGoTo msg;
+  msg.type = 2;
+  msg.value = uri;
+  wPub_.publish( msg );
 }
 
 std_msgs::ColorRGBA REEMProxyManager::colour2RGB( const REEMLedColour colour )
