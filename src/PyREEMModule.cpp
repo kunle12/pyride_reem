@@ -1439,22 +1439,22 @@ static PyObject * PyModule_REEMRegisterTiltScanData( PyObject * self, PyObject *
 static PyObject * PyModule_REEMRegisterPalFaceData( PyObject * self, PyObject * args )
 {
   PyObject * callbackFn = NULL;
-  double confidence = 0.3;
+  double confidence = 220.0;
 
   if (!PyArg_ParseTuple( args, "O|d", &callbackFn, &confidence )) {
     // PyArg_ParseTuple will set the error status.
     return NULL;
   }
 
-  if (confidence < 0.0 || confidence > 1.0) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.registerPalFaceCallback: confidence must be within [0.0, 1.0]." );
+  if (confidence < 0.0) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.registerPalFaceCallback: confidence must be > 0.0." );
     return NULL;
   }
 
   if (callbackFn == Py_None) {
     PyREEMModule::instance()->setPalFaceCallback( NULL );
     REEMProxyManager::instance()->deregisterForPalFaceData();
-    REEMProxyManager::instance()->enablePalFaceDetection( false, confidence );
+    REEMProxyManager::instance()->enablePalFaceDetection( false, 0.0 );
     Py_RETURN_NONE;
   }
 
@@ -1464,9 +1464,8 @@ static PyObject * PyModule_REEMRegisterPalFaceData( PyObject * self, PyObject * 
   }
 
   PyREEMModule::instance()->setPalFaceCallback( callbackFn );
-
-  REEMProxyManager::instance()->enablePalFaceDetection( true, confidence );
   REEMProxyManager::instance()->registerForPalFaceData();
+  REEMProxyManager::instance()->enablePalFaceDetection( true, confidence );
   Py_RETURN_NONE;
 }
 
@@ -2037,7 +2036,7 @@ static PyMethodDef PyModule_methods[] = {
 
 PyREEMModule::PyREEMModule() : PyModuleExtension( "PyREEM" )
 {
-  baseScanCB_ = tiltScanCB_ = NULL;
+  baseScanCB_ = tiltScanCB_ = palFaceCB_ = NULL;
 }
 
 PyREEMModule::~PyREEMModule()
@@ -2049,6 +2048,10 @@ PyREEMModule::~PyREEMModule()
   if (tiltScanCB_) {
     Py_DECREF( tiltScanCB_ );
     tiltScanCB_ = NULL;
+  }
+  if (palFaceCB_){
+    Py_DECREF( palFaceCB_ );
+    palFaceCB_ = NULL;
   }
 }
 

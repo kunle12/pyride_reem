@@ -228,6 +228,7 @@ private:
   bool rHandCtrl_;
   bool lArmCtrl_;
   bool rArmCtrl_;
+  bool palFaceDatabaseInit_;
   
   float lArmActionTimeout_;
   float rArmActionTimeout_;

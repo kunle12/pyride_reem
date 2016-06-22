@@ -14,6 +14,7 @@
 #include <pal_device_msgs/CancelEffect.h>
 #include <pal_device_msgs/LedGroup.h>
 #include <pal_detection_msgs/Recognizer.h>
+#include <pal_detection_msgs/SetDatabase.h>
 #include <pal_detection_msgs/StartEnrollment.h>
 #include <pal_detection_msgs/StopEnrollment.h>
 
@@ -88,6 +89,7 @@ REEMProxyManager::REEMProxyManager() :
   rHandCtrl_( false ),
   lArmCtrl_( false ),
   rArmCtrl_( false ),
+  palFaceDatabaseInit_( false ),
   lArmActionTimeout_( 20 ),
   rArmActionTimeout_( 20 ),
   lHandActionTimeout_( 20 ),
@@ -301,6 +303,16 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
     ROS_INFO( "No led colour effect cancelling service is available." );
   }
 
+  ServiceClient palFaceDatabaseClient = mCtrlNode_->serviceClient<pal_detection_msgs::SetDatabase>( "/pal_face/set_database" );
+
+  if (palFaceDatabaseClient.exists()) {
+    pal_detection_msgs::SetDatabase srvMsg;
+    srvMsg.request.databaseName = "face_data";
+    srvMsg.request.purgeAll = false;
+    palFaceDatabaseInit_ = palFaceDatabaseClient.call( srvMsg );
+    //ROS_INFO( "Pal face database is set to 'face data'" );
+  }
+
   palFaceEnablerClient_ = mCtrlNode_->serviceClient<pal_detection_msgs::Recognizer>( "/pal_face/recognizer" );
 
   if (!palFaceEnablerClient_.exists()) {
@@ -382,7 +394,6 @@ void REEMProxyManager::fini()
   jointDataThread_->stop();
   delete jointDataThread_;
   jointDataThread_ = NULL;
-  jointSub_.shutdown();
 }
 
 /** @name Action Callback Functions
@@ -1649,7 +1660,7 @@ void REEMProxyManager::cancelBodyMovement()
   
 bool REEMProxyManager::palFaceStartEnrollment( const std::string & name )
 {
-  if (!palFaceEnrolStartClient_.exists())
+  if (!palFaceEnrolStartClient_.exists() || !palFaceDatabaseInit_)
     return false;
 
   pal_detection_msgs::StartEnrollment srvMsg;
@@ -1660,7 +1671,7 @@ bool REEMProxyManager::palFaceStartEnrollment( const std::string & name )
 
 bool REEMProxyManager::palFaceStopEnrollment()
 {
-  if (!palFaceEnrolStopClient_.exists())
+  if (!palFaceEnrolStopClient_.exists() || !palFaceDatabaseInit_)
     return false;
 
   pal_detection_msgs::StopEnrollment srvMsg;
