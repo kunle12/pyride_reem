@@ -17,7 +17,6 @@
 #include <pal_detection_msgs/SetDatabase.h>
 #include <pal_detection_msgs/StartEnrollment.h>
 #include <pal_detection_msgs/StopEnrollment.h>
-
 #include <pal_web_msgs/WebGoTo.h>
 
 namespace pyride {
@@ -132,9 +131,11 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   mPub_ = mCtrlNode_->advertise<geometry_msgs::Twist>( "cmd_vel", 1 );
   hPub_ = mCtrlNode_->advertise<trajectory_msgs::JointTrajectory>( "head_vel", 1 );
   wPub_ = mCtrlNode_->advertise<pal_web_msgs::WebGoTo>( "web", 1 );
+  cPub_ = mCtrlNode_->advertise<pal_control_msgs::ActuatorCurrentLimit>( "current_limit", 1 );
 
   powerSub_ = mCtrlNode_->subscribe( "pal_diagnostic_aggregator", 1, &REEMProxyManager::powerStateDataCB, this );
 
+  this->initMotorStiffnessValue();
   ros::SubscribeOptions sopts = ros::SubscribeOptions::create<sensor_msgs::JointState>( "joint_states",
         1, boost::bind( &REEMProxyManager::jointStateDataCB, this, _1 ), ros::VoidPtr(), &jointDataQueue_ );
 
@@ -2040,11 +2041,15 @@ void REEMProxyManager::getBatteryStatus( float & percentage, bool & isplugged, f
   timeremain = (float)batTimeRemain_.toSec();
 }
 
-void REEMProxyManager::setHeadStiffness( const float stiffness )
+void REEMProxyManager::setTorsoStiffness( const float stiffness )
 {
-  // TODO: to be implemented
   if (stiffness < 0.0 || stiffness > 1.0)
     return;
+
+  stiffCmd_.current_limits[22] = stiffness;
+  stiffCmd_.current_limits[23] = stiffness;
+
+  cPub_.publish( stiffCmd_ );
 }
 
 void REEMProxyManager::setArmStiffness( bool isLeftArm, const float stiffness )
@@ -2052,6 +2057,15 @@ void REEMProxyManager::setArmStiffness( bool isLeftArm, const float stiffness )
   // TODO: to be implemented
   if (stiffness < 0.0 || stiffness > 1.0)
     return;
+
+  int offset = 0;
+  if (!isLeftArm) {
+    offset = 7;
+  }
+  for (int i = 0; i < 7; i++) {
+    stiffCmd_.current_limits[offset+i] = stiffness;
+  }
+  cPub_.publish( stiffCmd_ );
 }
 
 /*! \typedef onMoveBodySuccess()
@@ -2519,5 +2533,22 @@ std_msgs::ColorRGBA REEMProxyManager::colour2RGB( const REEMLedColour colour )
   return rgba;
 }
 
+void REEMProxyManager::initMotorStiffnessValue()
+{
+  static std::string acnames [] = { "arm_left_1_motor", "arm_left_2_motor", "arm_left_3_motor",
+      "arm_left_4_motor", "arm_left_5_motor", "arm_left_6_motor", "arm_left_7_motor",
+      "arm_right_1_motor", "arm_right_2_motor", "arm_right_3_motor", "arm_right_4_motor",
+      "arm_right_5_motor", "arm_right_6_motor", "arm_right_7_motor", "hand_left_thumb_motor",
+      "hand_left_index_motor", "hand_left_middle_motor", "hand_right_thumb_motor",
+      "hand_right_index_motor", "hand_right_middle_motor", "head_1_motor", "head_2_motor",
+      "torso_1_motor", "torso_2_motor"
+  };
+  stiffCmd_.actuator_names = std::vector<std::string> (acnames , acnames + 24);
+  size_t asize = stiffCmd_.actuator_names.size();
+  stiffCmd_.current_limits.resize( asize );
+  for (size_t i = 0; i < asize; i++) {
+    stiffCmd_.current_limits[i] = 1.0;
+  }
+}
 /**@}*/
 } // namespace pyride

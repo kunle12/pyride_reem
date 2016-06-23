@@ -32,6 +32,7 @@
 #include <std_msgs/ColorRGBA.h>
 
 #include <pal_detection_msgs/FaceDetections.h>
+#include <pal_control_msgs/ActuatorCurrentLimit.h>
 
 #include <trajectory_msgs/JointTrajectory.h>
 #include <geometry_msgs/Twist.h>
@@ -118,7 +119,7 @@ public:
 
   void cancelArmMovement( bool isLeftArm );
   
-  void setHeadStiffness( const float stiffness );
+  void setTorsoStiffness( const float stiffness );
   void setArmStiffness( bool isLeftArm, const float stiffness );
 
   bool addSolidObject( const std::string & name, std::vector<double> & volume,
@@ -186,6 +187,7 @@ private:
   Publisher mPub_;
   Publisher hPub_;
   Publisher wPub_;
+  Publisher cPub_;
   Publisher colObjPub_;
   Subscriber jointSub_;
   Subscriber powerSub_;
@@ -273,6 +275,8 @@ private:
   double reqTorsoYaw_, reqTorsoPitch_;
   double targetYaw_, targetPitch_;
   
+  pal_control_msgs::ActuatorCurrentLimit stiffCmd_;
+
   // power state
   bool isCharging_;
   float batCapacity_;
@@ -325,6 +329,7 @@ private:
 
   bool findSolidObjectInScene( const std::string & name );
   std_msgs::ColorRGBA colour2RGB( const REEMLedColour colour );
+  void initMotorStiffnessValue();
 };
 }; // namespace pyride
 

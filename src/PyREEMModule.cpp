@@ -1717,13 +1717,13 @@ static PyObject * PyModule_REEMPlaceObject( PyObject * self, PyObject * args, Py
   return PyModule_REEMPickUpAndPlaceObject( true, self, args, keywds );
 }
 
-/*! \fn setHeadStiffness(stiffness)
+/*! \fn setTorsoStiffness(stiffness)
  *  \memberof PyREEM
- *  \brief Set the stiffness of the REEM head.
+ *  \brief Set the stiffness of the REEM torso.
  *  \param float stiffness. Must be between [0.0,1.0].
  *  \return None.
  */
-static PyObject * PyModule_REEMSetHeadStiffness( PyObject * self, PyObject * args )
+static PyObject * PyModule_REEMSetTorsoStiffness( PyObject * self, PyObject * args )
 {
   float stiff = 0.0;
 
@@ -1733,11 +1733,11 @@ static PyObject * PyModule_REEMSetHeadStiffness( PyObject * self, PyObject * arg
   }
 
   if (stiff < 0.0 || stiff > 1.0) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.setHeadStiffness: the stiffness input must be within the range of [0.0, 1.0]!" );
+    PyErr_Format( PyExc_ValueError, "PyREEM.setTorsoStiffness: the stiffness input must be within the range of [0.0, 1.0]!" );
     return NULL;
   }
 
-  REEMProxyManager::instance()->setHeadStiffness( stiff );
+  REEMProxyManager::instance()->setTorsoStiffness( stiff );
   Py_RETURN_NONE;
 }
 
@@ -1997,8 +1997,8 @@ static PyMethodDef PyModule_methods[] = {
       "Pulse the ear LED of REEM between two colours." },
   { "cancelEarLEDEffect", (PyCFunction)PyModule_REEMCancelEarLEDEffect, METH_VARARGS,
       "Cancel an ear LED effect ." },
-  { "setHeadStiffness", (PyCFunction)PyModule_REEMSetHeadStiffness, METH_VARARGS,
-    "Set the stiffness of the REEM's head. " },
+  { "setTorsoStiffness", (PyCFunction)PyModule_REEMSetTorsoStiffness, METH_VARARGS,
+    "Set the stiffness of the REEM's torso. " },
   { "setArmStiffness", (PyCFunction)PyModule_REEMSetArmStiffness, METH_VARARGS,
     "Set the stiffness of the one of REEM's arms. " },
   { "listTFFrames", (PyCFunction)PyModule_REEMListTFFrames, METH_NOARGS,
