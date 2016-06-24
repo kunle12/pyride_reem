@@ -651,8 +651,8 @@ WARN_LOGFILE           =
 INPUT                  = mainpage.dox \
                          pyridecore/PyModulePyCommon.cpp \
                          pyridecore/PyModuleStub.cpp \
-                         src/PyPR2Module.cpp src/PR2ProxyManager.cpp \
-                         src/PyPR2Server.cpp \
+                         src/PyREEMModule.cpp src/REEMProxyManager.cpp \
+                         src/PyREEMServer.cpp \
                          scripts/pr2actions.py
 
 # This tag can be used to specify the character encoding of the source files

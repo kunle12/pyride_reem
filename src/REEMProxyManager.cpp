@@ -42,8 +42,8 @@ static const char *kREEMTFFrameList[] = { "map", "odom", "base_footprint", "base
   "arm_left_3_link", "arm_left_4_link","arm_left_5_link", "arm_left_6_link", "arm_left_7_link",
   "arm_right_1_link", "arm_right_2_link", "arm_right_3_link", "arm_right_4_link",
   "arm_right_5_link","arm_right_6_link","arm_right_7_link",
-  "arm_right_tool_link", "arm_left_tool_link",
-  "hand_right_grasping_frame", "hand_left_grasping_frame", "stereo_optical_frame",
+  "arm_right_tool_link", "arm_left_tool_link", "hand_right_grasping_frame",
+  "hand_left_grasping_frame", "stereo_optical_frame", "stereo_link",
   "stereo_gazebo_left_camera_optical_frame", "stereo_gazebo_right_camera_optical_frame",
   "base_torso_laser_link", "base_laser_link",
   NULL };
@@ -133,7 +133,7 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   wPub_ = mCtrlNode_->advertise<pal_web_msgs::WebGoTo>( "web", 1 );
   cPub_ = mCtrlNode_->advertise<pal_control_msgs::ActuatorCurrentLimit>( "current_limit", 1 );
 
-  powerSub_ = mCtrlNode_->subscribe( "pal_diagnostic_aggregator", 1, &REEMProxyManager::powerStateDataCB, this );
+  powerSub_ = mCtrlNode_->subscribe( "diagnostics_agg", 1, &REEMProxyManager::powerStateDataCB, this );
 
   this->initMotorStiffnessValue();
   ros::SubscribeOptions sopts = ros::SubscribeOptions::create<sensor_msgs::JointState>( "joint_states",
@@ -1307,7 +1307,7 @@ bool REEMProxyManager::pointHeadTo( const std::string & frame, float x, float y,
   
   //we are pointing the high-def camera frame
   //(pointing_axis defaults to X-axis)
-  goal.pointing_frame = "stereo_optical_frame";
+  goal.pointing_frame = "stereo_link";
  
   goal.pointing_axis.x = 1;
   goal.pointing_axis.y = 0;
@@ -1852,7 +1852,7 @@ void REEMProxyManager::updateBodyPose( const RobotPose & speed, bool localupdate
   }
 }
 
-bool REEMProxyManager::moveTorsoTo( double yaw, double pitch, bool relative )
+bool REEMProxyManager::moveTorsoTo( double yaw, double pitch, bool relative, float time_to_reach )
 {
   if (torsoCtrl_ || !torsoClient_)
     return false;
@@ -1889,10 +1889,10 @@ bool REEMProxyManager::moveTorsoTo( double yaw, double pitch, bool relative )
 
   goal.trajectory.points[0].positions[0] = newYaw;
   goal.trajectory.points[0].velocities[0] = 0.0;
-  goal.trajectory.points[1].positions[1] = newPitch;
-  goal.trajectory.points[1].velocities[1] = 0.0;
+  goal.trajectory.points[0].positions[1] = newPitch;
+  goal.trajectory.points[0].velocities[1] = 0.0;
   // To be reached 2 seconds after starting along the trajectory
-  //goal.trajectory.points[0].time_from_start = ros::Duration( time_to_reach );
+  goal.trajectory.points[0].time_from_start = ros::Duration( time_to_reach );
 
   torsoCtrl_ = true;
 
@@ -1911,7 +1911,7 @@ void REEMProxyManager::jointStateDataCB( const sensor_msgs::JointStateConstPtr &
   curJointPositions_ = msg->position;
 }
 
-/*! \typedef onPowerPluggedChange(is_plugged_in)
+/* \typedef onPowerPluggedChange(is_plugged_in)
  *  \memberof PyREEM.
  *  \brief Callback function when REEM power status changes.
  *  \param bool is_plugged_in. True if the robot is plugged in main power.
@@ -1923,7 +1923,8 @@ void REEMProxyManager::jointStateDataCB( const sensor_msgs::JointStateConstPtr &
  *  \brief Callback function when REEM battery status changes.
  *  \param tuple battery_status. A tuple of (battery percentage,is_charging,is_battery_below_threshold).
  *  \return None.
- *  \note Require low power threshold to be greater than zero.
+ *  \note Require low power threshold to be greater than zero. charging status
+ *  is not available on REEM, hence is_charging always return false.
  */
 void REEMProxyManager::powerStateDataCB( const diagnostic_msgs::DiagnosticArrayConstPtr & msg )
 {
@@ -1933,44 +1934,44 @@ void REEMProxyManager::powerStateDataCB( const diagnostic_msgs::DiagnosticArrayC
 
     const diagnostic_msgs::DiagnosticStatus & batStatus = msg->status[i];
     for (size_t j = 0; j < batStatus.values.size(); j++) {
-      if (batStatus.values[i].key.compare( "Battery Level" ) == 0) {
-    	boost::mutex::scoped_lock lock( bat_mutex_ );
+      if (batStatus.values[j].key.compare( "Battery Level" ) == 0) {
+        boost::mutex::scoped_lock lock( bat_mutex_ );
 
-    	//bool charging = (msg->AC_present > 0);
-    	bool charging = false;
-    	float batpercent = strtof( batStatus.values[i].value.c_str(), NULL );
-    	//batTimeRemain_ = msg->time_remaining;
+        //bool charging = (msg->AC_present > 0);
+        bool charging = false;
+        float batpercent = strtof( batStatus.values[j].value.c_str(), NULL );
+        //batTimeRemain_ = msg->time_remaining;
 
-    	if (lowPowerThreshold_ > 0) {
-    	  PyObject * arg = NULL;
-    	  /*
-    	  if (charging != isCharging_) {
-    	    PyGILState_STATE gstate;
-    	    gstate = PyGILState_Ensure();
+        if (lowPowerThreshold_ > 0) {
+          PyObject * arg = NULL;
+          /*
+          if (charging != isCharging_) {
+            PyGILState_STATE gstate;
+            gstate = PyGILState_Ensure();
 
-    	    arg = Py_BuildValue( "(O)", charging ? Py_True : Py_False );
+            arg = Py_BuildValue( "(O)", charging ? Py_True : Py_False );
 
-    	    PyREEMModule::instance()->invokeCallback( "onPowerPluggedChange", arg );
-    	    Py_DECREF( arg );
+            PyREEMModule::instance()->invokeCallback( "onPowerPluggedChange", arg );
+            Py_DECREF( arg );
 
-    	    PyGILState_Release( gstate );
-    	  }
-    	  */
-    	  if (batpercent != batCapacity_) {
-    	    PyGILState_STATE gstate;
-    	    gstate = PyGILState_Ensure();
+            PyGILState_Release( gstate );
+          }
+          */
+          if (fabs(batpercent - batCapacity_) > 0.5) {
+            PyGILState_STATE gstate;
+            gstate = PyGILState_Ensure();
 
-    	    arg = Py_BuildValue( "(fOO)", batpercent, charging ? Py_True : Py_False,
-    	                          (batpercent < (float)lowPowerThreshold_ ? Py_True : Py_False) );
+            arg = Py_BuildValue( "(fOO)", batpercent, charging ? Py_True : Py_False,
+                                  (batpercent < (float)lowPowerThreshold_ ? Py_True : Py_False) );
 
-    	    PyREEMModule::instance()->invokeCallback( "onBatteryChargeChange", arg );
-    	    Py_DECREF( arg );
+            PyREEMModule::instance()->invokeCallback( "onBatteryChargeChange", arg );
+            Py_DECREF( arg );
 
-    	    PyGILState_Release( gstate );
-    	  }
-    	}
-    	isCharging_ = charging;
-    	batCapacity_ = batpercent;
+            PyGILState_Release( gstate );
+          }
+        }
+        isCharging_ = charging;
+        batCapacity_ = batpercent;
       }
     }
   }
@@ -2037,7 +2038,7 @@ void REEMProxyManager::getBatteryStatus( float & percentage, bool & isplugged, f
 {
   boost::mutex::scoped_lock lock( bat_mutex_ );
   isplugged = isCharging_;
-  percentage = batCapacity_;
+  percentage = floorf(batCapacity_ * 100.0) / 100.0;
   timeremain = (float)batTimeRemain_.toSec();
 }
 

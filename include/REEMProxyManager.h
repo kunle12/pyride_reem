@@ -139,7 +139,7 @@ public:
 
   bool moveBodyTo( const RobotPose & pose, const float bestTime );
 
-  bool moveTorsoTo( double yaw, double pitch, bool relative = false );
+  bool moveTorsoTo( double yaw, double pitch, bool relative = false, float time_to_reach = 2.0 );
 
   void updateBodyPose( const RobotPose & pose, bool localupdate = false );
   

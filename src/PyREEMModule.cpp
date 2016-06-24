@@ -101,12 +101,6 @@ static PyObject * PyModule_write( PyObject *self, PyObject * args )
  *
  */
 /**@{*/
-/*! \fn setToMannequinMode( to_set )
- *  \brief Set REEM to the mannequin mode
- *  \memberof PyREEM
- *  \param bool to_set. True = mannequin mode; False = normal mode.
- *  \return None.
- */
 /*! \fn startDataRecording( data_type, output_file )
  *  \brief Start to record various sensor data into a ROS bag file.
  *  \memberof PyREEM
@@ -122,23 +116,6 @@ static PyObject * PyModule_write( PyObject *self, PyObject * args )
  *  \memberof PyREEM
  *  \return None.
  */
-/*! \fn startJoystickControl()
- *  \brief Start controlling REEM with a PS3 joystick.
- *  \memberof PyREEM
- *  \return None.
- */
-/*! \fn stopJoystickControl()
- *  \brief Stop controlling REEM with a PS3 joystick.
- *  \memberof PyREEM
- *  \return None.
- */
-/*! \fn setProjectorOff( to_set )
- *  \brief Set REEM's texture projector to off or on.
- *  \memberof PyREEM
- *  \param bool to_set. True = set projector off; False = set projector on.
- *  \return None.
- */
-
 static PyObject * PyModule_SetTeamMemberID( PyObject *self, PyObject * args )
 {
   int teamID, teamColour;
@@ -207,6 +184,8 @@ static PyObject * PyModule_REEMSayWithVolume( PyObject * self, PyObject * args )
  *  \memberof PyREEM
  *  \brief Return the current robot battery status.
  *  \return tuple(battery percentage, is_plugged_in, estimated remaining battery time).
+ *  \note REEM does not supply charging status and battery remaining estimate, hence
+ *  the last two values are default dummy values.
  */
 static PyObject * PyModule_REEMGetBatteryStatus( PyObject * self )
 {
@@ -309,39 +288,45 @@ static PyObject * PyModule_REEMUseMoveIt( PyObject * self )
     Py_RETURN_FALSE;
 }
 
-/*! \fn moveTorsoTo(length, best_time)
+/*! \fn moveTorsoTo(pan, pitch, relative, time_to_reach)
  *  \memberof PyREEM
  *  \brief Move the REEM torso to a specific yaw and pitch position.
- *  \param float head_yaw. Must be in radian.
- *  \param float head_pitch. Must be in radian.
+ *  \param float pan. Torso pan, must be in radian.
+ *  \param float pitch. Torso pitch must be in radian.
  *  \param bool relative. True == relative angle values; False == absolute angle values. Optional, default is False.
+ *  \param float time_to_reach. Time to reach the target position. Optional, default = 2.0 (seconds).
  *  \return bool. True == valid command; False == invalid command.
  */
 static PyObject * PyModule_REEMMoveTorsoTo( PyObject * self, PyObject * args )
 {
   double yaw = 0.0;
   double pitch = 0.0;
+  double time_to_reach = 2.0;
   PyObject * boolObj = NULL;
   bool isRelative = false;
   
-  if (!PyArg_ParseTuple( args, "dd|O", &yaw, &pitch, &boolObj )) {
+  if (!PyArg_ParseTuple( args, "dd|Od", &yaw, &pitch, &boolObj, &time_to_reach )) {
 	// PyArg_ParseTuple will set the error status.
-	return NULL;
+    return NULL;
   }
 
   if (boolObj) {
-	if (PyBool_Check( boolObj )) {
-	  isRelative = PyObject_IsTrue( boolObj );
-	}
-	else {
-	  PyErr_Format( PyExc_ValueError, "PyREEM.moveTorsoTo: last input parameter must be a boolean." );
-	  return NULL;
-	}
+    if (PyBool_Check( boolObj )) {
+      isRelative = PyObject_IsTrue( boolObj );
+    }
+    else {
+      PyErr_Format( PyExc_ValueError, "PyREEM.moveTorsoTo: relative input parameter must be a boolean." );
+      return NULL;
+    }
   }
-  if (REEMProxyManager::instance()->moveTorsoTo( yaw, pitch, isRelative ))
-	Py_RETURN_TRUE;
+  if (time_to_reach < 0.5) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.moveTorsoTo: time to reach input parameter must greater than 0.5." );
+    return NULL;
+  }
+  if (REEMProxyManager::instance()->moveTorsoTo( yaw, pitch, isRelative, time_to_reach ))
+    Py_RETURN_TRUE;
   else
-	Py_RETURN_FALSE;
+    Py_RETURN_FALSE;
 }
 
 /*! \fn moveBodyTo(x,y,theta,best_time)
@@ -419,12 +404,13 @@ static PyObject * PyModule_REEMUpdateHeadPos( PyObject * self, PyObject * args )
   Py_RETURN_NONE;
 }
 
-/*! \fn moveHeadTo(head_yaw, head_pitch)
+/*! \fn moveHeadTo(pan, pitch, relative, time_to_reach)
  *  \memberof PyREEM
  *  \brief Move the REEM head to a specific yaw and pitch position.
- *  \param float head_yaw. Must be in radian.
- *  \param float head_pitch. Must be in radian.
+ *  \param float pan. Head pan, must be in radian.
+ *  \param float pitch. Head pitch, must be in radian.
  *  \param bool relative. True == relative angle values; False == absolute angle values. Optional, default is False.
+ *  \param float time_to_reach. Time to reach the target position. Optional, default = 0.5 (seconds).
  *  \return bool. True == valid command; False == invalid command.
  */
 static PyObject * PyModule_REEMMoveHeadTo( PyObject * self, PyObject * args )
@@ -463,7 +449,7 @@ static PyObject * PyModule_REEMMoveHeadTo( PyObject * self, PyObject * args )
 
 /*! \fn pointHeadTo(reference_frame, x, y, z)
  *  \memberof PyREEM
- *  \brief Point the REEM head towards a specific coordinates in a reference frame.
+ *  \brief Point the REEM head towards a specific coordinates in a reference frame with respect to 'stereo_link'.
  *  \param str reference_frame. Text label for the requested reference frame (TF frame name).
  *  \param float x. X coordinate.
  *  \param float y. Y coordinate.
@@ -1204,6 +1190,7 @@ static PyObject * PyModule_REEMCancelMoveBodyAction( PyObject * self )
  *  \brief Opens one or both REEM grippers.
  *  \param int which_hand. 1 = left hand, 2 = right hand and 3 = both hand.
  *  \return bool. True == valid command; False == invalid command.
+ *  \todo This function has not been fully tested on REEM and may be buggy.
  */
 static PyObject * PyModule_REEMOpenHand( PyObject * self, PyObject * args )
 {
@@ -1242,6 +1229,7 @@ static PyObject * PyModule_REEMOpenHand( PyObject * self, PyObject * args )
  *  \brief Closes one or both REEM hand.
  *  \param int which_hand. 1 = left hand, 2 = right hand and 3 = both hands.
  *  \return bool. True == valid command; False == invalid command.
+ *  \todo This function has not been fully tested on REEM and may be buggy.
  */
 static PyObject * PyModule_REEMCloseHand( PyObject * self, PyObject * args )
 {
@@ -1276,12 +1264,13 @@ static PyObject * PyModule_REEMCloseHand( PyObject * self, PyObject * args )
   Py_RETURN_FALSE;
 }
 
-/*! \fn setHandPosition(which_gripper, position)
+/*! \fn setHandPosition(hand_joint_positions)
  *  \memberof PyREEM
- *  \brief Opens one or both REEM grippers.
- *  \param int which_gripper. 1 = left gripper, 2 = right gripper and 3 = both grippers.
- *  \param float position. Must be in range of [0.0,0.08].
- *  \return bool. True == valid command; False == invalid command.
+ *  \brief Move a REEM hand to the specified joint position within a time frame.
+ *  \param dict joint_position. A dictionary of hand joint positions in radian.
+ *  The dictionary must the same structure as the return of PyREEM.getHandJointPositions.
+ *  \param float time_to_reach. Time frame for reaching the pose.
+ *  \todo This function has not been fully tested on REEM and may be buggy.
  */
 static PyObject * PyModule_REEMSetHandPosition( PyObject * self, PyObject * args, PyObject * keywds  )
 {
@@ -1426,14 +1415,11 @@ static PyObject * PyModule_REEMRegisterTiltScanData( PyObject * self, PyObject *
   Py_RETURN_NONE;
 }
 
-/*! \fn registerPalFaceCallback( callback_function, target_frame )
+/*! \fn registerPalFaceCallback( callback_function )
  *  \memberof PyREEM
- *  \brief Register a callback function for receiving tilt laser scan data.
- *  None object can be used to stop receiving the scan data.
- *  If target frame is provided, the 3D position (x,y,z) w.r.t the target
- *  frame will be returned. Otherwise, raw laser scan data is returned.
- *  \param callback function that takes a list of raw laser range data or 3D position data as the input.
- *  \param string target_frame. Optional, the name of the target frame
+ *  \brief Register a callback function for receiving face data.
+ *  None object can be used to stop receiving the face data.
+ *  \param callback function that takes a list of detected faces (data).
  *  \return None
  */
 static PyObject * PyModule_REEMRegisterPalFaceData( PyObject * self, PyObject * args )
@@ -1747,6 +1733,8 @@ static PyObject * PyModule_REEMSetTorsoStiffness( PyObject * self, PyObject * ar
  *  \param bool left_arm. True for left arm; False for right arm.
  *  \param float stiffness. Must be between [0.0,1.0].
  *  \return None.
+ *  \note when an arm stiffness changes from 0 to 1.0, the arm snap back to
+ *  the position where the stiffness was previously turned off.
  */
 static PyObject * PyModule_REEMSetArmStiffness( PyObject * self, PyObject * args )
 {
@@ -1914,6 +1902,12 @@ static PyObject * PyModule_REEMStopPalFaceEnrollment( PyObject * self )
   Py_RETURN_FALSE;
 }
 
+/*! \fn directToWeb(uri)
+ *  \memberof PyREEM
+ *  \brief direct REEM touch screen to a specified web site.
+ *  \param str uri. URI for the web site.
+ *  \return None.
+ */
 static PyObject * PyModule_REEMDirectToWeb( PyObject * self, PyObject * args )
 {
   char * uriStr = NULL;
