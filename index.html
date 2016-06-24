@@ -73,34 +73,35 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">PyRIDE Documentation</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>PyRIDE, Python based Robot Interactive Development Environment, is a software development framework for rapid robot behaviour programming in Python scripting language. It is also an integration framework for bring disparate robot functional modules together. This documentation gives a detailed description of application programming interface of PyRIDE on PR2 robot.</p>
+<div class="textblock"><p>PyRIDE, Python based Robot Interactive Development Environment, is a software development framework for rapid robot behaviour programming in Python scripting language. It is also an integration framework for bring disparate robot functional modules together. This documentation gives a detailed description of application programming interface of PyRIDE on REEM robot.</p>
 <h2><a class="anchor" id="compile"></a>
-Compile from source on PR2</h2>
+Compile from source on REEM</h2>
 <h3><a class="anchor" id="require"></a>
 Prerequisites</h3>
-<p>PyRIDE on ROS/PR2 uses the standard ROS catkin build system. It requires a full PR2 Hydro installation on a Ubuntu linux system. In particular, make sure you have the following packages installed on your system:</p>
+<p>PyRIDE on ROS/REEM uses the standard ROS catkin build system. It requires a full REEM Hydro installation on a Ubuntu linux system. In particular, make sure you have the following packages installed on your system:</p>
 <ul>
 <li>ros-hydro-moveit-resources</li>
 <li>ros-hydro-sound-play</li>
 <li>libccrtp-dev</li>
 </ul>
-<p>To compile PyRIDE on PR2, do:</p>
+<p>To compile PyRIDE on REEM, do:</p>
 <ol type="1">
-<li>Get source code: <b>git clone <a href="https://github.com/uts-magic-lab/pyride_pr2.git">https://github.com/uts-magic-lab/pyride_pr2.git</a></b> under an existing catkin_workspace src directory.</li>
-<li>Compile: <b>catkin_make pyride_pr2</b>.</li>
+<li>Get source code: <b>git clone <a href="https://github.com/kunle12/pyride_reem.git">https://github.com/kunle12/pyride_reem.git</a></b> under an existing catkin_workspace src directory.</li>
+<li>Compile: <b>catkin_make pyride_reem</b>.</li>
 </ol>
 <h2><a class="anchor" id="operation"></a>
 Running PyRIDE</h2>
-<p>On PR2/ROS:</p>
+<p>On REEM/ROS:</p>
 <ol type="1">
-<li>Log into a valid user account on PR2 with PyRIDE stack installed.</li>
+<li>Log into a valid user account on REEM with PyRIDE stack installed.</li>
 <li>Make sure robot base system is running, i.e. <b>robot start</b>.</li>
 <li>Source appropriate catkin environment.</li>
-<li><b>roslaunch pyride_pr2 pyride.launch</b>.</li>
+<li><b>roslaunch pyride_reem pyride.launch</b>.</li>
 </ol>
 <h2><a class="anchor" id="codeapi"></a>
 Code API</h2>
-<p><a class="el" href="classPyPR2.html" title="PyPR2 is the main Python extension module of PyRIDE on PR2/ROS system.">PyPR2</a> </p>
+<p><a class="el" href="classPyREEM.html" title="PyREEM is the main Python extension module of PyRIDE on REEM/ROS system.">PyREEM</a></p>
+<p><a class="el" href="classreemactions_1_1Actionlet.html">reemactions.Actionlet</a> </p>
 </div></div><!-- contents -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
@@ -119,7 +120,7 @@ Code API</h2>
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jul 29 2015 22:33:30 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jun 24 2016 17:52:18 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['cancelmovearmaction',['cancelMoveArmAction',['../classPyPR2.html#a1fad2fa67905522e2b0919bfa8d5895f',1,'PyPR2']]],
-  ['cancelmovebodyaction',['cancelMoveBodyAction',['../classPyPR2.html#a4464fe442a99baab4e83121319a3b22d',1,'PyPR2']]],
-  ['changeuserpassword',['changeUserPassword',['../classPyPR2.html#a42b4baae87e88a1278a95b65fe614c4b',1,'PyPR2']]],
-  ['closegripper',['closeGripper',['../classPyPR2.html#af93876b3c7cac1400ea9a94316e510f2',1,'PyPR2']]]
+  ['cancelearledeffect',['cancelEarLEDEffect',['../classPyREEM.html#a7171e648804261f9e3ea56ded44ac1b4',1,'PyREEM']]],
+  ['cancelmovearmaction',['cancelMoveArmAction',['../classPyREEM.html#a1fad2fa67905522e2b0919bfa8d5895f',1,'PyREEM']]],
+  ['cancelmovebodyaction',['cancelMoveBodyAction',['../classPyREEM.html#a4464fe442a99baab4e83121319a3b22d',1,'PyREEM']]],
+  ['closehand',['closeHand',['../classPyREEM.html#a5513f5ba7c1fe11ad0f925d10f547fb3',1,'PyREEM']]]
 ];
