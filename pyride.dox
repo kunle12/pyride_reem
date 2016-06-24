@@ -653,7 +653,7 @@ INPUT                  = mainpage.dox \
                          pyridecore/PyModuleStub.cpp \
                          src/PyREEMModule.cpp src/REEMProxyManager.cpp \
                          src/PyREEMServer.cpp \
-                         scripts/pr2actions.py
+                         scripts/reemactions.py
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is

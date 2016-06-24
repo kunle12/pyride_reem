@@ -32,7 +32,7 @@ You can use doxygen to generate the latest API documentation of PyRIDE on REEM. 
 ```
 doxygen pyride.dox
 ```
-under the `pyride_reem` directory. The API documentation will be generated under `doc` sub-directory. **NOTE:** The API documentation is incomplete at this stage. You can find the latest doxygen generated documentation at http://uts-magic-lab.github.io/pyride_reem
+under the `pyride_reem` directory. The API documentation will be generated under `doc` sub-directory. **NOTE:** The API documentation is incomplete at this stage. You can find the latest doxygen generated documentation at http://kunle12.github.io/pyride_reem
 
 ##Launch PyRIDE on REEM
 Make sure you have started up a full REEM simulation or on a REEM robot and sourced appropriate catkin overlay. Do:
