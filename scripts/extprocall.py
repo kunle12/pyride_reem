@@ -91,7 +91,6 @@ class ProcConduit:
   def setCallbacks( self ):
     PyREEM.startDataRecording = self.startDataRecording
     PyREEM.stopDataRecording = self.stopDataRecording
-    PyREEM.turnOnBaseScanIntensity = self.setBaseScanIntensityOn
 
   def fini( self ):
     self.stopDataRecording()
