@@ -59,9 +59,9 @@ class ProcConduit:
     if mode & constants.REC_SCAN:
       cmd = cmd + '-e "/scan$" -e "/hokuyo/LAS_01" '
       str = str + '_laser'
-    #if mode & constants.REC_IMU: #temp disable for now.
-      #cmd = cmd + '"/torso_lift_imu/data" '
-      #str = str + '_imu'
+    if mode & constants.REC_IMU: #temp disable for now.
+      cmd = cmd + '"/mobile_base_controller/odom" '
+      str = str + '_imu'
     if mode & constants.REC_JOINTS:
       cmd = cmd + '"/joint_states" '
       str = str + '_joint'
