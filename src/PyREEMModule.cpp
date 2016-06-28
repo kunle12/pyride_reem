@@ -1786,7 +1786,7 @@ static PyObject * PyModule_REEMSetEarLED( PyObject * self, PyObject * args )
     return NULL;
   }
 
-  if (headSide > 3 || headSide < 0) {
+  if (headSide > 3 || headSide <= 0) {
     PyErr_Format( PyExc_ValueError, "PyREEM.setEarLED: invalid side of head: 1 = left, 2 = right, 3 = both." );
     return NULL;
   }
@@ -1824,7 +1824,7 @@ static PyObject * PyModule_REEMPulseEarLED( PyObject * self, PyObject * args )
     return NULL;
   }
 
-  if (headSide > 3 || headSide < 0) {
+  if (headSide > 3 || headSide <= 0) {
     PyErr_Format( PyExc_ValueError, "PyREEM.pluseEarLED: invalid side of head: 1 = left, 2 = right, 3 = both." );
     return NULL;
   }
@@ -1833,7 +1833,7 @@ static PyObject * PyModule_REEMPulseEarLED( PyObject * self, PyObject * args )
     return NULL;
   }
 
-  return PyLong_FromLong( REEMProxyManager::instance()->pulseEarLED( colourID1, colourID2, period, headSide ) );
+  return PyLong_FromLong( REEMProxyManager::instance()->pulseEarLED( colourID1, colourID2, headSide, period ) );
 }
 
 /** @name Miscellaneous Functions

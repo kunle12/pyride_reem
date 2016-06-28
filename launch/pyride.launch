@@ -1,6 +1,6 @@
 <launch>
   <!-- <include file="$(find reem_3dnav)/both_arms_navigation.launch"/> -->
-  
+
   <!-- <include file="$(find reem_2dnav_slam)/launch/reem_2dnav.launch/> -->
   <node pkg="pyride_reem" type="pyride_reem" name="pyride_reem" output="screen">
     <remap from="cmd_vel" to="key_vel" />
@@ -9,7 +9,8 @@
     <remap from="current_limit" to="current_limit_controller/command" />
     <param name="_image_transport" type="str" value="compressed"/>
     <param name="config_file" type="str" value="$(find pyride_reem)/pyrideconfig.xml"/>
-    <param name="script_dir" type="str" value="$(find pyride_reem)/scripts"/>
+    <!--<param name="script_dir" type="str" value="$(find pyride_reem)/scripts"/> -->
+    <param name="script_dir" type="str" value="/home/xun/myscripts"/>
     <param name="use_moveit" type="bool" value="false"/>
   </node>
 </launch>

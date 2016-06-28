@@ -55,7 +55,7 @@ bool PyREEMServer::init()
     ERROR_MSG( "Unable to find any active robot camera.\n" );
   }
 
-  nodeStatusSub_ = hcNodeHandle_->subscribe( "pyride_reem/node_status", 1, &PyREEMServer::nodeStatusCB, this );
+  nodeStatusSub_ = hcNodeHandle_->subscribe( "pyride/node_status", 1, &PyREEMServer::nodeStatusCB, this );
 
   REEMProxyManager::instance()->initWithNodeHandle( hcNodeHandle_, useOptionNodes, useMoveIt );
   ServerDataProcessor::instance()->init( activeVideoDevices_, activeAudioDevices_ );
