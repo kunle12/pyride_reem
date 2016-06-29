@@ -33,12 +33,8 @@ static const char *kHeadKWlist[] = { "head_1_joint", "head_2_joint", NULL };
 
 static const char *kTorsoKWlist[] = { "torso_1_joint", "torso_2_joint", NULL };
 
-static const char *kLeftHandKWlist[] = { "hand_left_index_1_joint", "hand_left_index_2_joint",
-    "hand_left_index_3_joint", "hand_left_index_joint", "hand_left_middle_1_joint", "hand_left_middle_2_joint",
-    "hand_left_middle_3_joint", "hand_left_middle_joint", "hand_left_thumb_joint" };
-static const char *kRightHandKWlist[] = { "hand_right_index_1_joint", "hand_right_index_2_joint",
-    "hand_right_index_3_joint", "hand_right_index_joint", "hand_right_middle_1_joint", "hand_right_middle_2_joint",
-    "hand_right_middle_3_joint", "hand_right_middle_joint", "hand_right_thumb_joint" };
+static const char *kLeftHandKWlist[] = { "hand_left_index_joint", "hand_left_middle_joint", "hand_left_thumb_joint" };
+static const char *kRightHandKWlist[] = { "hand_right_index_joint", "hand_right_middle_joint", "hand_right_thumb_joint" };
 ;
 static const char *kPoseKWlist[] = { "position", "orientation", NULL };
 static const char *kPickAndPlaceKWlist[] = { "name", "place", "grasp_position", "grasp_orientation", "use_left_arm", "distance_from", NULL };
@@ -1409,42 +1405,26 @@ static PyObject * PyModule_REEMSetHandPosition( PyObject * self, PyObject * args
   int mode = 0;
   PyObject * posObj = NULL;
 
-  double h_i_1_j, h_i_2_j, h_i_3_j, h_i_j;
-  double h_m_1_j, h_m_2_j, h_m_3_j, h_m_j, h_t_j;
+  double h_i_j, h_m_j, h_t_j;
   double time_to_reach = 2.0;
   
   bool isLeftArm = false;
   
-  if (PyArg_ParseTupleAndKeywords( args, keywds, "ddddddddd|d", (char**)kLeftHandKWlist,
-                                     &h_i_1_j, &h_i_2_j, &h_i_3_j, &h_i_j,
-                                     &h_m_1_j, &h_m_2_j, &h_m_3_j, &h_m_j,
-                                     &h_t_j, &time_to_reach ))
+  if (PyArg_ParseTupleAndKeywords( args, keywds, "ddd|d", (char**)kLeftHandKWlist,
+                                     &h_i_j, &h_m_j, &h_t_j, &time_to_reach ))
   {
     isLeftArm = true;
   }
   else {
     PyErr_Clear();
-    if (!PyArg_ParseTupleAndKeywords( args, keywds, "ddddddddd|d", (char**)kRightHandKWlist,
-                                        &h_i_1_j, &h_i_2_j, &h_i_3_j, &h_i_j,
-                                        &h_m_1_j, &h_m_2_j, &h_m_3_j, &h_m_j,
-                                        &h_t_j, &time_to_reach ))
+    if (!PyArg_ParseTupleAndKeywords( args, keywds, "ddd|d", (char**)kRightHandKWlist,
+                                        &h_i_j, &h_m_j, &h_t_j, &time_to_reach ))
     {
       // PyArg_ParseTuple will set the error status.
       return NULL;
     }
   }
   std::vector<double> hand_pos( 3, 0.0 );
-  /*
-  hand_pos[0] = h_i_1_j;
-  hand_pos[1] = h_i_2_j;
-  hand_pos[2] = h_i_3_j;
-  hand_pos[3] = h_i_j;
-  hand_pos[4] = h_m_1_j;
-  hand_pos[5] = h_m_2_j;
-  hand_pos[6] = h_m_3_j;
-  hand_pos[7] = h_m_j;
-  hand_pos[8] = h_t_j;
-  */
   hand_pos[0] = h_i_j;
   hand_pos[1] = h_m_j;
   hand_pos[2] = h_t_j;

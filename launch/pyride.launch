@@ -10,7 +10,7 @@
     <param name="_image_transport" type="str" value="compressed"/>
     <param name="config_file" type="str" value="$(find pyride_reem)/pyrideconfig.xml"/>
     <!--<param name="script_dir" type="str" value="$(find pyride_reem)/scripts"/> -->
-    <param name="script_dir" type="str" value="/home/xun/myscripts"/>
+    <param name="script_dir" type="str" value="/home/pal/dev/pyride_demo_scripts"/>
     <param name="use_moveit" type="bool" value="false"/>
   </node>
 </launch>
