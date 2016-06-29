@@ -99,12 +99,16 @@ Public Member Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Return whether MoveIt is in use.  <a href="#ab06a2dce82b816b110884bd4dd88117a"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a97dfd4b1926507d8729e64beae606303">moveTorsoTo</a> (pan, pitch, relative, time_to_reach)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Move the REEM torso to a specific yaw and pitch position.  <a href="#a97dfd4b1926507d8729e64beae606303"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a258977a08d93d7c0334b832de0ad72d7">moveTorsoWithJointTrajectory</a> (joint_trajectory)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Move REEM torso to a sequence of waypoints, i.e. joint trajectory.  <a href="#a258977a08d93d7c0334b832de0ad72d7"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ac6d983eb5ce4481444832b4fc411de71">moveBodyTo</a> (x, y, theta, best_time)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Move the REEM body to a pose at (x,y,theta).  <a href="#ac6d983eb5ce4481444832b4fc411de71"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ac3c9eb318a01ac16c6662637539c55f4">moveBodyWithSpeed</a> (x, y, theta)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the REEM body moving speed in the form of (x,y,theta).  <a href="#ac3c9eb318a01ac16c6662637539c55f4"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#acfc08db20190ea0ce9db96d7a223d7c6">moveHeadTo</a> (pan, pitch, relative, time_to_reach)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Move the REEM head to a specific yaw and pitch position.  <a href="#acfc08db20190ea0ce9db96d7a223d7c6"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ab87684d7f7cb3868b4911cd490eaee84">moveHeadWithJointTrajectory</a> (joint_trajectory)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Move REEM head to a sequence of waypoints, i.e. joint trajectory.  <a href="#ab87684d7f7cb3868b4911cd490eaee84"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a89c5dd1292b40dc1be46adfd9dfc849a">pointHeadTo</a> (reference_frame, x, y, z)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Point the REEM head towards a specific coordinates in a reference frame with respect to 'stereo_link'.  <a href="#a89c5dd1292b40dc1be46adfd9dfc849a"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ade16ad31b8ab1e4c387a3f431530014c">getHeadPos</a> ()</td></tr>
@@ -209,6 +213,10 @@ Public Member Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#a8656b2f5610bbe6b132579662aa76769" title="Opens one or both REEM grippers.">PyREEM.openHand</a>, <a class="el" href="classPyREEM.html#a5513f5ba7c1fe11ad0f925d10f547fb3" title="Closes one or both REEM hand.">PyREEM.closeHand</a> and <a class="el" href="classPyREEM.html#af56dc8d51afafbfe02cc906cc8da297e" title="Move a REEM hand to the specified joint position within a time frame.">PyREEM.setHandPosition</a> method call is successful.  <a href="#aa01b04f06b360af889978a6f17837eb7"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a624f25119a654919e5da5eba36fb9ae7">onHandActionFailed</a> (is_left_hand)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#a8656b2f5610bbe6b132579662aa76769" title="Opens one or both REEM grippers.">PyREEM.openHand</a>, <a class="el" href="classPyREEM.html#a5513f5ba7c1fe11ad0f925d10f547fb3" title="Closes one or both REEM hand.">PyREEM.closeHand</a> and <a class="el" href="classPyREEM.html#af56dc8d51afafbfe02cc906cc8da297e" title="Move a REEM hand to the specified joint position within a time frame.">PyREEM.setHandPosition</a> method call is failed.  <a href="#a624f25119a654919e5da5eba36fb9ae7"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a39137090ffb97097d7bdd186ffc2587e">onSpeakSuccess</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when PyREEM.say method call is successful.  <a href="#a39137090ffb97097d7bdd186ffc2587e"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ad2619bc47da74d97fb1f70e2a6f0f5d0">onSpeakFailed</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when PyREEM.say method call is failed.  <a href="#ad2619bc47da74d97fb1f70e2a6f0f5d0"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#abc7d8a7ba502111201c3ab7f1d0c3d1a">onBatteryChargeChange</a> (battery_status)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when REEM battery status changes.  <a href="#abc7d8a7ba502111201c3ab7f1d0c3d1a"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a55b1d5e512841a5b44bbf1820eb0b629">onMoveBodySuccess</a> ()</td></tr>
@@ -1019,6 +1027,33 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ab87684d7f7cb3868b4911cd490eaee84"></a><!-- doxytag: member="PyREEM::moveHeadWithJointTrajectory" ref="ab87684d7f7cb3868b4911cd490eaee84" args="(joint_trajectory)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#ab87684d7f7cb3868b4911cd490eaee84">moveHeadWithJointTrajectory</a> </td>
+          <td>(</td>
+          <td class="paramtype">joint_trajectory&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Move REEM head to a sequence of waypoints, i.e. joint trajectory. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">list</td><td>joint_trajectory. A list of waypoints that contain joint position dictionaries of {'head_1_joint','head_2_joint'}. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+<dl class="warning"><dt><b>Warning:</b></dt><dd>no joint value validation </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a97dfd4b1926507d8729e64beae606303"></a><!-- doxytag: member="PyREEM::moveTorsoTo" ref="a97dfd4b1926507d8729e64beae606303" args="(pan, pitch, relative, time_to_reach)" -->
 <div class="memitem">
 <div class="memproto">
@@ -1067,6 +1102,33 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>bool. True == valid command; False == invalid command. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a258977a08d93d7c0334b832de0ad72d7"></a><!-- doxytag: member="PyREEM::moveTorsoWithJointTrajectory" ref="a258977a08d93d7c0334b832de0ad72d7" args="(joint_trajectory)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a258977a08d93d7c0334b832de0ad72d7">moveTorsoWithJointTrajectory</a> </td>
+          <td>(</td>
+          <td class="paramtype">joint_trajectory&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Move REEM torso to a sequence of waypoints, i.e. joint trajectory. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">list</td><td>joint_trajectory. A list of waypoints that contain joint position dictionaries of {'torso_1_joint','torso_2_joint'}. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+<dl class="warning"><dt><b>Warning:</b></dt><dd>no joint value validation </dd></dl>
 
 </div>
 </div>
@@ -1413,6 +1475,44 @@ Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ad2619bc47da74d97fb1f70e2a6f0f5d0"></a><!-- doxytag: member="PyREEM::onSpeakFailed" ref="ad2619bc47da74d97fb1f70e2a6f0f5d0" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#ad2619bc47da74d97fb1f70e2a6f0f5d0">onSpeakFailed</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback function when PyREEM.say method call is failed. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a39137090ffb97097d7bdd186ffc2587e"></a><!-- doxytag: member="PyREEM::onSpeakSuccess" ref="a39137090ffb97097d7bdd186ffc2587e" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a39137090ffb97097d7bdd186ffc2587e">onSpeakSuccess</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback function when PyREEM.say method call is successful. </p>
 <dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
 
 </div>
@@ -2089,7 +2189,7 @@ Default output file name path is in the format of /removable/recordings/Ymd_HM_s
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 24 2016 17:52:17 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Jun 29 2016 16:12:20 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

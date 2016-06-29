@@ -7,5 +7,7 @@ var searchData=
   ['movebodyto',['moveBodyTo',['../classPyREEM.html#ac6d983eb5ce4481444832b4fc411de71',1,'PyREEM']]],
   ['movebodywithspeed',['moveBodyWithSpeed',['../classPyREEM.html#ac3c9eb318a01ac16c6662637539c55f4',1,'PyREEM']]],
   ['moveheadto',['moveHeadTo',['../classPyREEM.html#acfc08db20190ea0ce9db96d7a223d7c6',1,'PyREEM']]],
-  ['movetorsoto',['moveTorsoTo',['../classPyREEM.html#a97dfd4b1926507d8729e64beae606303',1,'PyREEM']]]
+  ['moveheadwithjointtrajectory',['moveHeadWithJointTrajectory',['../classPyREEM.html#ab87684d7f7cb3868b4911cd490eaee84',1,'PyREEM']]],
+  ['movetorsoto',['moveTorsoTo',['../classPyREEM.html#a97dfd4b1926507d8729e64beae606303',1,'PyREEM']]],
+  ['movetorsowithjointtrajectory',['moveTorsoWithJointTrajectory',['../classPyREEM.html#a258977a08d93d7c0334b832de0ad72d7',1,'PyREEM']]]
 ];
