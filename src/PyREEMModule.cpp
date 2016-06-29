@@ -29,6 +29,10 @@ static const char *kLeftArmKWlist[] = { "arm_left_1_joint", "arm_left_2_joint", 
 static const char *kRightArmKWlist[] = { "arm_right_1_joint", "arm_right_2_joint", "arm_right_3_joint",
     "arm_right_4_joint", "arm_right_5_joint", "arm_right_6_joint", "arm_right_7_joint", "time_to_reach", NULL };
 
+static const char *kHeadKWlist[] = { "head_1_joint", "head_2_joint", NULL };
+
+static const char *kTorsoKWlist[] = { "torso_1_joint", "torso_2_joint", NULL };
+
 static const char *kLeftHandKWlist[] = { "hand_left_index_1_joint", "hand_left_index_2_joint",
     "hand_left_index_3_joint", "hand_left_index_joint", "hand_left_middle_1_joint", "hand_left_middle_2_joint",
     "hand_left_middle_3_joint", "hand_left_middle_joint", "hand_left_thumb_joint" };
@@ -329,6 +333,70 @@ static PyObject * PyModule_REEMMoveTorsoTo( PyObject * self, PyObject * args )
     Py_RETURN_FALSE;
 }
 
+/*! \fn moveTorsoWithJointTrajectory(joint_trajectory)
+ *  \memberof PyREEM
+ *  \brief Move REEM torso to a sequence of waypoints, i.e. joint trajectory.
+ *  \param list joint_trajectory. A list of waypoints that contain joint position dictionaries of {'torso_1_joint','torso_2_joint'}.
+ *  \return None.
+ *  \warning no joint value validation
+ */
+static PyObject * PyModule_REEMMoveTorsoWithJointTraj( PyObject * self, PyObject * args )
+{
+  PyObject * trajObj = NULL;
+
+  if (!PyArg_ParseTuple( args, "O", &trajObj )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  int listSize = 0;
+
+  if (!PyList_Check( trajObj ) || (listSize = PyList_Size( trajObj )) == 0) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.moveTorsoWithJointTrajectory: input parameter must be a non empty list of dictionary!" );
+    return NULL;
+  }
+
+  PyObject * jointPos = NULL;
+  PyObject * jval = NULL;
+
+  std::vector< std::vector<double> > trajectory;
+  std::vector<float> times_to_reach( listSize, 2.0 ); // default to 2 seconds;
+
+  for (int i = 0; i < listSize; ++i) {
+    jointPos = PyList_GetItem( trajObj, i );
+    if (!PyDict_Check( jointPos ) || PyDict_Size( jointPos ) < 2) {
+      PyErr_Format( PyExc_ValueError, "PyREEM.moveTorsoWithJointTrajectory: input list item %d "
+                   "must be a dictionary containing all 2 joint entries for REEM torso!", i );
+      return NULL;
+    }
+
+    std::vector<double> head_joint_pos( 2, 0.0 );
+
+    for (int k = 0; k < 2; k++) {
+      jval = PyDict_GetItemString( jointPos,  kTorsoKWlist[k] );
+      if (!jval) {
+        PyErr_Format( PyExc_ValueError, "PyREEM.moveTorsoWithJointTrajectory: input list item %d has"
+                     " missing %s joint value!", i, kTorsoKWlist[k] );
+        return NULL;
+      }
+      if (!PyFloat_Check( jval )) {
+        PyErr_Format( PyExc_ValueError, "PyREEM.moveTorsoWithJointTrajectory: input list item %d has"
+                     " invalid %s joint values!", i, kTorsoKWlist[k] );
+        return NULL;
+      }
+      head_joint_pos[k] = PyFloat_AsDouble( jval );
+    }
+    trajectory.push_back( head_joint_pos );
+    jval = PyDict_GetItemString( jointPos, "time_to_reach" );
+    if (jval && PyFloat_Check( jval )) {
+      times_to_reach[i] = (float)PyFloat_AsDouble( jval );
+    }
+  }
+
+  REEMProxyManager::instance()->moveTorsoWithJointTrajectory( trajectory, times_to_reach );
+  Py_RETURN_NONE;
+}
+
 /*! \fn moveBodyTo(x,y,theta,best_time)
  *  \memberof PyREEM
  *  \brief Move the REEM body to a pose at (x,y,theta).
@@ -445,6 +513,70 @@ static PyObject * PyModule_REEMMoveHeadTo( PyObject * self, PyObject * args )
     Py_RETURN_TRUE;
   else
     Py_RETURN_FALSE;
+}
+
+/*! \fn moveHeadWithJointTrajectory(joint_trajectory)
+ *  \memberof PyREEM
+ *  \brief Move REEM head to a sequence of waypoints, i.e. joint trajectory.
+ *  \param list joint_trajectory. A list of waypoints that contain joint position dictionaries of {'head_1_joint','head_2_joint'}.
+ *  \return None.
+ *  \warning no joint value validation
+ */
+static PyObject * PyModule_REEMMoveHeadWithJointTraj( PyObject * self, PyObject * args )
+{
+  PyObject * trajObj = NULL;
+
+  if (!PyArg_ParseTuple( args, "O", &trajObj )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  int listSize = 0;
+
+  if (!PyList_Check( trajObj ) || (listSize = PyList_Size( trajObj )) == 0) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.moveHeadWithJointTrajectory: input parameter must be a non empty list of dictionary!" );
+    return NULL;
+  }
+
+  PyObject * jointPos = NULL;
+  PyObject * jval = NULL;
+
+  std::vector< std::vector<double> > trajectory;
+  std::vector<float> times_to_reach( listSize, 2.0 ); // default to 2 seconds;
+
+  for (int i = 0; i < listSize; ++i) {
+    jointPos = PyList_GetItem( trajObj, i );
+    if (!PyDict_Check( jointPos ) || PyDict_Size( jointPos ) < 2) {
+      PyErr_Format( PyExc_ValueError, "PyREEM.moveHeadWithJointTrajectory: input list item %d "
+                   "must be a dictionary containing all 2 joint entries for REEM head!", i );
+      return NULL;
+    }
+
+    std::vector<double> head_joint_pos( 2, 0.0 );
+
+    for (int k = 0; k < 2; k++) {
+      jval = PyDict_GetItemString( jointPos,  kHeadKWlist[k] );
+      if (!jval) {
+        PyErr_Format( PyExc_ValueError, "PyREEM.moveHeadWithJointTrajectory: input list item %d has"
+                     " missing %s joint value!", i, kHeadKWlist[k] );
+        return NULL;
+      }
+      if (!PyFloat_Check( jval )) {
+        PyErr_Format( PyExc_ValueError, "PyREEM.moveHeadWithJointTrajectory: input list item %d has"
+                     " invalid %s joint values!", i, kHeadKWlist[k] );
+        return NULL;
+      }
+      head_joint_pos[k] = PyFloat_AsDouble( jval );
+    }
+    trajectory.push_back( head_joint_pos );
+    jval = PyDict_GetItemString( jointPos, "time_to_reach" );
+    if (jval && PyFloat_Check( jval )) {
+      times_to_reach[i] = (float)PyFloat_AsDouble( jval );
+    }
+  }
+
+  REEMProxyManager::instance()->moveHeadWithJointTrajectory( trajectory, times_to_reach );
+  Py_RETURN_NONE;
 }
 
 /*! \fn pointHeadTo(reference_frame, x, y, z)
@@ -1953,6 +2085,8 @@ static PyMethodDef PyModule_methods[] = {
     "Update REEM head position with a specific velocity in radian/s." },
   { "moveHeadTo", (PyCFunction)PyModule_REEMMoveHeadTo, METH_VARARGS,
     "Move REEM head to a new position (in degree)." },
+  { "moveHeadWithJointTrajectory", (PyCFunction)PyModule_REEMMoveHeadWithJointTraj, METH_VARARGS,
+    "Move REEM's head in a specific joint trajectory (a list of joint positions)." },
   { "moveBodyTo", (PyCFunction)PyModule_REEMMoveBodyTo, METH_VARARGS,
     "Move REEM base to a new pose." },
   { "moveBodyWithSpeed", (PyCFunction)PyModule_REEMMoveBodyWithSpeed, METH_VARARGS,
@@ -1963,6 +2097,8 @@ static PyMethodDef PyModule_methods[] = {
     "Cancel the active move body actions." },
   { "moveTorsoTo", (PyCFunction)PyModule_REEMMoveTorsoTo, METH_VARARGS,
     "Move REEM torso joints." },
+  { "moveTorsoWithJointTrajectory", (PyCFunction)PyModule_REEMMoveTorsoWithJointTraj, METH_VARARGS,
+    "Move REEM's torso in a specific joint trajectory (a list of joint positions)." },
   { "moveArmPoseTo", (PyCFunction)PyModule_REEMMoveArmPoseTo, METH_VARARGS|METH_KEYWORDS,
     "Move one of REEM arms end point pose to a coordinate wrt torso." },
   { "moveArmWithJointPos", (PyCFunction)PyModule_REEMMoveArmWithJointPos, METH_VARARGS|METH_KEYWORDS,

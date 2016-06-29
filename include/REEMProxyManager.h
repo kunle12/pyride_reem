@@ -104,7 +104,10 @@ public:
   bool moveHeadTo( double yaw, double pitch, bool relative = false, float time_to_reach = 0.5 );
   bool pointHeadTo( const std::string & frame, float x, float y, float z );
   void updateHeadPos( float yaw, float pitch );
-  
+
+  void moveHeadWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
+                                     std::vector<float> & times_to_reach );
+
   bool moveArmWithGoalPose( bool isLeftArm, std::vector<double> & position,
                            std::vector<double> & orientation, float time_to_reach = 10.0 );
   void moveArmWithJointPos( bool isLeftArm, std::vector<double> & positions,
@@ -140,6 +143,9 @@ public:
   bool moveBodyTo( const RobotPose & pose, const float bestTime );
 
   bool moveTorsoTo( double yaw, double pitch, bool relative = false, float time_to_reach = 2.0 );
+
+  void moveTorsoWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
+                                     std::vector<float> & times_to_reach );
 
   void updateBodyPose( const RobotPose & pose, bool localupdate = false );
   

@@ -1296,6 +1296,44 @@ bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative, floa
   return true;
 }
 
+void REEMProxyManager::moveHeadWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
+                                   std::vector<float> & times_to_reach )
+{
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || !headClient_)
+    return;
+
+  control_msgs::FollowJointTrajectoryGoal goal;
+
+  goal.trajectory.joint_names.push_back( "head_1_joint" );
+  goal.trajectory.joint_names.push_back( "head_2_joint" );
+
+  goal.trajectory.points.resize( trajectory.size() );
+
+  float time_to_reach_for_pt = 0.0;
+
+  for (size_t jp = 0; jp < trajectory.size(); ++jp) {
+    goal.trajectory.points[jp].positions.resize( 2 );
+    // Velocities
+    goal.trajectory.points[jp].velocities.resize( 2 );
+
+    for (size_t j = 0; j < 2; ++j) {
+      goal.trajectory.points[jp].positions[j] = trajectory[jp][j];
+      goal.trajectory.points[jp].velocities[j] = 0.0;
+    }
+    time_to_reach_for_pt += times_to_reach[jp];
+    goal.trajectory.points[jp].time_from_start = ros::Duration( time_to_reach_for_pt );
+  }
+
+  headCtrlWithTrajActionClient_ = true;
+
+  headClient_->sendGoal( goal,
+                          boost::bind( &REEMProxyManager::doneHeadTrajAction, this, _1, _2 ),
+                          FollowTrajectoryClient::SimpleActiveCallback(),
+                          FollowTrajectoryClient::SimpleFeedbackCallback() );
+
+  return;
+}
+
 bool REEMProxyManager::pointHeadTo( const std::string & frame, float x, float y, float z )
 {
   if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_)
@@ -1912,6 +1950,44 @@ bool REEMProxyManager::moveTorsoTo( double yaw, double pitch, bool relative, flo
 						  FollowTrajectoryClient::SimpleFeedbackCallback() );
 
   return true;
+}
+
+void REEMProxyManager::moveTorsoWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
+                                   std::vector<float> & times_to_reach )
+{
+  if (torsoCtrl_ || !torsoClient_)
+    return;
+
+  control_msgs::FollowJointTrajectoryGoal goal;
+
+  goal.trajectory.joint_names.push_back( "torso_1_joint" );
+  goal.trajectory.joint_names.push_back( "torso_2_joint" );
+
+  goal.trajectory.points.resize( trajectory.size() );
+
+  float time_to_reach_for_pt = 0.0;
+
+  for (size_t jp = 0; jp < trajectory.size(); ++jp) {
+    goal.trajectory.points[jp].positions.resize( 2 );
+    // Velocities
+    goal.trajectory.points[jp].velocities.resize( 2 );
+
+    for (size_t j = 0; j < 2; ++j) {
+      goal.trajectory.points[jp].positions[j] = trajectory[jp][j];
+      goal.trajectory.points[jp].velocities[j] = 0.0;
+    }
+    time_to_reach_for_pt += times_to_reach[jp];
+    goal.trajectory.points[jp].time_from_start = ros::Duration( time_to_reach_for_pt );
+  }
+
+  torsoCtrl_ = true;
+
+  torsoClient_->sendGoal( goal,
+              boost::bind( &REEMProxyManager::doneTorsoAction, this, _1, _2 ),
+              FollowTrajectoryClient::SimpleActiveCallback(),
+              FollowTrajectoryClient::SimpleFeedbackCallback() );
+
+  return;
 }
 
 void REEMProxyManager::jointStateDataCB( const sensor_msgs::JointStateConstPtr & msg )
