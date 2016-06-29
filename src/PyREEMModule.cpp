@@ -1339,7 +1339,7 @@ static PyObject * PyModule_REEMOpenHand( PyObject * self, PyObject * args )
         Py_RETURN_TRUE;
       break;
     case 3:
-      if (REEMProxyManager::instance()->setHandPosition( true, hand_pos ) ||
+      if (REEMProxyManager::instance()->setHandPosition( true, hand_pos ) &&
           REEMProxyManager::instance()->setHandPosition( false, hand_pos ))
       {
         Py_RETURN_TRUE;
@@ -1380,7 +1380,7 @@ static PyObject * PyModule_REEMCloseHand( PyObject * self, PyObject * args )
         Py_RETURN_TRUE;
       break;
     case 3:
-      if (REEMProxyManager::instance()->setHandPosition( true, hand_pos ) ||
+      if (REEMProxyManager::instance()->setHandPosition( true, hand_pos ) &&
           REEMProxyManager::instance()->setHandPosition( false, hand_pos ))
       {
         Py_RETURN_TRUE;
