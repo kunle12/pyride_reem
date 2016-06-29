@@ -719,6 +719,16 @@ void REEMProxyManager::doneRHandAction( const actionlib::SimpleClientGoalState &
   ROS_INFO( "Right hand action finished in state [%s]", state.toString().c_str());
 }
 
+/*! \typedef onSpeakSuccess()
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.say method call is successful.
+ *  \return None.
+ */
+/*! \typedef onSpeakFailed()
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.say method call is failed.
+ *  \return None.
+ */
 void REEMProxyManager::doneSpeakAction( const actionlib::SimpleClientGoalState & state,
                             const TtsResultConstPtr & result )
 {
@@ -726,15 +736,15 @@ void REEMProxyManager::doneSpeakAction( const actionlib::SimpleClientGoalState &
   gstate = PyGILState_Ensure();
 
   if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
-	PyREEMModule::instance()->invokeCallback( "onSpeakSuccess", NULL );
+    PyREEMModule::instance()->invokeCallback( "onSpeakSuccess", NULL );
   }
   else {
-	PyREEMModule::instance()->invokeCallback( "onSpeakFailed", NULL );
+    PyREEMModule::instance()->invokeCallback( "onSpeakFailed", NULL );
   }
 
   PyGILState_Release( gstate );
 
-  //ROS_INFO( "On speak finished in state [%s]", state.toString().c_str());
+  ROS_INFO( "On speak finished in state [%s]", state.toString().c_str());
 }
 
 void REEMProxyManager::sayWithVolume( const std::string & text, float volume, bool toBlock )
