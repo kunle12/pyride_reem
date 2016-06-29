@@ -1367,8 +1367,9 @@ static PyObject * PyModule_REEMCloseHand( PyObject * self, PyObject * args )
     return NULL;
   }
   
-  std::vector<double> hand_pos( 3, 0.0 );
-  // TODO: set position
+  std::vector<double> hand_pos( 3, 3.5 );
+  hand_pos[2] = 1.8;
+
   switch (mode) {
     case 1:
       if (REEMProxyManager::instance()->setHandPosition( true, hand_pos ))
