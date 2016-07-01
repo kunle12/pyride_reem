@@ -33,9 +33,9 @@ class IKSResolver( object ):
       return pose
     else:
       if left_arm:
-        return PyREEM.getRelativeTF( '/base_footprint', '/l_gripper_tool_frame' )
+        return PyREEM.getRelativeTF( '/base_footprint', '/hand_left_grasping_frame' )
       else:
-        return PyREEM.getRelativeTF( '/base_footprint', '/r_gripper_tool_frame' )
+        return PyREEM.getRelativeTF( '/base_footprint', '/hand_right_grasping_frame' )
 
   def moveArmInTrajectory( self, traj, time = 10.0, left_arm = False, relative = False ):
     if self.iks_in_use != 2:
@@ -43,7 +43,7 @@ class IKSResolver( object ):
 
     if time <= 1.0:
       raise IKSError( 'Invalid execution time.' )
-      
+
     if not isinstance( traj, list ) or len( traj ) == 0:
       raise IKSError( 'Input trajectory must be a non-empty list of pose (dictionary)' )
 
@@ -52,7 +52,7 @@ class IKSResolver( object ):
 
     for idx, pose in enumerate(traj):
       if not isinstance( pose, dict ) or not pose.has_key( 'position' ) or not isinstance(pose['position'], tuple) or len(pose['position']) != 3:
-        print 'invalid pose position at {0}'.format( idx )	
+        print 'invalid pose position at {0}'.format( idx )
       else:
         pos_traj.add_point(phi = float(idx), pos = self.np.array(pose['position']))
       # optional
@@ -65,11 +65,11 @@ class IKSResolver( object ):
       jt = self.spr2_obj.larm.project_to_js( pos_traj, orient_traj, relative = relative )
       pos_traj.consistent_velocities()
       jt.consistent_velocities()
-      self.spr2_obj.run_config_trajectory(jt, is_left_arm = True, duration = time) 
+      self.spr2_obj.run_config_trajectory(jt, is_left_arm = True, duration = time)
     else:
       jt = self.spr2_obj.rarm.project_to_js( pos_traj, orient_traj, relative = relative )
       jt.consistent_velocities()
-      self.spr2_obj.run_config_trajectory(jt, is_left_arm = False, duration = time) 
+      self.spr2_obj.run_config_trajectory(jt, is_left_arm = False, duration = time)
 
   def moveArmWithSREEM( self, **kwargs ):
     if not self.spr2_obj:
@@ -90,7 +90,7 @@ class IKSResolver( object ):
       self.spr2_obj.larm_reference = True
     else:
       self.spr2_obj.larm_reference = False
- 
+
     self.spr2_obj.sync_object()
     arm_orient = self.geometry.Orientation_3D( kwargs['orientation'], representation = 'quaternion' )
     self.spr2_obj.set_target( self.np.array(kwargs['position']), arm_orient.matrix() )
@@ -134,7 +134,7 @@ class IKSResolver( object ):
       PyREEM.moveArmTo = self.moveArmWithSREEM
       self.iks_in_use = 2
       print 'PyRIDE is using S-REEM for REEM'
-      
+
   def useMoveIt( self ):
     if PyREEM.useMoveIt():
       PyREEM.moveArmTo = PyREEM.moveArmPoseTo
@@ -148,4 +148,3 @@ class IKSResolver( object ):
       return 'S-REEM'
     else:
       return 'None'
-

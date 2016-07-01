@@ -2149,6 +2149,42 @@ void REEMProxyManager::setArmStiffness( bool isLeftArm, const float stiffness )
   if (!isLeftArm) {
     offset = 7;
   }
+  if (stiffCmd_.current_limits[offset] < 0.3 && stiffness > 0.5) { //we are turning on the stiffness
+    std::vector<std::string> joints( 7 );
+    std::vector<double> positions;
+
+    if (isLeftArm) {
+      joints[0] = "arm_left_1_joint";
+      joints[1] = "arm_left_2_joint";
+      joints[2] = "arm_left_3_joint";
+      joints[3] = "arm_left_4_joint";
+      joints[4] = "arm_left_5_joint";
+      joints[5] = "arm_left_6_joint";
+      joints[6] = "arm_left_7_joint";
+    }
+    else {
+      joints[0] = "arm_right_1_joint";
+      joints[1] = "arm_right_2_joint";
+      joints[2] = "arm_right_3_joint";
+      joints[3] = "arm_right_4_joint";
+      joints[4] = "arm_right_5_joint";
+      joints[5] = "arm_right_6_joint";
+      joints[6] = "arm_right_7_joint";
+    }
+    this->getPositionForJoints( joints, positions );
+    // set to this position
+    this->moveArmWithJointPos( isLeftArm, positions, 1.0 );
+    float mystiffness = stiffCmd_.current_limits[offset];
+    float step = (stiffness - mystiffness) / 10.0;
+    for (int j = 0; j < 10; j++) {
+      for (int i = 0; i < 7; i++) {
+        stiffCmd_.current_limits[offset+i] = mystiffness + step*j;
+      }
+      cPub_.publish( stiffCmd_ );
+      //printf( "mystiffness %.3f\n", mystiffness + step*j );
+      sleep( 0.1 );
+    }
+  }
   for (int i = 0; i < 7; i++) {
     stiffCmd_.current_limits[offset+i] = stiffness;
   }

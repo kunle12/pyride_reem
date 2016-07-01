@@ -4,35 +4,23 @@ import math
 class Actionlet( object ):
   def __init__( self, name ):
     self.name = name
+    self.action_finishes = True
 
   def play( self ):
     pass
 
-  def finishsHeadAction( self ):
-    pass
-
-  def finishsNavigateBodyAction( self ):
-    pass
-
-  def finishsMoveBodyAction( self ):
-    pass
-
-  def finishsGripperAction( self ):
-    pass
-
-  def finishsArmAction( self, is_left ):
-    pass
+  def onFinishingAction( self, type ):
+    self.action_finishes = True
 
   def isActionCompleted( self ):
-    return True
+    return self.action_finishes
 
   def reset( self ):
-    pass
+    self.action_finishes = True
 
 class PointHeadToAction( Actionlet ):
   def __init__( self ):
     super(PointHeadToAction, self).__init__( "PointHeadToAction" )
-    self.action_finishes = True
     self.reset()
     self.target_x = None
     self.target_y = None
@@ -53,56 +41,87 @@ class PointHeadToAction( Actionlet ):
       print "still playing action '%s'" % self.name
       return
 
+    self.action_finishes = False
     PyREEM.pointHeadTo( "odom", self.target_x, self.target_y, self.target_z )
 
-  def finishsHeadAction( self ):
-    self.action_finishes = True
-
-  def isActionCompleted( self ):
-    return self.action_finishes
-
-  def reset( self ):
-    self.action_finishes = True
-
-class PrimitiveArmAction( Actionlet ):
-  def __init__( self, name, armaction, handaction, isleft ):
-    super(PrimitiveArmAction, self).__init__( name )
-    self.arm_action = armaction
-    self.hand_action = handaction
-    self.is_left = isleft
-    self.reset()
+class PrimitiveHeadAction( Actionlet ):
+  def __init__( self, name, headaction ):
+    super(PrimitiveHeadAction, self).__init__( name )
+    self.head_action = headaction
 
   def play( self ):
-    if not self.isarm_finished or not self.ishandper_finished:
+    if not self.action_finishes:
+      print "still playing action '%s'" % self.name
+      return
+
+    if self.head_action:
+      self.action_finishes = False
+      if isinstance( self.head_action, list ):
+        PyREEM.moveArmWithJointTrajectory( self.head_action )
+      else:
+        PyREEM.moveArmWithJointPos( **(self.head_action) )
+
+class PrimitiveTorsoAction( Actionlet ):
+  def __init__( self, name, torsoaction ):
+    super(PrimitiveTorsoAction, self).__init__( name )
+    self.torso_action = torsoaction
+
+  def play( self ):
+    if not self.action_finishes:
+      print "still playing action '%s'" % self.name
+      return
+
+    if self.torso_action:
+      self.action_finishes = False
+      if isinstance( self.torso_action, list ):
+        PyREEM.moveArmWithJointTrajectory( self.torso_action )
+      else:
+        PyREEM.moveArmWithJointPos( **(self.torso_action) )
+
+class PrimitiveArmAction( Actionlet ):
+  def __init__( self, name, armaction ):
+    super(PrimitiveArmAction, self).__init__( name )
+    self.arm_action = armaction
+
+  def play( self ):
+    if not self.action_finishes:
       print "still playing action '%s'" % self.name
       return
 
     if self.arm_action:
+      self.action_finishes = False
       if isinstance( self.arm_action, list ):
         PyREEM.moveArmWithJointTrajectory( self.arm_action )
       else:
         PyREEM.moveArmWithJointPos( **(self.arm_action) )
-      self.isarm_finished = False
-    if self.hand_action != None:
-      if self.is_left:
-        PyREEM.setGripperPosition( 1, self.hand_action )
-      else:
-        PyREEM.setGripperPosition( 2, self.hand_action )
 
-      self.ishandper_finished = False
+class PrimitiveHandAction( Actionlet ):
+  def __init__( self, name, handaction ):
+    super(PrimitiveHandAction, self).__init__( name )
+    self.hand_action = handaction
 
-  def finishsGripperAction( self ):
-    self.ishandper_finished = True
+  def play( self ):
+    if not self.action_finishes:
+      print "still playing action '%s'" % self.name
+      return
 
-  def finishsArmAction( self ):
-    self.isarm_finished = True
+    if self.hand_action:
+      self.action_finishes = False
+      PyREEM.setHandPostion( **(self.hand_action) )
 
-  def isActionCompleted( self ):
-    return (self.isarm_finished and self.ishandper_finished)
+class PrimitiveSpeakAction( Actionlet ):
+  def __init__( self, name, text ):
+    super(PrimitiveSpeakAction, self).__init__( name )
+    self.text = text
 
-  def reset( self ):
-    self.isarm_finished = True
-    self.ishandper_finished = True
+  def play( self ):
+    if not self.action_finishes:
+      print "still playing action '%s'" % self.name
+      return
+
+    if self.text:
+      self.action_finishes = False
+      PyREEM.say( text )
 
 class ActionPlayerDelegate( object ):
   def onActionTrackCompleted( self, name ):
@@ -112,6 +131,24 @@ class ActionPlayer( object ):
   def __init__( self, delegate = None ):
     self.actiontracks = {}
     self.playingtrack = None
+
+    #save existing callback functions, if any.
+    self.existingArmActionHandler = PyREEM.onMoveArmActionSuccess
+    self.existingHeadActionHandler = PyREEM.onHeadActionSuccess
+    self.existingHandActionHandler = PyREEM.onHandActionSuccess
+    self.existingTorsoActionHandler = PyREEM.onMoveTorsoSuccess
+    self.existingBodyActionHandler = PyREEM.onMoveBodySuccess
+    self.existingSpeakActionHandler = PyREEM.onSpeakSuccess
+    self.existingNavigateActionHandler = PyREEM.onNavigateBodySuccess
+
+    PyREEM.onMoveArmActionSuccess = self.onArmActionComplete
+    PyREEM.onHeadActionSuccess = self.onHeadActionComplete
+    PyREEM.onHandActionSuccess = self.onHandActionComplete
+    PyREEM.onMoveTorsoSuccess = self.onTorsoActionComplete
+    PyREEM.onSpeakSuccess = self.onSpeakActionComplete
+    PyREEM.onMoveBodySuccess = self.onMoveBodyComplete
+    PyREEM.onNavigateBodySuccess = self.onNavigateBodyComplete
+
     if delegate and isinstance( delegate, ActionPlayerDelegate ):
       self.delegate = delegate
     else:
@@ -121,21 +158,26 @@ class ActionPlayer( object ):
     if isinstance( delegate, ActionPlayerDelegate ):
       self.delegate = delegate
 
-  def addActionTrack( self, name, track ):
+  def createActionTrack( self, name ):
     if name in self.actiontracks:
-      print "addActionTrack: track named '%s' is already added" % name
+      print "addActionTrack: track named '%s' has already been created" % name
       return False
 
-    if not isinstance( track, list ) or len( track ) == 0:
-      print "addActionTrack: track must be a non-empty list."
+  def appendActionToTrack( self, name, newaction, delay = 0 ):
+    if not isinstance( newaction, Actionlet ):
+      print "the second input is not an Actionlet"
       return False
 
-    for ac in track:
-      if not isinstance( ac, Actionlet ):
-        print "addActionTrack: track contains no Actionlet."
-        return False
+    if not isinstance( delay, float ) or delay < 0:
+      print "the third input is not a non negative float number"
+      return False
 
-    self.actiontracks[name] = (track, 0)
+    if not name in self.actiontracks:
+      print "track named '%s' does not exihandactionst." % name
+      return False
+
+    (track, idx) = self.actiontracks[name]
+    track.append( (newaction, delay) )
     return True
 
   def listTrackName( self ):
@@ -164,7 +206,8 @@ class ActionPlayer( object ):
     self.playingtrack = name
     (track, idx) = self.actiontracks[name]
 
-    track[idx].play()
+    (action, delay) = track[idx] #ignore the first delay
+    action.play()
     return True
 
   def resetTrack( self, name ):
@@ -186,19 +229,6 @@ class ActionPlayer( object ):
       return False
 
     del self.actiontracks[name]
-    return True
-
-  def appendActionToTrack( self, name, newaction ):
-    if not isinstance( newaction, Actionlet ):
-      print "the second input is not an Actionlet"
-      return False
-
-    if not name in self.actiontracks:
-      print "track named '%s' does not exist." % name
-      return False
-
-    (track, idx) = self.actiontracks[name]
-    track.append( newaction )
     return True
 
   def removeActionFromTrack( self, name, idx ):
@@ -223,23 +253,33 @@ class ActionPlayer( object ):
     self.actiontracks = new_tracks
     return old_tracks
 
+  def onSpeakActionComplete( self ):
+    if self.playingtrack == None:
+      return
+
+    (track, idx) = self.actiontracks[self.playingtrack]
+    (action, delay) = track[idx]
+    action.onFinishingAction( "speak" )
+
+    self.updateTrackStatus( action, track, idx )
+
   def onArmActionComplete( self, isleft ):
     if self.playingtrack == None:
       return
 
     (track, idx) = self.actiontracks[self.playingtrack]
-    action = track[idx]
-    action.finishsArmAction()
+    (action, delay) = track[idx]
+    action.onFinishingAction( "arm_{}".format( "left" if isleft else "right"))
 
     self.updateTrackStatus( action, track, idx )
 
-  def onGripperActionComplete( self, isleft ):
+  def onHandActionComplete( self, isleft ):
     if self.playingtrack == None:
       return
 
     (track, idx) = self.actiontracks[self.playingtrack]
-    action = track[idx]
-    action.finishsGripperAction()
+    (action, delay) = track[idx]
+    action.onFinishingAction( "hand_{}".format( "left" if isleft else "right"))
 
     self.updateTrackStatus( action, track, idx )
 
@@ -248,8 +288,8 @@ class ActionPlayer( object ):
       return
 
     (track, idx) = self.actiontracks[self.playingtrack]
-    action = track[idx]
-    action.finishsNavigateBodyAction()
+    (action, delay) = track[idx]
+    action.onFinishingAction( "navigate" )
 
     self.updateTrackStatus( action, track, idx )
 
@@ -258,8 +298,8 @@ class ActionPlayer( object ):
       return
 
     (track, idx) = self.actiontracks[self.playingtrack]
-    action = track[idx]
-    action.finishsMoveBodyAction()
+    (action, delay) = track[idx]
+    action.onFinishingAction( "move" )
 
     self.updateTrackStatus( action, track, idx )
 
@@ -268,8 +308,18 @@ class ActionPlayer( object ):
       return
 
     (track, idx) = self.actiontracks[self.playingtrack]
-    action = track[idx]
-    action.finishsHeadAction()
+    (action, delay) = track[idx]
+    action.onFinishingAction( "head" )
+
+    self.updateTrackStatus( action, track, idx )
+
+  def onTorsoActionComplete( self ):
+    if self.playingtrack == None:
+      return
+
+    (track, idx) = self.actiontracks[self.playingtrack]
+    (action, delay) = track[idx]
+    action.onFinishingAction( "torso" )
 
     self.updateTrackStatus( action, track, idx )
 
@@ -282,5 +332,18 @@ class ActionPlayer( object ):
           self.delegate.onActionTrackCompleted( self.playingtrack )
         self.playingtrack = None
       else:
-        track[idx].play()
+        (action, delay) = track[idx]
+        if delay > 0:
+            time.sleep( delay )
+        action.play()
         self.actiontracks[self.playingtrack] = (track, idx)
+
+  def fini( self ):
+    self.clearActionTracks()
+    PyREEM.onMoveArmActionSuccess = self.existingArmActionHandler
+    PyREEM.onHeadActionSuccess = self.existingHeadActionHandler
+    PyREEM.onHandActionSuccess = self.existingHandActionHandler
+    PyREEM.onMoveTorsoSuccess = self.existingTorsoActionHandler
+    PyREEM.onSpeakSuccess = self.existingSpeakActionHandler
+    PyREEM.onMoveBodySuccess = self.existingBodyActionHandler
+    PyREEM.onNavigateBodySuccess = self.existingNavigateActionHandler
