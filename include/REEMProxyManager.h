@@ -26,6 +26,7 @@
 
 #include <sensor_msgs/JointState.h>
 #include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/Range.h>
 
 #include <std_msgs/String.h>
 #include <std_msgs/Float64.h>
@@ -171,6 +172,9 @@ public:
   void deregisterForBaseScanData();
   void deregisterForTiltScanData();
   
+  void registerForSonarData();
+  void deregisterForSonarData();
+
   void directToWeb( const std::string & uri );
 
   int setEarLED( const REEMLedColour colour, const int side = 3 );
@@ -200,7 +204,7 @@ private:
 
   Subscriber * rawBaseScanSub_;
   Subscriber * rawTiltScanSub_;
-
+  Subscriber * torsoSonarSub_;
   Subscriber * faceDetectSub_;
 
   AsyncSpinner * jointDataThread_;
@@ -332,6 +336,7 @@ private:
   void baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg );
   void tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg );
   void palFaceDataCB( const pal_detection_msgs::FaceDetectionsConstPtr & msg );
+  void torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg );
 
   bool findSolidObjectInScene( const std::string & name );
   std_msgs::ColorRGBA colour2RGB( const REEMLedColour colour );

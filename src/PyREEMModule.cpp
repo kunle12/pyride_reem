@@ -1528,6 +1528,39 @@ static PyObject * PyModule_REEMRegisterTiltScanData( PyObject * self, PyObject *
   Py_RETURN_NONE;
 }
 
+/*! \fn registerTorsoSonarCallback( callback_function )
+ *  \memberof PyREEM
+ *  \brief Register a callback function for receiving sonar data from the torso.
+ *  None object can be used to stop receiving the scan data.
+ *  \param callback function that takes sonar sensor data in a dictionary {'isleft', 'range'}.
+ *  \return None
+ */
+static PyObject * PyModule_REEMRegisterTorsoSonarData( PyObject * self, PyObject * args )
+{
+  PyObject * callbackFn = NULL;
+
+  if (!PyArg_ParseTuple( args, "O", &callbackFn )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  if (callbackFn == Py_None) {
+    PyREEMModule::instance()->setTorsoSonarCallback( NULL );
+    REEMProxyManager::instance()->deregisterForSonarData();
+    Py_RETURN_NONE;
+  }
+
+  if (!PyCallable_Check( callbackFn )) {
+    PyErr_Format( PyExc_ValueError, "First input parameter is not a callable object" );
+    return NULL;
+  }
+
+  PyREEMModule::instance()->setTorsoSonarCallback( callbackFn );
+
+  REEMProxyManager::instance()->registerForSonarData();
+  Py_RETURN_NONE;
+}
+
 /*! \fn registerPalFaceCallback( callback_function )
  *  \memberof PyREEM
  *  \brief Register a callback function for receiving face data.
@@ -2132,6 +2165,8 @@ static PyMethodDef PyModule_methods[] = {
     "Register (or deregister) a callback function to get base laser scan data. If target frame is not given, raw data is returned." },
   { "registerTiltScanCallback", (PyCFunction)PyModule_REEMRegisterTiltScanData, METH_VARARGS,
     "Register (or deregister) a callback function to get tilt laser scan data. If target frame is not given, raw data is returned." },
+  { "registerTorsoSonarCallback", (PyCFunction)PyModule_REEMRegisterTorsoSonarData, METH_VARARGS,
+    "Register (or deregister) a callback function to get REEM torso sonar data." },
   { "registerPalFaceCallback", (PyCFunction)PyModule_REEMRegisterPalFaceData, METH_VARARGS,
     "Register (or deregister) a callback function to get PAL built-in face detector." },
   { "startPalFaceEnrollment", (PyCFunction)PyModule_REEMStartPalFaceEnrollment, METH_VARARGS,
@@ -2147,7 +2182,7 @@ static PyMethodDef PyModule_methods[] = {
 
 PyREEMModule::PyREEMModule() : PyModuleExtension( "PyREEM" )
 {
-  baseScanCB_ = tiltScanCB_ = palFaceCB_ = NULL;
+  baseScanCB_ = tiltScanCB_ = palFaceCB_ = torsoSonarCB_ = NULL;
 }
 
 PyREEMModule::~PyREEMModule()
@@ -2189,6 +2224,11 @@ void PyREEMModule::invokeTiltScanCallback( PyObject * arg )
   this->invokeCallbackHandler( tiltScanCB_, arg );
 }
 
+void PyREEMModule::invokeTorsoSonarCallback( PyObject * arg )
+{
+  this->invokeCallbackHandler( torsoSonarCB_, arg );
+}
+
 void PyREEMModule::invokePalFaceCallback( PyObject * arg )
 {
   this->invokeCallbackHandler( palFaceCB_, arg );
@@ -2202,6 +2242,11 @@ void PyREEMModule::setBaseScanCallback( PyObject * obj )
 void PyREEMModule::setTiltScanCallback( PyObject * obj )
 {
   this->swapCallbackHandler( tiltScanCB_, obj );
+}
+
+void PyREEMModule::setTorsoSonarCallback( PyObject * obj )
+{
+  this->swapCallbackHandler( torsoSonarCB_, obj );
 }
 
 void PyREEMModule::setPalFaceCallback( PyObject * obj )

@@ -78,6 +78,7 @@ REEMProxyManager::REEMProxyManager() :
   tiltScanSub_( NULL ),
   baseScanNotifier_( NULL ),
   tiltScanNotifier_( NULL ),
+  torsoSonarSub_( NULL ),
   faceDetectSub_( NULL ),
   bodyCtrlWithOdmetry_( false ),
   bodyCtrlWithNavigation_( false ),
@@ -391,6 +392,7 @@ void REEMProxyManager::fini()
   deregisterForBaseScanData();
   deregisterForTiltScanData();
   deregisterForPalFaceData();
+  deregisterForSonarData();
 
   jointDataThread_->stop();
   delete jointDataThread_;
@@ -912,6 +914,34 @@ void REEMProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & ms
   }
 }
 
+void REEMProxyManager::torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg )
+{
+  if ((msg->range > msg->max_range) || (msg->range < msg->min_range)) {
+    return;
+  }
+
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  PyObject * retObj = PyDict_New();
+  PyObject * elemObj = PyBool_FromLong( msg->header.frame_id.compare( "torso_sonar_15_link" ) == 0 );
+  PyDict_SetItemString( retObj, "isleft", elemObj );
+  Py_DECREF( elemObj );
+
+  elemObj = PyFloat_FromDouble( msg->range );
+  PyDict_SetItemString( retObj, "range", elemObj );
+  Py_DECREF( elemObj );
+
+  PyObject * arg = Py_BuildValue( "(O)", retObj );
+
+  PyREEMModule::instance()->invokeTorsoSonarCallback( arg );
+
+  Py_DECREF( arg );
+  Py_DECREF( retObj );
+
+  PyGILState_Release( gstate );
+}
+
 bool REEMProxyManager::getRobotPose( std::vector<double> & positions, std::vector<double> & orientation )
 {
   tf::StampedTransform curTransform;
@@ -1193,6 +1223,25 @@ void REEMProxyManager::deregisterForPalFaceData()
     faceDetectSub_->shutdown();
     delete faceDetectSub_;
     faceDetectSub_ = NULL;
+  }
+}
+
+void REEMProxyManager::registerForSonarData()
+{
+  if (torsoSonarSub_) {
+    ROS_WARN( "Already registered for torso sonar data." );
+  }
+  else {
+    torsoSonarSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "sonar_torso", 1, &REEMProxyManager::torsoSonarDataCB, this ) );
+  }
+}
+
+void REEMProxyManager::deregisterForSonarData()
+{
+  if (torsoSonarSub_) {
+    torsoSonarSub_->shutdown();
+    delete torsoSonarSub_;
+    torsoSonarSub_ = NULL;
   }
 }
 
