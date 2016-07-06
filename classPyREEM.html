@@ -147,10 +147,14 @@ Public Member Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Closes one or both REEM hand.  <a href="#a5513f5ba7c1fe11ad0f925d10f547fb3"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#af56dc8d51afafbfe02cc906cc8da297e">setHandPosition</a> (hand_joint_positions)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Move a REEM hand to the specified joint position within a time frame.  <a href="#af56dc8d51afafbfe02cc906cc8da297e"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ac9cbbde1b09aecb14622c65347a58861">playDefaultMotion</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">play a default motion prebuilt with PAL.  <a href="#ac9cbbde1b09aecb14622c65347a58861"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a6039673392cc2570503dc7ced173b4a6">registerBaseScanCallback</a> (callback_function, target_frame)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Register a callback function for receiving base laser scan data. None object can be used to stop receiving the scan data. If target frame is provided, the 3D position (x,y,z) w.r.t the target frame will be returned. Otherwise, raw laser scan data is returned.  <a href="#a6039673392cc2570503dc7ced173b4a6"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ad36b823027470d77f7535b2944e63ec8">registerTiltScanCallback</a> (callback_function, target_frame)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Register a callback function for receiving tilt laser scan data. None object can be used to stop receiving the scan data. If target frame is provided, the 3D position (x,y,z) w.r.t the target frame will be returned. Otherwise, raw laser scan data is returned.  <a href="#ad36b823027470d77f7535b2944e63ec8"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a626aa2217f6a2fb6a59b78a0b22cc4dc">registerTorsoSonarCallback</a> (callback_function)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Register a callback function for receiving sonar data from the torso. None object can be used to stop receiving the scan data.  <a href="#a626aa2217f6a2fb6a59b78a0b22cc4dc"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a34ceecf3dddc75a09fb919980d1fda85">registerPalFaceCallback</a> (callback_function)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Register a callback function for receiving face data. None object can be used to stop receiving the face data.  <a href="#a34ceecf3dddc75a09fb919980d1fda85"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a98f28470e4d404bec32cfca7a7c0034e">addSolidObject</a> (name, volume, position, orientation)</td></tr>
@@ -213,6 +217,10 @@ Public Member Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#a8656b2f5610bbe6b132579662aa76769" title="Opens one or both REEM grippers.">PyREEM.openHand</a>, <a class="el" href="classPyREEM.html#a5513f5ba7c1fe11ad0f925d10f547fb3" title="Closes one or both REEM hand.">PyREEM.closeHand</a> and <a class="el" href="classPyREEM.html#af56dc8d51afafbfe02cc906cc8da297e" title="Move a REEM hand to the specified joint position within a time frame.">PyREEM.setHandPosition</a> method call is successful.  <a href="#aa01b04f06b360af889978a6f17837eb7"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a624f25119a654919e5da5eba36fb9ae7">onHandActionFailed</a> (is_left_hand)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#a8656b2f5610bbe6b132579662aa76769" title="Opens one or both REEM grippers.">PyREEM.openHand</a>, <a class="el" href="classPyREEM.html#a5513f5ba7c1fe11ad0f925d10f547fb3" title="Closes one or both REEM hand.">PyREEM.closeHand</a> and <a class="el" href="classPyREEM.html#af56dc8d51afafbfe02cc906cc8da297e" title="Move a REEM hand to the specified joint position within a time frame.">PyREEM.setHandPosition</a> method call is failed.  <a href="#a624f25119a654919e5da5eba36fb9ae7"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ab17dd518c05c223717f267066a63983a">onPlayMotionSuccess</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#ac9cbbde1b09aecb14622c65347a58861" title="play a default motion prebuilt with PAL.">PyREEM.playDefaultMotion</a> method call is successful.  <a href="#ab17dd518c05c223717f267066a63983a"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a7a5fa7f075c36f30fb1a003d096d1ba3">onPlayMotionFailed</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#ac9cbbde1b09aecb14622c65347a58861" title="play a default motion prebuilt with PAL.">PyREEM.playDefaultMotion</a> method call is failed.  <a href="#a7a5fa7f075c36f30fb1a003d096d1ba3"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a39137090ffb97097d7bdd186ffc2587e">onSpeakSuccess</a> ()</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when PyREEM.say method call is successful.  <a href="#a39137090ffb97097d7bdd186ffc2587e"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ad2619bc47da74d97fb1f70e2a6f0f5d0">onSpeakFailed</a> ()</td></tr>
@@ -1479,6 +1487,44 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a7a5fa7f075c36f30fb1a003d096d1ba3"></a><!-- doxytag: member="PyREEM::onPlayMotionFailed" ref="a7a5fa7f075c36f30fb1a003d096d1ba3" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a7a5fa7f075c36f30fb1a003d096d1ba3">onPlayMotionFailed</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback function when <a class="el" href="classPyREEM.html#ac9cbbde1b09aecb14622c65347a58861" title="play a default motion prebuilt with PAL.">PyREEM.playDefaultMotion</a> method call is failed. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ab17dd518c05c223717f267066a63983a"></a><!-- doxytag: member="PyREEM::onPlayMotionSuccess" ref="ab17dd518c05c223717f267066a63983a" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#ab17dd518c05c223717f267066a63983a">onPlayMotionSuccess</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback function when <a class="el" href="classPyREEM.html#ac9cbbde1b09aecb14622c65347a58861" title="play a default motion prebuilt with PAL.">PyREEM.playDefaultMotion</a> method call is successful. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ad2619bc47da74d97fb1f70e2a6f0f5d0"></a><!-- doxytag: member="PyREEM::onSpeakFailed" ref="ad2619bc47da74d97fb1f70e2a6f0f5d0" args="()" -->
 <div class="memitem">
 <div class="memproto">
@@ -1678,6 +1724,31 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ac9cbbde1b09aecb14622c65347a58861"></a><!-- doxytag: member="PyREEM::playDefaultMotion" ref="ac9cbbde1b09aecb14622c65347a58861" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#ac9cbbde1b09aecb14622c65347a58861">playDefaultMotion</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>play a default motion prebuilt with PAL. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">string</td><td>name. Motion name </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a89c5dd1292b40dc1be46adfd9dfc849a"></a><!-- doxytag: member="PyREEM::pointHeadTo" ref="a89c5dd1292b40dc1be46adfd9dfc849a" args="(reference_frame, x, y, z)" -->
 <div class="memitem">
 <div class="memproto">
@@ -1874,6 +1945,32 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">callback</td><td>function that takes a list of raw laser range data or 3D position data as the input. </td></tr>
     <tr><td class="paramname">string</td><td>target_frame. Optional, the name of the target frame </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a626aa2217f6a2fb6a59b78a0b22cc4dc"></a><!-- doxytag: member="PyREEM::registerTorsoSonarCallback" ref="a626aa2217f6a2fb6a59b78a0b22cc4dc" args="(callback_function)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a626aa2217f6a2fb6a59b78a0b22cc4dc">registerTorsoSonarCallback</a> </td>
+          <td>(</td>
+          <td class="paramtype">callback_function&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Register a callback function for receiving sonar data from the torso. None object can be used to stop receiving the scan data. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">callback</td><td>function that takes sonar sensor data in a dictionary {'isleft', 'range'}. </td></tr>
   </table>
   </dd>
 </dl>
@@ -2189,7 +2286,7 @@ Default output file name path is in the format of /removable/recordings/Ymd_HM_s
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jun 29 2016 16:12:20 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Jul 6 2016 16:21:21 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

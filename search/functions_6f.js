@@ -14,6 +14,8 @@ var searchData=
   ['onnavigatebodyfailed',['onNavigateBodyFailed',['../classPyREEM.html#a795e333656f4b21ead13b10a655ee150',1,'PyREEM']]],
   ['onnavigatebodysuccess',['onNavigateBodySuccess',['../classPyREEM.html#a43f54d79297b621086fb27edbbd61301',1,'PyREEM']]],
   ['onnodestatusupdate',['onNodeStatusUpdate',['../classPyREEM.html#a55382b7352e5d3710778521bb2523f9d',1,'PyREEM']]],
+  ['onplaymotionfailed',['onPlayMotionFailed',['../classPyREEM.html#a7a5fa7f075c36f30fb1a003d096d1ba3',1,'PyREEM']]],
+  ['onplaymotionsuccess',['onPlayMotionSuccess',['../classPyREEM.html#ab17dd518c05c223717f267066a63983a',1,'PyREEM']]],
   ['onspeakfailed',['onSpeakFailed',['../classPyREEM.html#ad2619bc47da74d97fb1f70e2a6f0f5d0',1,'PyREEM']]],
   ['onspeaksuccess',['onSpeakSuccess',['../classPyREEM.html#a39137090ffb97097d7bdd186ffc2587e',1,'PyREEM']]],
   ['openhand',['openHand',['../classPyREEM.html#a8656b2f5610bbe6b132579662aa76769',1,'PyREEM']]]
