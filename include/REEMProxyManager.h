@@ -35,6 +35,7 @@
 #include <pal_detection_msgs/FaceDetections.h>
 #include <pal_control_msgs/ActuatorCurrentLimit.h>
 
+#include <play_motion_msgs/PlayMotionAction.h>
 #include <trajectory_msgs/JointTrajectory.h>
 #include <geometry_msgs/Twist.h>
 
@@ -58,6 +59,7 @@ using namespace ros;
 using namespace control_msgs;
 using namespace pal_interaction_msgs;
 using namespace move_base_msgs;
+using namespace play_motion_msgs;
 
 namespace pyride {
 
@@ -66,6 +68,7 @@ typedef actionlib::SimpleActionClient<control_msgs::PointHeadAction> PointHeadCl
 typedef actionlib::SimpleActionClient<control_msgs::JointTrajectoryAction> TrajectoryClient;
 typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> FollowTrajectoryClient;
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+typedef actionlib::SimpleActionClient<play_motion_msgs::PlayMotionAction> PlayMotionClient;
 
 typedef enum {
   WHITE = 0,
@@ -147,6 +150,8 @@ public:
 
   void moveTorsoWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
                                      std::vector<float> & times_to_reach );
+
+  void playDefaultMotion( const std::string & motion_name );
 
   void updateBodyPose( const RobotPose & pose, bool localupdate = false );
   
@@ -266,6 +271,7 @@ private:
 
   PointHeadClient * phClient_;
   MoveBaseClient * moveBaseClient_;
+  PlayMotionClient * playMotionClient_;
 
   moveit::planning_interface::MoveGroup * rarmGroup_;
   moveit::planning_interface::MoveGroup * larmGroup_;
@@ -324,7 +330,10 @@ private:
 
   void doneNavgiateBodyAction( const actionlib::SimpleClientGoalState & state,
                               const MoveBaseResultConstPtr & result );
-  
+
+  void donePlayMotionAction( const actionlib::SimpleClientGoalState & state,
+                              const PlayMotionResultConstPtr & result );
+
   void moveLHandActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback );
   void moveRHandActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback );
 

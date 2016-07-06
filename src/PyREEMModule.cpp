@@ -1436,6 +1436,25 @@ static PyObject * PyModule_REEMSetHandPosition( PyObject * self, PyObject * args
     Py_RETURN_FALSE;
 }
 
+/*! \fn playDefaultMotion()
+ *  \memberof PyREEM
+ *  \brief play a default motion prebuilt with PAL.
+ *  \param string name. Motion name
+ *  \return None
+ */
+static PyObject * PyModule_REEMPlayDefaultMotion( PyObject * self, PyObject * args )
+{
+  char * motion = NULL;
+
+  if (!PyArg_ParseTuple( args, "s", &motion )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  REEMProxyManager::instance()->playDefaultMotion( motion );
+  Py_RETURN_NONE;
+}
+
 /*! \fn registerBaseScanCallback( callback_function, target_frame )
  *  \memberof PyREEM
  *  \brief Register a callback function for receiving base laser scan data.
@@ -2149,6 +2168,8 @@ static PyMethodDef PyModule_methods[] = {
     "List supported REEM TF frames." },
   { "isSupportedTFFrame", (PyCFunction)PyModule_REEMCheckTFFrame, METH_VARARGS,
     "Check whether the input TF frames is supported." },
+  { "playDefaultMotion", (PyCFunction)PyModule_REEMPlayDefaultMotion, METH_VARARGS,
+    "Let REEM play one of its default motion." },
   { "useMoveIt", (PyCFunction)PyModule_REEMUseMoveIt, METH_NOARGS,
     "Check whether MoveIt is in use." },
   { "addSolidObject", (PyCFunction)PyModule_REEMAddSolidObject, METH_VARARGS|METH_KEYWORDS,

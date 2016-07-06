@@ -106,6 +106,7 @@ REEMProxyManager::REEMProxyManager() :
   mlacClient_( NULL ),
   mracClient_( NULL ),
   moveBaseClient_( NULL ),
+  playMotionClient_( NULL ),
   isCharging_( true ),
   batCapacity_( 100.0 ),
   lowPowerThreshold_( 0 ), // # no active power monitoring
@@ -247,6 +248,19 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
     mracClient_ = NULL;
   }
 
+  trials = 0;
+  playMotionClient_ = new PlayMotionClient( "play_motion", true );
+
+  while (!playMotionClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
+    ROS_INFO( "Waiting for the play motion action server to come up." );
+    trials++;
+  }
+  if (!playMotionClient_->isServerConnected()) {
+    ROS_INFO( "Play motion action server is down." );
+    delete playMotionClient_;
+    playMotionClient_ = NULL;
+  }
+
   if (useOptionNodes) {
     trials = 0;
     moveBaseClient_ = new MoveBaseClient( "move_base", true );
@@ -385,6 +399,10 @@ void REEMProxyManager::fini()
   if (moveBaseClient_) {
     delete moveBaseClient_;
     moveBaseClient_ = NULL;
+  }
+  if (playMotionClient_) {
+    delete playMotionClient_;
+    playMotionClient_ = NULL;
   }
   jointSub_.shutdown();
   powerSub_.shutdown();
@@ -719,6 +737,34 @@ void REEMProxyManager::doneRHandAction( const actionlib::SimpleClientGoalState &
   PyGILState_Release( gstate );
   
   ROS_INFO( "Right hand action finished in state [%s]", state.toString().c_str());
+}
+
+/*! \typedef onPlayMotionSuccess()
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.playDefaultMotion method call is successful.
+ *  \return None.
+ */
+/*! \typedef onPlayMotionFailed()
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.playDefaultMotion method call is failed.
+ *  \return None.
+ */
+void REEMProxyManager::donePlayMotionAction( const actionlib::SimpleClientGoalState & state,
+                            const PlayMotionResultConstPtr & result )
+{
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
+    PyREEMModule::instance()->invokeCallback( "onPlayMotionSuccess", NULL );
+  }
+  else {
+    PyREEMModule::instance()->invokeCallback( "onPlayMotionFailed", NULL );
+  }
+
+  PyGILState_Release( gstate );
+
+  ROS_INFO( "On play default motion finished in state [%s]", state.toString().c_str());
 }
 
 /*! \typedef onSpeakSuccess()
@@ -1755,7 +1801,27 @@ void REEMProxyManager::cancelBodyMovement()
   mCmd_.linear.x = mCmd_.linear.y = mCmd_.angular.z = 0.0;
   bodyCtrlWithOdmetry_ = false;
 }
+
+void REEMProxyManager::playDefaultMotion( const std::string & motion_name )
+{
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ ||
+      rArmCtrl_ || lArmCtrl_ || torsoCtrl_)
+  {
+    return;
+  }
   
+  play_motion_msgs::PlayMotionGoal goal;
+
+  goal.motion_name = motion_name;
+  goal.skip_planning = false;
+  goal.priority = 20;
+
+  playMotionClient_->sendGoal( goal,
+                      boost::bind( &REEMProxyManager::donePlayMotionAction, this, _1, _2 ),
+                      PlayMotionClient::SimpleActiveCallback(),
+                      PlayMotionClient::SimpleFeedbackCallback() );
+}
+
 bool REEMProxyManager::palFaceStartEnrollment( const std::string & name )
 {
   if (!palFaceEnrolStartClient_.exists() || !palFaceDatabaseInit_)
