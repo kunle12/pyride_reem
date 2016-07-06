@@ -928,7 +928,7 @@ void REEMProxyManager::torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg 
   PyDict_SetItemString( retObj, "isleft", elemObj );
   Py_DECREF( elemObj );
 
-  elemObj = PyFloat_FromDouble( msg->range );
+  elemObj = PyFloat_FromDouble( roundf(msg->range * 100.0) / 100.0 );
   PyDict_SetItemString( retObj, "range", elemObj );
   Py_DECREF( elemObj );
 
@@ -2222,7 +2222,7 @@ void REEMProxyManager::setArmStiffness( bool isLeftArm, const float stiffness )
     }
     this->getPositionForJoints( joints, positions );
     // set to this position
-    this->moveArmWithJointPos( isLeftArm, positions, 1.0 );
+    this->moveArmWithJointPos( isLeftArm, positions, 0.5 );
     float mystiffness = stiffCmd_.current_limits[offset];
     float step = (stiffness - mystiffness) / 10.0;
     for (int j = 0; j < 10; j++) {
