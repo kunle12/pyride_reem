@@ -2739,6 +2739,7 @@ void REEMProxyManager::directToWeb( const std::string & uri )
 void REEMProxyManager::sendNodeMessage( const std::string & node, const std::string & command, const int priority )
 {
   pyride_common_msgs::NodeMessage msg;
+  msg.header.stamp = ros::Time::now();
   msg.node_id = node;
   msg.priority = priority;
   msg.command = command;
