@@ -18,6 +18,7 @@
 #include <pal_detection_msgs/StartEnrollment.h>
 #include <pal_detection_msgs/StopEnrollment.h>
 #include <pal_web_msgs/WebGoTo.h>
+#include <pyride_common_msgs/NodeMessage.h>
 
 namespace pyride {
 
@@ -134,6 +135,7 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   hPub_ = mCtrlNode_->advertise<trajectory_msgs::JointTrajectory>( "head_vel", 1 );
   wPub_ = mCtrlNode_->advertise<pal_web_msgs::WebGoTo>( "web", 1 );
   cPub_ = mCtrlNode_->advertise<pal_control_msgs::ActuatorCurrentLimit>( "current_limit", 1 );
+  bPub_ = mCtrlNode_->advertise<pyride_common_msgs::NodeMessage>( "pyride/node_message", 1 );
 
   powerSub_ = mCtrlNode_->subscribe( "diagnostics_agg", 1, &REEMProxyManager::powerStateDataCB, this );
 
@@ -970,7 +972,7 @@ void REEMProxyManager::torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg 
   gstate = PyGILState_Ensure();
 
   PyObject * retObj = PyDict_New();
-  PyObject * elemObj = PyBool_FromLong( msg->header.frame_id.compare( "torso_sonar_15_link" ) == 0 );
+  PyObject * elemObj = PyBool_FromLong( (msg->header.frame_id.compare( "torso_sonar_15_link" ) == 0) ? 1 : 0 );
   PyDict_SetItemString( retObj, "isleft", elemObj );
   Py_DECREF( elemObj );
 
@@ -2732,6 +2734,16 @@ void REEMProxyManager::directToWeb( const std::string & uri )
   msg.type = 2;
   msg.value = uri;
   wPub_.publish( msg );
+}
+
+void REEMProxyManager::sendNodeMessage( const std::string & node, const std::string & command, const int priority )
+{
+  pyride_common_msgs::NodeMessage msg;
+  msg.node_id = node;
+  msg.priority = priority;
+  msg.command = command;
+
+  bPub_.publish( msg );
 }
 
 std_msgs::ColorRGBA REEMProxyManager::colour2RGB( const REEMLedColour colour )

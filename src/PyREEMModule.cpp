@@ -2085,6 +2085,30 @@ static PyObject * PyModule_REEMDirectToWeb( PyObject * self, PyObject * args )
     Py_RETURN_NONE;
 }
 
+/*! \fn sendMessageToNode( node_id, message, priority )
+ *  \memberof PyREEM
+ *  \brief send a command text message to a node that is listening on /pyride/node_message.
+ *  \param str node_id. The id of the node. The corresponding node should know its id.
+ *  \param str message. The command message.
+ *  \param int priority. A message priority. optional should be greater than zero.
+ *  \return None.
+ */
+static PyObject * PyModule_REEMSendMessageToNode  ( PyObject * self, PyObject * args )
+{
+  char * nodeStr = NULL;
+  char * cmdStr = NULL;
+  int priority = 1;
+
+  if (!PyArg_ParseTuple( args, "ss|i", &nodeStr, &cmdStr, &priority ) ||
+      strlen(nodeStr) == 0 || strlen( cmdStr ) == 0 || priority <= 0)
+  {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+  REEMProxyManager::instance()->sendNodeMessage( nodeStr, cmdStr, priority );
+  Py_RETURN_NONE;
+}
+
 /**@}*/
 #define INCLUDE_COMMON_PYMODULE_MEHTODS
 #include "../pyridecore/PyModulePyCommon.cpp"
@@ -2196,6 +2220,8 @@ static PyMethodDef PyModule_methods[] = {
     "Stop PAL built-in face enrollment." },
   { "directToWeb", (PyCFunction)PyModule_REEMDirectToWeb, METH_VARARGS,
     "Direct REEM chest screen to a URI." },
+  { "sendMessageToNode", (PyCFunction)PyModule_REEMSendMessageToNode, METH_VARARGS,
+    "Send a text command message to a node that is listening to /pyride/node_message." },
 #define DEFINE_COMMON_PYMODULE_METHODS
 #include "../pyridecore/PyModulePyCommon.cpp"
   { NULL, NULL, 0, NULL }           /* sentinel */
