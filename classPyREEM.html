@@ -191,11 +191,13 @@ Public Member Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a7171e648804261f9e3ea56ded44ac1b4">cancelEarLEDEffect</a> (effect_id)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set REEM's ear LED to a colour.  <a href="#a7171e648804261f9e3ea56ded44ac1b4"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a26b2cbf32895f1cc18882b400b611436">startPalFaceEnrollment</a> (name)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Start register face with a name.  <a href="#a26b2cbf32895f1cc18882b400b611436"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ab27de34b81c38c91d65b350ccbcb7dce">stopPalFaceEnrollment</a> (name)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Start register face with a name.  <a href="#ab27de34b81c38c91d65b350ccbcb7dce"></a><br/></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Start register a face with a name using default PAL face recognition system.  <a href="#a26b2cbf32895f1cc18882b400b611436"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a090b472230dbd423fd595723a3b68446">stopPalFaceEnrollment</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">stop a face registration process.  <a href="#a090b472230dbd423fd595723a3b68446"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a6f2062149506ed9f9f7ce4a6bbf41733">directToWeb</a> (uri)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">direct REEM touch screen to a specified web site.  <a href="#a6f2062149506ed9f9f7ce4a6bbf41733"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a437882718bd29bdbd0ce0b827c990051">sendMessageToNode</a> (node_id, message, priority)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">send a command text message to a node that is listening on /pyride/node_message.  <a href="#a437882718bd29bdbd0ce0b827c990051"></a><br/></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Action Callback Functions</div></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#addfbe834b418869407f44a7ff36e6a9f">onHeadActionSuccess</a> ()</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#a89c5dd1292b40dc1be46adfd9dfc849a" title="Point the REEM head towards a specific coordinates in a reference frame with respect to &#39;stereo_link&#39;...">PyREEM.pointHeadTo</a> method call is successful.  <a href="#addfbe834b418869407f44a7ff36e6a9f"></a><br/></td></tr>
@@ -1978,6 +1980,50 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a437882718bd29bdbd0ce0b827c990051"></a><!-- doxytag: member="PyREEM::sendMessageToNode" ref="a437882718bd29bdbd0ce0b827c990051" args="(node_id, message, priority)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a437882718bd29bdbd0ce0b827c990051">sendMessageToNode</a> </td>
+          <td>(</td>
+          <td class="paramtype">node_id&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">message&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">priority&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>send a command text message to a node that is listening on /pyride/node_message. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>node_id. The id of the node. The corresponding node should know its id. </td></tr>
+    <tr><td class="paramname">str</td><td>message. The command message. </td></tr>
+    <tr><td class="paramname">int</td><td>priority. A message priority. optional should be greater than zero. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a637a770d22b3c66e21df137720d0b879"></a><!-- doxytag: member="PyREEM::setArmStiffness" ref="a637a770d22b3c66e21df137720d0b879" args="(left_arm, stiffness)" -->
 <div class="memitem">
 <div class="memproto">
@@ -2188,14 +2234,15 @@ Default output file name path is in the format of /removable/recordings/Ymd_HM_s
 </div>
 <div class="memdoc">
 
-<p>Start register face with a name. </p>
+<p>Start register a face with a name using default PAL face recognition system. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">str</td><td>name. Name of the user to be registered. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>True = face enrollment started successfully, otherwise, False. </dd></dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>True = face enrollment started successfully started, otherwise, False. </dd></dl>
+<dl class="note"><dt><b>Note:</b></dt><dd>All face registrations are stored under /home/pal/databases/face_data </dd></dl>
 
 </div>
 </div>
@@ -2218,14 +2265,13 @@ Default output file name path is in the format of /removable/recordings/Ymd_HM_s
 
 </div>
 </div>
-<a class="anchor" id="ab27de34b81c38c91d65b350ccbcb7dce"></a><!-- doxytag: member="PyREEM::stopPalFaceEnrollment" ref="ab27de34b81c38c91d65b350ccbcb7dce" args="(name)" -->
+<a class="anchor" id="a090b472230dbd423fd595723a3b68446"></a><!-- doxytag: member="PyREEM::stopPalFaceEnrollment" ref="a090b472230dbd423fd595723a3b68446" args="()" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classPyREEM.html#ab27de34b81c38c91d65b350ccbcb7dce">stopPalFaceEnrollment</a> </td>
+          <td class="memname"><a class="el" href="classPyREEM.html#a090b472230dbd423fd595723a3b68446">stopPalFaceEnrollment</a> </td>
           <td>(</td>
-          <td class="paramtype">name&#160;</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
@@ -2233,14 +2279,8 @@ Default output file name path is in the format of /removable/recordings/Ymd_HM_s
 </div>
 <div class="memdoc">
 
-<p>Start register face with a name. </p>
-<dl class="params"><dt><b>Parameters:</b></dt><dd>
-  <table class="params">
-    <tr><td class="paramname">str</td><td>name. Name of the user to be registered. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>True = face enrollment is successfully, otherwise, False. </dd></dl>
+<p>stop a face registration process. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>True = face enrollment is successfully stopped, otherwise, False. </dd></dl>
 
 </div>
 </div>
@@ -2286,7 +2326,7 @@ Default output file name path is in the format of /removable/recordings/Ymd_HM_s
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jul 6 2016 16:21:21 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jul 8 2016 12:21:06 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>
