@@ -2033,9 +2033,10 @@ static PyObject * PyModule_REEMCancelEarLEDEffect( PyObject * self, PyObject * a
 
 /*! \fn startPalFaceEnrollment(name)
  *  \memberof PyREEM
- *  \brief Start register face with a name
+ *  \brief Start register a face with a name using default PAL face recognition system.
  *  \param str name. Name of the user to be registered.
- *  \return True = face enrollment started successfully, otherwise, False.
+ *  \return True = face enrollment started successfully started, otherwise, False.
+ *  \note All face registrations are stored under /home/pal/databases/face_data
  */
 static PyObject * PyModule_REEMStartPalFaceEnrollment( PyObject * self, PyObject * args )
 {
@@ -2052,11 +2053,10 @@ static PyObject * PyModule_REEMStartPalFaceEnrollment( PyObject * self, PyObject
   Py_RETURN_FALSE;
 }
 
-/*! \fn stopPalFaceEnrollment(name)
+/*! \fn stopPalFaceEnrollment()
  *  \memberof PyREEM
- *  \brief Start register face with a name
- *  \param str name. Name of the user to be registered.
- *  \return True = face enrollment is successfully, otherwise, False.
+ *  \brief stop a face registration process.
+ *  \return True = face enrollment is successfully stopped, otherwise, False.
  */
 static PyObject * PyModule_REEMStopPalFaceEnrollment( PyObject * self )
 {
