@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <time.h>
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 
@@ -17,6 +18,16 @@
 #include "VideoObject.h"
 
 namespace pyride {
+
+static inline long timediff_usec( timespec start, timespec end )
+{
+  if ((end.tv_nsec - start.tv_nsec) < 0) {
+    return (end.tv_sec-start.tv_sec - 1) * 1E06 + (1E09 + end.tv_nsec - start.tv_nsec) / 1E03;
+  }
+  else {
+    return (end.tv_sec - start.tv_sec) * 1E06 + (end.tv_nsec - start.tv_nsec) / 1E03;
+  }
+}
 
 VideoObject::VideoObject( DeviceInfo & devInfo ) :
   imgTrans_( priImgNode_ ),
@@ -84,10 +95,13 @@ void VideoObject::finiWorkerThread()
 void VideoObject::doImageStreaming()
 {
   cv_bridge::CvImagePtr cv_ptr;
-  long tick = 0;
+  //long tick = 0;
+  timespec time1, time2;
+  long interval = long(1.0 / (double)vSettings_.fps * 1E6);
 
   while (isStreaming_) {
-    tick = cv::getTickCount();
+    //tick = cv::getTickCount();
+    clock_gettime( CLOCK_MONOTONIC, &time1 );
     {
       boost::mutex::scoped_lock lock( mutex_ );
       
@@ -111,7 +125,10 @@ void VideoObject::doImageStreaming()
       saveToJPEG( cv_ptr->image.data, cv_ptr->image.total()*cv_ptr->image.elemSize(), RGB );
       takeSnapShot_ = false;
     }
-    usleep( long((1.0 / (double)vSettings_.fps - double(cv::getTickCount() - tick) / cv::getTickFrequency()) * 1E6) );
+    clock_gettime( CLOCK_MONOTONIC, &time2 );
+    //printf( "%d %d\n", interval, timediff_usec( time1, time2 ));
+    usleep( interval - timediff_usec( time1, time2 ) );
+    //usleep( long((1.0 / (double)vSettings_.fps - double(cv::getTickCount() - tick) / cv::getTickFrequency()) * 1E6) );
   }
 }
 
