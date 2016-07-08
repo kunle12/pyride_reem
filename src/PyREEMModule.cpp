@@ -2093,7 +2093,7 @@ static PyObject * PyModule_REEMDirectToWeb( PyObject * self, PyObject * args )
  *  \param int priority. A message priority. optional should be greater than zero.
  *  \return None.
  */
-static PyObject * PyModule_REEMSendMessageToNode  ( PyObject * self, PyObject * args )
+static PyObject * PyModule_REEMSendMessageToNode( PyObject * self, PyObject * args )
 {
   char * nodeStr = NULL;
   char * cmdStr = NULL;
