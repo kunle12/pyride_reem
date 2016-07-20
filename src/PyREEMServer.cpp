@@ -16,6 +16,7 @@
 #include "AppConfigManager.h"
 #include "PyREEMModule.h"
 #include "VideoObject.h"
+#include "AudioObject.h"
 
 PYRIDE_LOGGING_DECLARE( "pyride_reem.log" );
 
@@ -52,7 +53,11 @@ bool PyREEMServer::init()
   AppConfigManager::instance()->loadConfigFromFile( filename.c_str() );
 
   if (!initVideoDevices()) {
-    ERROR_MSG( "Unable to find any active robot camera.\n" );
+    ERROR_MSG( "Unable to initialise any active robot camera.\n" );
+  }
+
+  if (!initAudioDevices()) {
+    ERROR_MSG( "Unable to initialise any active robot audio device.\n" );
   }
 
   nodeStatusSub_ = hcNodeHandle_->subscribe( "pyride/node_status", 1, &PyREEMServer::nodeStatusCB, this );
@@ -95,6 +100,7 @@ void PyREEMServer::fini()
 
   // finalise controllers
   finiVideoDevices();
+  finiAudioDevices();
 
   nodeStatusSub_.shutdown();
 
@@ -196,6 +202,32 @@ void PyREEMServer::finiVideoDevices()
     delete videoObj;
   }
   activeVideoDevices_.clear();
+}
+
+bool PyREEMServer::initAudioDevices()
+{
+  AudioDevice * activeAudioObj = new AudioObject();
+  if (activeAudioObj->initDevice()) {
+    activeAudioDevices_.push_back( activeAudioObj );
+  }
+  else {
+    ERROR_MSG( "Failed to activate an audio device.\n" );
+    delete activeAudioObj;
+  }
+
+  return (activeVideoDevices_.size() != 0);
+}
+
+void PyREEMServer::finiAudioDevices()
+{
+  AudioDevice * audioObj = NULL;
+
+  for (size_t i = 0; i < activeAudioDevices_.size(); i++) {
+    audioObj = activeAudioDevices_.at( i );
+    audioObj->finiDevice();
+    delete audioObj;
+  }
+  activeAudioDevices_.clear();
 }
 
 void PyREEMServer::notifySystemShutdown()

@@ -124,6 +124,7 @@ add_executable(pyride_reem pyridecore/AppConfigManager.cpp
                           src/REEMProxyManager.cpp
                           src/PyREEMModule.cpp
                           src/VideoObject.cpp
+                          src/AudioObject.cpp
                           src/main.cpp)
 
 ## Add cmake target dependencies of the executable/library
@@ -137,6 +138,7 @@ target_link_libraries(pyride_reem
    ccrtp1 ccgnu2
    crypto python2.7
    jpeg tinyxml celt
+   asound
    ${catkin_LIBRARIES}
 )
 
