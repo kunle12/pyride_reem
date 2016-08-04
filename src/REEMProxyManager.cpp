@@ -2009,9 +2009,14 @@ void REEMProxyManager::updateBodyPose( const RobotPose & speed, bool localupdate
     if (bodyCtrlWithOdmetry_)
       return;
 
-    mCmd_.linear.x = clamp( speed.x, kMaxWalkSpeed );
-    mCmd_.linear.y = clamp( speed.y, kMaxWalkSpeed );
-    mCmd_.angular.z = clamp( speed.theta, kYawRate );
+    mCmd_.linear.x = clamp( speed.x * 0.6, kMaxWalkSpeed );
+    //mCmd_.linear.y = clamp( speed.y, kMaxWalkSpeed );
+    if (speed.y != 0.0) { // make y the priority for turning.
+      mCmd_.angular.z = clamp( speed.y * 0.3, kYawRate );
+    }
+    else if (speed.theta != 0.0) {
+      mCmd_.angular.z = clamp( speed.theta * 0.3, kYawRate );
+    }
     
     cmdTimeStamp_ = ros::Time::now();
   }
