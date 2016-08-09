@@ -22,7 +22,7 @@
 
 namespace pyride {
 
-static const float kMaxWalkSpeed = 1.0;
+static const float kMaxWalkSpeed = 0.8;
 static const float kYawRate = 0.7;  // ~ 45 degree
 static const float kHeadYawRate = 1.5;
 static const float kHeadPitchRate = 1.5;
@@ -2009,7 +2009,7 @@ void REEMProxyManager::updateBodyPose( const RobotPose & speed, bool localupdate
     if (bodyCtrlWithOdmetry_)
       return;
 
-    mCmd_.linear.x = clamp( speed.x * 0.6, kMaxWalkSpeed );
+    mCmd_.linear.x = clamp( speed.x * 0.3, kMaxWalkSpeed );
     //mCmd_.linear.y = clamp( speed.y, kMaxWalkSpeed );
     if (speed.y != 0.0) { // make y the priority for turning.
       mCmd_.angular.z = clamp( speed.y * 0.3, kYawRate );
