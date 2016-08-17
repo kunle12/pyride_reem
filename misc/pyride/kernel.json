@@ -1,0 +1,8 @@
+{
+ "display_name": "PyRIDE", 
+ "language": "python", 
+ "argv": [
+  "/home/xun/dev/playground/ipytrigger2",
+  "{connection_file}"
+ ]
+}
