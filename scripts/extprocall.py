@@ -4,6 +4,7 @@ import signal
 import subprocess
 import time
 import PyREEM
+import constants
 
 RECORDED_DATA_DIR = '/home/pal/recordings'
 
