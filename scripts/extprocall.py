@@ -2,7 +2,6 @@ import os
 import stat
 import signal
 import subprocess
-import constants
 import time
 import PyREEM
 
@@ -35,16 +34,13 @@ class ProcConduit:
 
     os.killpg( proc.pid, signal.SIGINT )  # Send the signal to all the process groups
 
-  #def setBaseScanIntensityOn( self ):
-    #PyREEM.say( "Turning on base scan intensity, please wait" )
-    #subprocess.call( 'rosrun dynamic_reconfigure dynparam set /base_hokuyo_node skip 2', shell=True )
-    #time.sleep( 0.5 )
-    #subprocess.call( 'rosrun dynamic_reconfigure dynparam set /base_hokuyo_node intensity True', shell=True )
-    #time.sleep( 0.5 )
-    #subprocess.call( 'rosrun dynamic_reconfigure dynparam set /base_hokuyo_node allow_unsafe_settings True', shell=True )
-    #time.sleep( 0.5 )
-    #subprocess.call( 'rosrun dynamic_reconfigure dynparam set /base_hokuyo_node max_ang 2.2689', shell=True )
-    #PyREEM.say( "base scan intensity should be on" )
+  def enableAlive( self, ison ):
+    if ison:
+      subprocess.call( 'headManagerStart.sh > /dev/null 2>&1', shell=True )
+      subprocess.call( 'rosrun dynamic_reconfigure dynparam set alive_engine disabled False', shell=True )
+    else:
+      subprocess.call( 'headManagerStop.sh > /dev/null 2>&1', shell=True )
+      subprocess.call( 'rosrun dynamic_reconfigure dynparam set alive_engine disabled True', shell=True )
 
   def startDataRecording( self, mode, filename = "" ):
     cmd = 'rosbag record -b 1024 '
@@ -91,6 +87,7 @@ class ProcConduit:
   def setCallbacks( self ):
     PyREEM.startDataRecording = self.startDataRecording
     PyREEM.stopDataRecording = self.stopDataRecording
+    PyREEM.setAliveEngineOn = self.enableAlive
 
   def fini( self ):
     self.stopDataRecording()
