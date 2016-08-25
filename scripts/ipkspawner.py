@@ -1,4 +1,4 @@
-#import PyREEM
+import PyREEM
 import json
 import sys
 from threading import Thread
@@ -17,6 +17,7 @@ class IPKSpawner( object ):
     self.is_initialised = None
     try:
       from ipykernel import kernelapp
+      self.kernelapp = kernelapp
     except:
       return
     kernelapp.signal = dumbsig
@@ -54,11 +55,15 @@ class IPKSpawner( object ):
       return
 
     self.app.start()
-    self.is_initialised = None
     self.app.shell_socket.close()
     self.app.stdin_socket.close()
     self.app.control_socket.close()
     self.app.iopub_socket.close()
     self.app.heartbeat.socket.close()
+    self.kernelapp.IPKernelApp.clear_instance()
+    PyREEM.sendMessageToNode( 'jupyter', 'stop' )
+    print( "reinitiate app instance" )
+    self.app = self.kernelapp.IPKernelApp.instance()
+    self.is_initialised = None
 
 sys.path.append( '/usr/local/lib/python2.7/dist-packages' )
