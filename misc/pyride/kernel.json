@@ -2,7 +2,9 @@
  "display_name": "PyRIDE", 
  "language": "python", 
  "argv": [
-  "/home/xun/dev/playground/ipytrigger2",
+  "python", "-m",
+  "/home/pal/deployed_ws/ipytrigger",
+  "-f",
   "{connection_file}"
  ]
 }
