@@ -54,6 +54,7 @@ class IPKSpawner( object ):
     if not self.app:
       return
 
+    PyREEM.sendMessageToNode( 'jupyter', 'start' )
     self.app.start()
     self.app.shell_socket.close()
     self.app.stdin_socket.close()

@@ -6,13 +6,17 @@ import sys
 import json
 
 keep_running = True
+kernel_started = False
 
 def notif( data ):
-  global keep_running
+  global keep_running, kernel_started
 
   if data.node_id == 'jupyter':
-    print( "stop ipytrigger" )
-    keep_running = False
+    if data.command == 'stop':
+      print( "stop ipytrigger" )
+      keep_running = False
+    elif data.command == 'start':
+      kernel_started = True
 
 if __name__ == '__main__':
   rospy.init_node( 'ipytrigger', anonymous = True )
@@ -28,6 +32,7 @@ if __name__ == '__main__':
   print( "status_text = {}".format( msg.status_text ))
   rate = rospy.Rate( 1 )
   firemsg = True
+  count = 2
   try:
     while not rospy.is_shutdown():
       rate.sleep()
@@ -35,6 +40,13 @@ if __name__ == '__main__':
         pub.publish( msg )
         print( 'send' )
         firemsg = False
+
+      if not kernel_started:
+        if count <= 0:
+          rospy.signal_shutdown( "shutting down ipytrigger" )
+          break
+        else:
+          count -= 1
 
       if not keep_running:
         rospy.signal_shutdown( "shutting down ipytrigger" )
