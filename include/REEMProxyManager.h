@@ -23,6 +23,7 @@
 #include <diagnostic_msgs/DiagnosticArray.h>
 #include <pal_interaction_msgs/TtsAction.h>
 #include <move_base_msgs/MoveBaseAction.h>
+#include <pal_navigation_msgs/GoToPOIAction.h>
 
 #include <sensor_msgs/JointState.h>
 #include <sensor_msgs/PointCloud.h>
@@ -60,6 +61,7 @@ using namespace control_msgs;
 using namespace pal_interaction_msgs;
 using namespace move_base_msgs;
 using namespace play_motion_msgs;
+using namespace pal_navigation_msgs;
 
 namespace pyride {
 
@@ -68,6 +70,7 @@ typedef actionlib::SimpleActionClient<control_msgs::PointHeadAction> PointHeadCl
 typedef actionlib::SimpleActionClient<control_msgs::JointTrajectoryAction> TrajectoryClient;
 typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> FollowTrajectoryClient;
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+typedef actionlib::SimpleActionClient<pal_navigation_msgs::GoToPOIAction> GotoPOIClient;
 typedef actionlib::SimpleActionClient<play_motion_msgs::PlayMotionAction> PlayMotionClient;
 
 typedef enum {
@@ -158,7 +161,11 @@ public:
   bool navigateBodyTo( const std::vector<double> & positions,
                       const std::vector<double> & orientation );
   
+  bool gotoPOI( const std::string & poi_name );
+
   void cancelBodyMovement();
+
+  void cancelGotoPOI();
 
   void publishCommands();
   
@@ -190,6 +197,8 @@ public:
   bool palFaceStartEnrollment( const std::string & name );
   bool palFaceStopEnrollment();
   void enablePalFaceDetection( bool enable, float confidence = 0.4 );
+
+  bool getCurrentMapPOIs( std::vector<std::string> & poi_names, std::vector<RobotPose> & poi_pts );
 
   void getTFFrameList( std::vector<std::string> & list );
   bool isTFFrameSupported( const char * frame_name );
@@ -225,6 +234,8 @@ private:
   ServiceClient palFaceEnrolStartClient_;
   ServiceClient palFaceEnrolStopClient_;
 
+  ServiceClient mapConfigClient_;
+
   message_filters::Subscriber<sensor_msgs::LaserScan> * baseScanSub_;
   message_filters::Subscriber<sensor_msgs::LaserScan> * tiltScanSub_;
 
@@ -258,6 +269,8 @@ private:
   std::string baseScanTransformFrame_;
   std::string tiltScanTransformFrame_;
   
+  std::string targetPOIName_;
+
   std::vector<std::string> curJointNames_;
   std::vector<double> curJointPositions_;
   
@@ -273,6 +286,7 @@ private:
 
   PointHeadClient * phClient_;
   MoveBaseClient * moveBaseClient_;
+  GotoPOIClient * gotoPOIClient_;
   PlayMotionClient * playMotionClient_;
 
   moveit::planning_interface::MoveGroup * rarmGroup_;
@@ -332,6 +346,9 @@ private:
 
   void doneNavgiateBodyAction( const actionlib::SimpleClientGoalState & state,
                               const MoveBaseResultConstPtr & result );
+
+  void doneGotoPOIAction( const actionlib::SimpleClientGoalState & state,
+                              const GoToPOIResultConstPtr & result );
 
   void donePlayMotionAction( const actionlib::SimpleClientGoalState & state,
                               const PlayMotionResultConstPtr & result );

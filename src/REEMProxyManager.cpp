@@ -17,6 +17,8 @@
 #include <pal_detection_msgs/SetDatabase.h>
 #include <pal_detection_msgs/StartEnrollment.h>
 #include <pal_detection_msgs/StopEnrollment.h>
+#include <pal_navigation_msgs/GetMapConfiguration.h>
+#include <pal_navigation_msgs/POI.h>
 #include <pal_web_msgs/WebGoTo.h>
 #include <pyride_common_msgs/NodeMessage.h>
 
@@ -107,6 +109,7 @@ REEMProxyManager::REEMProxyManager() :
   mlacClient_( NULL ),
   mracClient_( NULL ),
   moveBaseClient_( NULL ),
+  gotoPOIClient_( NULL ),
   playMotionClient_( NULL ),
   isCharging_( true ),
   batCapacity_( 100.0 ),
@@ -263,18 +266,28 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
     playMotionClient_ = NULL;
   }
 
-  if (useOptionNodes) {
-    trials = 0;
-    moveBaseClient_ = new MoveBaseClient( "move_base", true );
-    while (!moveBaseClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
-      ROS_INFO( "Waiting for move base server to come up." );
-      trials++;
-    }
-    if (!moveBaseClient_->isServerConnected()) {
-      ROS_INFO( "Move base action server is down." );
-      delete moveBaseClient_;
-      moveBaseClient_ = NULL;
-    }
+  trials = 0;
+  gotoPOIClient_ = new GotoPOIClient( "poi_navigation_server/go_to_poi", true );
+  while (!gotoPOIClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
+    ROS_INFO( "Waiting for POI navigation action server to come up." );
+    trials++;
+  }
+  if (!gotoPOIClient_->isServerConnected()) {
+    ROS_INFO( "MPOI navigation action server is down." );
+    delete gotoPOIClient_;
+    gotoPOIClient_ = NULL;
+  }
+
+  trials = 0;
+  moveBaseClient_ = new MoveBaseClient( "move_base", true );
+  while (!moveBaseClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
+    ROS_INFO( "Waiting for move base server to come up." );
+    trials++;
+  }
+  if (!moveBaseClient_->isServerConnected()) {
+    ROS_INFO( "Move base action server is down." );
+    delete moveBaseClient_;
+    moveBaseClient_ = NULL;
   }
 
   if (useMoveIt) {
@@ -349,6 +362,12 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
     ROS_INFO( "No Pal face stop enrollment service is available." );
   }
 
+  mapConfigClient_ = mCtrlNode_->serviceClient<pal_navigation_msgs::GetMapConfiguration>( "/getMapConfiguration" );
+
+  if (!mapConfigClient_.exists()) {
+    ROS_INFO( "No Pal map configuration service is available." );
+  }
+
 doneInit:
   this->getHeadPos( reqHeadYaw_, reqHeadPitch_ );
   this->getTorsoPos( reqTorsoYaw_, reqTorsoPitch_ );
@@ -401,6 +420,10 @@ void REEMProxyManager::fini()
   if (moveBaseClient_) {
     delete moveBaseClient_;
     moveBaseClient_ = NULL;
+  }
+  if (gotoPOIClient_) {
+    delete gotoPOIClient_;
+    gotoPOIClient_ = NULL;
   }
   if (playMotionClient_) {
     delete playMotionClient_;
@@ -587,6 +610,41 @@ void REEMProxyManager::doneNavgiateBodyAction( const actionlib::SimpleClientGoal
   PyGILState_Release( gstate );
   
   ROS_INFO("nagivate body finished in state [%s]", state.toString().c_str());
+}
+
+/*! \typedef onGotoPOISuccess( poi_name )
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.gotoPOI method call is successful.
+ *  \return None.
+ */
+/*! \typedef onGotoPOIFailed( poi_name )
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.gotPOI method call is failed.
+ *  \return None.
+ */
+void REEMProxyManager::doneGotoPOIAction( const actionlib::SimpleClientGoalState & state,
+                                             const GoToPOIResultConstPtr & result )
+{
+  bodyCtrlWithNavigation_ = false;
+
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  PyObject * arg = Py_BuildValue( "(s)", targetPOIName_.c_str() );
+
+  if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
+    PyREEMModule::instance()->invokeCallback( "onGotoPOISuccess", arg );
+  }
+  else {
+    PyREEMModule::instance()->invokeCallback( "onGotoPOIFailed", arg );
+  }
+  Py_DECREF( arg );
+
+  PyGILState_Release( gstate );
+
+  targetPOIName_ = "";
+
+  ROS_INFO("go to POI finished in state [%s]", state.toString().c_str());
 }
 
 void REEMProxyManager::moveLArmActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback )
@@ -1071,7 +1129,6 @@ bool REEMProxyManager::navigateBodyTo( const std::vector<double> & positions, co
 
   move_base_msgs::MoveBaseGoal goal;
   
-  //we'll send a goal to the robot to move 1 meter forward
   goal.target_pose.header.frame_id = "base_link";
   goal.target_pose.header.stamp = ros::Time::now();
   
@@ -1087,6 +1144,25 @@ bool REEMProxyManager::navigateBodyTo( const std::vector<double> & positions, co
                         boost::bind( &REEMProxyManager::doneNavgiateBodyAction, this, _1, _2 ),
                         MoveBaseClient::SimpleActiveCallback(),
                         MoveBaseClient::SimpleFeedbackCallback() );
+
+  bodyCtrlWithNavigation_ = true;
+  return true;
+}
+bool REEMProxyManager::gotoPOI( const std::string & poi_name )
+{
+  if (bodyCtrlWithNavigation_ || bodyCtrlWithOdmetry_ || !gotoPOIClient_)
+    return false;
+
+  //TODO: check whether the POI exists?
+  pal_navigation_msgs::GoToPOIGoal goal;
+
+  goal.poi.data = poi_name;
+  targetPOIName_ = poi_name;
+
+  gotoPOIClient_->sendGoal( goal,
+                        boost::bind( &REEMProxyManager::doneGotoPOIAction, this, _1, _2 ),
+                        GotoPOIClient::SimpleActiveCallback(),
+                        GotoPOIClient::SimpleFeedbackCallback() );
 
   bodyCtrlWithNavigation_ = true;
   return true;
@@ -1804,6 +1880,15 @@ void REEMProxyManager::cancelBodyMovement()
   bodyCtrlWithOdmetry_ = false;
 }
 
+void REEMProxyManager::cancelGotoPOI()
+{
+  if (bodyCtrlWithNavigation_ && gotoPOIClient_->getState() == actionlib::SimpleClientGoalState::ACTIVE) {
+    gotoPOIClient_->cancelGoal();
+    targetPOIName_= "";
+    bodyCtrlWithNavigation_ = false;
+  }
+}
+
 void REEMProxyManager::playDefaultMotion( const std::string & motion_name )
 {
   if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ ||
@@ -1847,6 +1932,32 @@ bool REEMProxyManager::palFaceStopEnrollment()
     return srvMsg.response.enrollment_ok;
   }
   return false;
+}
+
+bool REEMProxyManager::getCurrentMapPOIs( std::vector<std::string> & poi_names, std::vector<RobotPose> & poi_pts )
+{
+  if (!mapConfigClient_.exists())
+    return false;
+
+  poi_names.clear();
+  poi_pts.clear();
+  pal_navigation_msgs::GetMapConfiguration srvMsg;
+
+  if (mapConfigClient_.call( srvMsg )) {
+    const pal_navigation_msgs::POI & pois = srvMsg.response.map_config.pois;
+    size_t lsize = pois.ids.size();
+    poi_names.resize( lsize );
+    poi_pts.resize( lsize );
+    for (size_t i = 0; i < lsize; ++i) {
+      poi_names[i] = pois.ids[i].data;
+      RobotPose pt = {pois.points.points[i].x, pois.points.points[i].y, pois.points.points[i].z};
+      poi_pts[i] = pt;
+    }
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 void REEMProxyManager::enablePalFaceDetection( bool enable, float confidence )

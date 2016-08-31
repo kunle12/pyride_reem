@@ -2085,6 +2085,63 @@ static PyObject * PyModule_REEMDirectToWeb( PyObject * self, PyObject * args )
     Py_RETURN_NONE;
 }
 
+/*! \fn getCurrentMapPOIs()
+ *  \memberof PyREEM
+ *  \brief retrieve a list (dictionary) of Points Of Interests (POIs) in the current map.
+ *  \return dict: A list of POIs in { 'name': (x,y,z) } format
+ */
+static PyObject * PyModule_REEMGetCurrentMapPOIs( PyObject * self )
+{
+  std::vector<std::string> poi_names;
+  std::vector<RobotPose> poi_pts;
+
+  PyObject * retObj = PyDict_New();
+  if (REEMProxyManager::instance()->getCurrentMapPOIs( poi_names, poi_pts )) {
+    for (int i = 0; i < poi_names.size(); i++) {
+      const RobotPose & pt = poi_pts[i];
+      PyObject * posObj = PyTuple_New( 3 );
+      PyTuple_SetItem( posObj, 0, PyFloat_FromDouble( pt.x ) );
+      PyTuple_SetItem( posObj, 1, PyFloat_FromDouble( pt.y ) );
+      PyTuple_SetItem( posObj, 2, PyFloat_FromDouble( pt.theta ) );
+      PyDict_SetItemString( retObj, poi_names.at( i ).c_str(), posObj );
+      Py_DECREF( posObj );
+    }
+  }
+  return retObj;
+}
+
+/*! \fn gotoPOI( poi_name )
+ *  \memberof PyREEM
+ *  \brief Direct REEM drive autonomously to a Point of Interest (POI).
+ *  \param str poi_name. Name of the POI.
+ *  \return True = Navigation successfully started, otherwise, False.
+ */
+static PyObject * PyModule_REEMGotoPOI( PyObject * self, PyObject * args )
+{
+  char * nameStr = NULL;
+
+  if (!PyArg_ParseTuple( args, "s", &nameStr )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+  if (REEMProxyManager::instance()->gotoPOI( nameStr )) {
+    Py_RETURN_TRUE;
+  }
+
+  Py_RETURN_FALSE;
+}
+
+/*! \fn cancelGotoPOI()
+ *  \memberof PyREEM
+ *  \brief Cancel current autonomous navigation to a POI.
+ *  \return None.
+ */
+static PyObject * PyModule_REEMCancelGotoPOI( PyObject * self )
+{
+  REEMProxyManager::instance()->cancelGotoPOI();
+  Py_RETURN_NONE;
+}
+
 /*! \fn sendMessageToNode( node_id, message, priority )
  *  \memberof PyREEM
  *  \brief send a command text message to a node that is listening on /pyride/node_message.
@@ -2220,6 +2277,12 @@ static PyMethodDef PyModule_methods[] = {
     "Stop PAL built-in face enrollment." },
   { "directToWeb", (PyCFunction)PyModule_REEMDirectToWeb, METH_VARARGS,
     "Direct REEM chest screen to a URI." },
+  { "getCurrentMapPOIs", (PyCFunction)PyModule_REEMGetCurrentMapPOIs, METH_NOARGS,
+    "Get a dictionary of Point of Interest (POI) in the current map." },
+  { "gotoPOI", (PyCFunction)PyModule_REEMGotoPOI, METH_VARARGS,
+    "Direct REEM to a POI autonomously." },
+  { "cancelGotoPOI", (PyCFunction)PyModule_REEMCancelGotoPOI, METH_NOARGS,
+    "Cancel the active navigation to a POI." },
   { "sendMessageToNode", (PyCFunction)PyModule_REEMSendMessageToNode, METH_VARARGS,
     "Send a text command message to a node that is listening to /pyride/node_message." },
 #define DEFINE_COMMON_PYMODULE_METHODS
