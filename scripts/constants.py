@@ -39,3 +39,5 @@ REC_KINECT = 4
 REC_IMU    = 8
 REC_JOINTS = 16
 REC_TF     = 32
+REC_SONAR  = 64
+REC_IR     = 128

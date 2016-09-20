@@ -65,6 +65,12 @@ class ProcConduit:
     if mode & constants.REC_TF:
       cmd = cmd + '"/tf" '
       str = str + '_tf'
+    if mode & constants.REC_SONAR:
+      cmd = cmd + '"/sonar_torso" "/sonar_base" '
+      str = str + '_sonar'
+    if mode & constants.REC_IR:
+      cmd = cmd + '"/ir_base" '
+      str = str + '_ir'
 
     if filename == "":
       cmd = cmd + '--duration=1m --split -O %s/%s%s_data.bag' % \
