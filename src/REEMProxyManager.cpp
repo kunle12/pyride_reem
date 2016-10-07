@@ -9,6 +9,7 @@
 #include "REEMProxyManager.h"
 #include "PyREEMModule.h"
 
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <pal_device_msgs/TimedColourEffect.h>
 #include <pal_device_msgs/TimedFadeEffect.h>
 #include <pal_device_msgs/CancelEffect.h>
@@ -135,6 +136,7 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   mCtrlNode_ = nodeHandle;
 
   mPub_ = mCtrlNode_->advertise<geometry_msgs::Twist>( "cmd_vel", 1 );
+  pPub_ = mCtrlNode_->advertise<geometry_msgs::PoseWithCovarianceStamped>( "initialpose", 1 );
   hPub_ = mCtrlNode_->advertise<trajectory_msgs::JointTrajectory>( "head_vel", 1 );
   wPub_ = mCtrlNode_->advertise<pal_web_msgs::WebGoTo>( "web", 1 );
   cPub_ = mCtrlNode_->advertise<pal_control_msgs::ActuatorCurrentLimit>( "current_limit", 1 );
@@ -1048,16 +1050,16 @@ void REEMProxyManager::torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg 
   PyGILState_Release( gstate );
 }
 
-bool REEMProxyManager::getRobotPose( std::vector<double> & positions, std::vector<double> & orientation )
+bool REEMProxyManager::getRobotPose( std::vector<double> & positions, std::vector<double> & orientation, bool in_map )
 {
   tf::StampedTransform curTransform;
   
   try {
-    tflistener_.waitForTransform( "odom", "base_footprint",
+    tflistener_.waitForTransform( (in_map ? "map" : "odom"), "base_footprint",
                                  ros::Time(0), ros::Duration( 1.0 ) );
     
     
-    tflistener_.lookupTransform( "odom", "base_footprint",
+    tflistener_.lookupTransform( (in_map ? "map" : "odom"), "base_footprint",
                                 ros::Time(0), curTransform );
   }
   catch (tf::TransformException ex) {
@@ -2276,7 +2278,7 @@ void REEMProxyManager::powerStateDataCB( const diagnostic_msgs::DiagnosticArrayC
             PyGILState_Release( gstate );
           }
           */
-          if (fabs(batpercent - batCapacity_) > 0.5) {
+          if (fabs(batpercent - batCapacity_) >= 1.0) {
             PyGILState_STATE gstate;
             gstate = PyGILState_Ensure();
 
@@ -2850,6 +2852,33 @@ void REEMProxyManager::directToWeb( const std::string & uri )
   msg.type = 2;
   msg.value = uri;
   wPub_.publish( msg );
+}
+
+void REEMProxyManager::setRobotPoseInMap( const std::vector<double> & positions,
+        const std::vector<double> & orientation )
+{
+  geometry_msgs::PoseWithCovarianceStamped msg;
+  msg.header.frame_id = "map";
+  msg.header.stamp = ros::Time::now();
+
+  msg.pose.pose.position.x = positions[0];
+  msg.pose.pose.position.y = positions[1];
+  msg.pose.pose.position.z = positions[2];
+  msg.pose.pose.orientation.w = orientation[0];
+  msg.pose.pose.orientation.x = orientation[1];
+  msg.pose.pose.orientation.y = orientation[2];
+  msg.pose.pose.orientation.z = orientation[3];
+  // hardcoded covariance
+  boost::array<double, 36> dta = {{0.25, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.25, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.0,
+          0.06853891945200942}};
+  msg.pose.covariance = dta;
+  pPub_.publish( msg );
 }
 
 void REEMProxyManager::sendNodeMessage( const std::string & node, const std::string & command, const int priority )

@@ -25,6 +25,7 @@ AudioObject::AudioObject() :
   AudioDevice( 1 )
 {
   streaming_data_thread_ = NULL;
+  aSettings_.sampling = 44100;
 }
 
 bool AudioObject::initDevice()
@@ -97,7 +98,7 @@ void AudioObject::doAudioStreaming()
       }
       continue;
     }
-    //printf( "nof of frames %d\n", frames );
+    printf( "nof of frames %d\n", (int)frames );
     this->processAndSendAudioData( (short*)audioBuffers, frames );
   }
   delete [] audioBuffers;

@@ -102,7 +102,10 @@ public:
   bool getTorsoPos( double & yaw, double & pitch );
 
   bool getRobotPose( std::vector<double> & positions,
-                    std::vector<double> & orientation );
+                    std::vector<double> & orientation, bool in_map = false );
+  void setRobotPoseInMap( const std::vector<double> & positions,
+                    const std::vector<double> & orientation );
+
   bool getRelativeTF( const char * frame1,
                          const char * frame2,
                          std::vector<double> & positions,
@@ -214,6 +217,7 @@ private:
   Publisher wPub_;
   Publisher cPub_;
   Publisher bPub_;
+  Publisher pPub_;
   Publisher colObjPub_;
   Subscriber jointSub_;
   Subscriber powerSub_;

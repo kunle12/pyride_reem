@@ -823,18 +823,31 @@ static PyObject * PyModule_REEMGetHandJointPositions( PyObject * self, PyObject 
   }
 }
 
-/*! \fn getRobotPose()
+/*! \fn getRobotPose(in_map)
  *  \memberof PyREEM
- *  \brief Get the current REEM body pose.
+ *  \brief Get the current REEM body pose w.r.t. odometry or map reference frame
+ *  \param bool in_map. Optional (default False). True for using map reference frame; otherwise False.
  *  \return tuple(position,orientation).
  *  \note Orientation is in quaternion form (w,x,y,z).
  */
-static PyObject * PyModule_REEMGetRobotPose( PyObject * self )
+static PyObject * PyModule_REEMGetRobotPose( PyObject * self, PyObject * args )
 {
   std::vector<double> positions(3, 0.0);
   std::vector<double> orientation(4, 0.0);
-  
-  if (REEMProxyManager::instance()->getRobotPose( positions, orientation )) {
+
+  PyObject * boolObj = NULL;
+
+  if (!PyArg_ParseTuple( args, "|O", &boolObj )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  if (!PyBool_Check( boolObj )) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.getRobotPose: the optional input parameter must be a boolean!" );
+    return NULL;
+  }
+
+  if (REEMProxyManager::instance()->getRobotPose( positions, orientation, PyObject_IsTrue( boolObj ) )) {
     PyObject * retObj = PyDict_New();
     PyObject * posObj = PyTuple_New( 3 );
     PyObject * orientObj = PyTuple_New( 4 );
@@ -959,6 +972,63 @@ static PyObject * PyModule_REEMNavigateBodyTo( PyObject * self, PyObject * args,
   }
 
   REEMProxyManager::instance()->navigateBodyTo( position, orientation );
+  Py_RETURN_NONE;
+}
+
+/*! \fn setRobotPoseInMap(position, orientation)
+ *  \memberof PyREEM
+ *  \brief Set REEM body to a specified pose in the current map.
+ *  \param tuple position. Position in the form of (x,y,z).
+ *  \param tuple orientation. Orientation in quaternion form (w,x,y,z).
+ *  \return None.
+ *  \note Must have REEM navigation stack running prior the start of PyRIDE.
+ */
+static PyObject * PyModule_REEMSetRobotPoseInMap( PyObject * self, PyObject * args, PyObject * keywds )
+{
+  PyObject * posObj = NULL;
+  PyObject * orientObj = NULL;
+
+  if (!PyArg_ParseTupleAndKeywords( args, keywds, "OO", (char**)kPoseKWlist, &posObj, &orientObj ) ||
+      !PyTuple_Check( posObj ) || !PyTuple_Check( orientObj ))
+  {
+    PyErr_Format( PyExc_ValueError, "PyREEM.setRobotPoseInMap: input parameter must be a dictionary with position and orientation tuples." );
+    return NULL;
+  }
+
+  if (PyTuple_Size( posObj ) != (Py_ssize_t)3 ||
+      PyTuple_Size( orientObj ) != (Py_ssize_t)4)
+  {
+    PyErr_Format( PyExc_ValueError,
+                 "PyREEM.setRobotPoseInMap: position must be a tuple of 3 and orientation must be a tuple of 4." );
+    return NULL;
+  }
+
+  std::vector<double> position(3, 0.0);
+  std::vector<double> orientation(4, 0.0);
+
+  PyObject * tmpObj = NULL;
+
+  for (int i = 0; i < 3; i++) {
+    tmpObj = PyTuple_GetItem( posObj, i );
+    if (!PyFloat_Check( tmpObj )) {
+      PyErr_Format( PyExc_ValueError,
+                   "PyREEM.setRobotPoseInMap: position tuple must have float numbers." );
+      return NULL;
+    }
+    position[i] = PyFloat_AsDouble( tmpObj );
+  }
+
+  for (int i = 0; i < 4; i++) {
+    tmpObj = PyTuple_GetItem( orientObj, i );
+    if (!PyFloat_Check( tmpObj )) {
+      PyErr_Format( PyExc_ValueError,
+                   "PyREEM.setRobotPoseInMap: orientation tuple must have float numbers." );
+      return NULL;
+    }
+    orientation[i] = PyFloat_AsDouble( tmpObj );
+  }
+
+  REEMProxyManager::instance()->setRobotPoseInMap( position, orientation );
   Py_RETURN_NONE;
 }
 
@@ -2191,7 +2261,7 @@ static PyMethodDef PyModule_methods[] = {
     "Get joint positions of REEM arms." },
   { "getHandJointPositions", (PyCFunction)PyModule_REEMGetHandJointPositions, METH_VARARGS,
     "Get joint positions of REEM hand." },
-  { "getRobotPose", (PyCFunction)PyModule_REEMGetRobotPose, METH_NOARGS,
+  { "getRobotPose", (PyCFunction)PyModule_REEMGetRobotPose, METH_VARARGS,
     "Get the current REEM pose." },
   { "getRelativeTF", (PyCFunction)PyModule_REEMGetRelativeTF, METH_VARARGS,
     "Get the relative TF between two frames with the first frame as the reference frame." },
@@ -2207,6 +2277,8 @@ static PyMethodDef PyModule_methods[] = {
     "Set REEM base moving speed." },
   { "navigateBodyTo", (PyCFunction)PyModule_REEMNavigateBodyTo, METH_VARARGS|METH_KEYWORDS,
     "Navigate REEM base to a new pose." },
+  { "setRobotPoseInMap", (PyCFunction)PyModule_REEMSetRobotPoseInMap, METH_VARARGS|METH_KEYWORDS,
+    "Set REEM's pose in the current map." },
   { "cancelMoveBodyAction", (PyCFunction)PyModule_REEMCancelMoveBodyAction, METH_NOARGS,
     "Cancel the active move body actions." },
   { "moveTorsoTo", (PyCFunction)PyModule_REEMMoveTorsoTo, METH_VARARGS,

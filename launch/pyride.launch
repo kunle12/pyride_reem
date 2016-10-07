@@ -7,7 +7,7 @@
     <remap from="head_vel" to="head_controller/command" />
     <remap from="web" to="web/go_to" />
     <remap from="current_limit" to="current_limit_controller/command" />
-    <param name="_image_transport" type="str" value="compressed"/>
+    <!--<param name="_image_transport" type="str" value="compressed"/> -->
     <param name="config_file" type="str" value="$(find pyride_reem)/pyrideconfig.xml"/>
     <param name="script_dir" type="str" value="$(find pyride_reem)/scripts"/>
     <!--<param name="script_dir" type="str" value="/home/pal/dev/pyride_demo_scripts"/> -->
