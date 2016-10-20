@@ -1,6 +1,8 @@
 var searchData=
 [
   ['onbatterychargechange',['onBatteryChargeChange',['../classPyREEM.html#abc7d8a7ba502111201c3ab7f1d0c3d1a',1,'PyREEM']]],
+  ['ongotopoifailed',['onGotoPOIFailed',['../classPyREEM.html#ae07a62d6dbd67ea477a8c61a2c21cac4',1,'PyREEM']]],
+  ['ongotopoisuccess',['onGotoPOISuccess',['../classPyREEM.html#aef4f15088470b496952f451c7cb23ebe',1,'PyREEM']]],
   ['onhandactionfailed',['onHandActionFailed',['../classPyREEM.html#a624f25119a654919e5da5eba36fb9ae7',1,'PyREEM']]],
   ['onhandactionsuccess',['onHandActionSuccess',['../classPyREEM.html#aa01b04f06b360af889978a6f17837eb7',1,'PyREEM']]],
   ['onheadactionfailed',['onHeadActionFailed',['../classPyREEM.html#acc8d6450e06cf1c3ca80093eb5c35ecc',1,'PyREEM']]],
@@ -14,9 +16,16 @@ var searchData=
   ['onnavigatebodyfailed',['onNavigateBodyFailed',['../classPyREEM.html#a795e333656f4b21ead13b10a655ee150',1,'PyREEM']]],
   ['onnavigatebodysuccess',['onNavigateBodySuccess',['../classPyREEM.html#a43f54d79297b621086fb27edbbd61301',1,'PyREEM']]],
   ['onnodestatusupdate',['onNodeStatusUpdate',['../classPyREEM.html#a55382b7352e5d3710778521bb2523f9d',1,'PyREEM']]],
+  ['onpeermessage',['onPeerMessage',['../classPyREEM.html#a3db2e5359b0c6241217f446624072ae4',1,'PyREEM']]],
   ['onplaymotionfailed',['onPlayMotionFailed',['../classPyREEM.html#a7a5fa7f075c36f30fb1a003d096d1ba3',1,'PyREEM']]],
   ['onplaymotionsuccess',['onPlayMotionSuccess',['../classPyREEM.html#ab17dd518c05c223717f267066a63983a',1,'PyREEM']]],
+  ['onremotecommand',['onRemoteCommand',['../classPyREEM.html#ab066ed63929d4f1e7793724fd5401563',1,'PyREEM']]],
+  ['onsnapshotimage',['onSnapshotImage',['../classPyREEM.html#af8bc1cd49c8ec2faea99608dca5a30e5',1,'PyREEM']]],
   ['onspeakfailed',['onSpeakFailed',['../classPyREEM.html#ad2619bc47da74d97fb1f70e2a6f0f5d0',1,'PyREEM']]],
   ['onspeaksuccess',['onSpeakSuccess',['../classPyREEM.html#a39137090ffb97097d7bdd186ffc2587e',1,'PyREEM']]],
+  ['ontimer',['onTimer',['../classPyREEM.html#a8fa658106e30657bb6523ba56c7b4a6d',1,'PyREEM']]],
+  ['ontimerlapsed',['onTimerLapsed',['../classPyREEM.html#a140ec5e71ba22485085245ed2bd4e1a8',1,'PyREEM']]],
+  ['onuserlogoff',['onUserLogOff',['../classPyREEM.html#ab7f2071168f860fce1c1337d020dc97d',1,'PyREEM']]],
+  ['onuserlogon',['onUserLogOn',['../classPyREEM.html#adba214e24866376f3fe3a18bcdfd994e',1,'PyREEM']]],
   ['openhand',['openHand',['../classPyREEM.html#a8656b2f5610bbe6b132579662aa76769',1,'PyREEM']]]
 ];

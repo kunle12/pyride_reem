@@ -121,12 +121,14 @@ Public Member Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current joint positions of one of the REEM arm.  <a href="#ad34ee9430b52db397f40faaeb1614c8a"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a2ebb5abf054df0e63e673bbf4afa7875">getHandJointPositions</a> (left_hand)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current joint positions of one of the REEM hand.  <a href="#a2ebb5abf054df0e63e673bbf4afa7875"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a4e319161c91dd7061a2b4b056979584a">getRobotPose</a> ()</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current REEM body pose.  <a href="#a4e319161c91dd7061a2b4b056979584a"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#abd8c72d337113bc9c2a5d36a618d2e8c">getRobotPose</a> (in_map)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current REEM body pose w.r.t. odometry or map reference frame.  <a href="#abd8c72d337113bc9c2a5d36a618d2e8c"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a0e174ffcd38807593ef9e7ce4c6e9410">getRelativeTF</a> (reference_frame, frame)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the relative position and orientation of an input frame w.r.t to a reference frame.  <a href="#a0e174ffcd38807593ef9e7ce4c6e9410"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a8158dc2cc4ce7265406358e03d16be99">navigateBodyTo</a> (target_position, target_orientation)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Navigate REEM body to a specified pose.  <a href="#a8158dc2cc4ce7265406358e03d16be99"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a994532de8e8326c7d3dffba68528fea1">setRobotPoseInMap</a> (position, orientation)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set REEM body to a specified pose in the current map.  <a href="#a994532de8e8326c7d3dffba68528fea1"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a12079d0eac454eeda76fdc62959d14e2">moveArmTo</a> (position, orientation, use_left_arm)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Move a REEM arm to a specified pose.  <a href="#a12079d0eac454eeda76fdc62959d14e2"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a0e091e88e66473f4ded76513cdb8d2d7">getArmPose</a> (left_arm)</td></tr>
@@ -171,9 +173,43 @@ Public Member Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the stiffness of the REEM torso.  <a href="#aa5ebd97338ecaff03c67387503301971"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a637a770d22b3c66e21df137720d0b879">setArmStiffness</a> (left_arm, stiffness)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the stiffness of a REEM' arm.  <a href="#a637a770d22b3c66e21df137720d0b879"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#afd5b4f1700e30f8a035109c584c6677a">setTeamMemberID</a> (member_id, team_id)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the ID number of the robot.  <a href="#afd5b4f1700e30f8a035109c584c6677a"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#af1db0209c92b8989db2bcdc76cc04ef3">say</a> (text)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Use Text-to-Speech system to say the input text.  <a href="#af1db0209c92b8989db2bcdc76cc04ef3"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ae0c1b0f76c9dec4fc42d57e8f4f71125">sendTeamMessage</a> (message)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Broadcast a message to other robots in the same team (colour).  <a href="#ae0c1b0f76c9dec4fc42d57e8f4f71125"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a55382b7352e5d3710778521bb2523f9d">onNodeStatusUpdate</a> (data)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function invoked when an external ROS node dispatch status update message to PyRIDE on pyride_reem/node_status topic.  <a href="#a55382b7352e5d3710778521bb2523f9d"></a><br/></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Remote Client Access Functions</div></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ab066ed63929d4f1e7793724fd5401563">onRemoteCommand</a> (cmd_id, cmd_text)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when a custom command is received from a remote client.  <a href="#ab066ed63929d4f1e7793724fd5401563"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#adba214e24866376f3fe3a18bcdfd994e">onUserLogOn</a> (user_name)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when a user logs in through a remote client.  <a href="#adba214e24866376f3fe3a18bcdfd994e"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ab7f2071168f860fce1c1337d020dc97d">onUserLogOff</a> (user_name)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when a remote user logs off.  <a href="#ab7f2071168f860fce1c1337d020dc97d"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a59d000e6b2f5c2d43c22942656270407">disconnect</a> (username)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Disconnect all remote clients.  <a href="#a59d000e6b2f5c2d43c22942656270407"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ab67a1649d2764d9a68209d4cf78ee2a3">blockRemoteExclusiveControl</a> (toblock)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Block or unblock exclusive control of connected remote clients.  <a href="#ab67a1649d2764d9a68209d4cf78ee2a3"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a875c4ebd24897d9e354d6ac09fa23e0c">updateOperationalStatus</a> (op_state, op_text)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Send robot operational status notification to all connected remote clients.  <a href="#a875c4ebd24897d9e354d6ac09fa23e0c"></a><br/></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Timer Management Functions</div></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a8fa658106e30657bb6523ba56c7b4a6d">onTimer</a> (timer_id)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when a timer object (created by <a class="el" href="classPyREEM.html#a46c5b5974d8939800c8db11eb7b04837" title="Add a timer object.">PyREEM.addTimer</a>) is fired.  <a href="#a8fa658106e30657bb6523ba56c7b4a6d"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a140ec5e71ba22485085245ed2bd4e1a8">onTimerLapsed</a> (timer_id)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when a timer object (created by <a class="el" href="classPyREEM.html#a46c5b5974d8939800c8db11eb7b04837" title="Add a timer object.">PyREEM.addTimer</a>) is fired for the last time.  <a href="#a140ec5e71ba22485085245ed2bd4e1a8"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a46c5b5974d8939800c8db11eb7b04837">addTimer</a> (init_start, repeats, interval)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a timer object.  <a href="#a46c5b5974d8939800c8db11eb7b04837"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a55104db9aa8af00e96d6d65e00e937d4">removeTimer</a> (timer_id)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a timer object.  <a href="#a55104db9aa8af00e96d6d65e00e937d4"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a2449f339acd1a7bb9ad9c2e5b82432b4">isTimerRunning</a> (timer_id)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether a timer object is still alive.  <a href="#a2449f339acd1a7bb9ad9c2e5b82432b4"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#af9bcb81751a454ae9e2e289ffc650490">removeAllTimers</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove all timer objects in the system.  <a href="#af9bcb81751a454ae9e2e289ffc650490"></a><br/></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Miscellaneous Functions</div></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a3db2e5359b0c6241217f446624072ae4">onPeerMessage</a> (sender_id, message)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when a team message is received from a team member (calling <a class="el" href="classPyREEM.html#ae0c1b0f76c9dec4fc42d57e8f4f71125" title="Broadcast a message to other robots in the same team (colour).">PyREEM.sendTeamMessage</a>).  <a href="#a3db2e5359b0c6241217f446624072ae4"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ab936f344fa76977901ac56a73891e78b">startDataRecording</a> (data_type, output_file)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Start to record various sensor data into a ROS bag file.  <a href="#ab936f344fa76977901ac56a73891e78b"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#aabc8468057e6ccc57ea728674af370d6">stopDataRecording</a> ()</td></tr>
@@ -196,8 +232,34 @@ Public Member Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">stop a face registration process.  <a href="#a090b472230dbd423fd595723a3b68446"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a6f2062149506ed9f9f7ce4a6bbf41733">directToWeb</a> (uri)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">direct REEM touch screen to a specified web site.  <a href="#a6f2062149506ed9f9f7ce4a6bbf41733"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a710eb5c8511243f7d35f07f7e33ce7a6">getCurrentMapPOIs</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">retrieve a list (dictionary) of Points Of Interests (POIs) in the current map.  <a href="#a710eb5c8511243f7d35f07f7e33ce7a6"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#aada3a28866b29273ac7b602099aa1fb6">gotoPOI</a> (poi_name)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Direct REEM drive autonomously to a Point of Interest (POI).  <a href="#aada3a28866b29273ac7b602099aa1fb6"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a22f052ce2e84964e3ca4c16a67b4f6c2">cancelGotoPOI</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Cancel current autonomous navigation to a POI.  <a href="#a22f052ce2e84964e3ca4c16a67b4f6c2"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a437882718bd29bdbd0ce0b827c990051">sendMessageToNode</a> (node_id, message, priority)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">send a command text message to a node that is listening on /pyride/node_message.  <a href="#a437882718bd29bdbd0ce0b827c990051"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a7b9410c34ceb40818f13b52211b83275">takeCameraSnapshot</a> (all_camera)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Take a snapshot for the robot camera(s)  <a href="#a7b9410c34ceb40818f13b52211b83275"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#afab550231c059fdc85cd68af7bcd074a">getMyIPAddress</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the IP address of the robot.  <a href="#afab550231c059fdc85cd68af7bcd074a"></a><br/></td></tr>
+<tr><td colspan="2"><div class="groupHeader"></div></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#af8bc1cd49c8ec2faea99608dca5a30e5">onSnapshotImage</a> (image_name)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#a7b9410c34ceb40818f13b52211b83275" title="Take a snapshot for the robot camera(s)">PyREEM.takeCameraSnapshot</a> is called.  <a href="#af8bc1cd49c8ec2faea99608dca5a30e5"></a><br/></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Remote Client User Management Functions</div></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a26dffe7ef4c1e630adacc15b8db77706">listCurrentUsers</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a list of users who are currently logged in through remote clients.  <a href="#a26dffe7ef4c1e630adacc15b8db77706"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ac6021a4cd791060aee26f8162a49b684">listAllUsers</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a list of users who can log in remotely.  <a href="#ac6021a4cd791060aee26f8162a49b684"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ac3fce7965c35f1d20bdfdb544fa682f2">saveConfiguration</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Save the current user access configuration.  <a href="#ac3fce7965c35f1d20bdfdb544fa682f2"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a1b1baea5a73ed05eeae181c528c2f63f">addUser</a> (user_name, user_password)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a new remote user into the system.  <a href="#a1b1baea5a73ed05eeae181c528c2f63f"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ae96726d655a09a6fb636defd04bd2466">removeUser</a> (user_name)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove an existing remote user from the system.  <a href="#ae96726d655a09a6fb636defd04bd2466"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a42b4baae87e88a1278a95b65fe614c4b">changeUserPassword</a> (user_name, old_password, new_password)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Change an existing remote user's password.  <a href="#a42b4baae87e88a1278a95b65fe614c4b"></a><br/></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Action Callback Functions</div></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#addfbe834b418869407f44a7ff36e6a9f">onHeadActionSuccess</a> ()</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#a89c5dd1292b40dc1be46adfd9dfc849a" title="Point the REEM head towards a specific coordinates in a reference frame with respect to &#39;stereo_link&#39;...">PyREEM.pointHeadTo</a> method call is successful.  <a href="#addfbe834b418869407f44a7ff36e6a9f"></a><br/></td></tr>
@@ -215,6 +277,10 @@ Public Member Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#a8158dc2cc4ce7265406358e03d16be99" title="Navigate REEM body to a specified pose.">PyREEM.navigateBodyTo</a> method call is successful.  <a href="#a43f54d79297b621086fb27edbbd61301"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a795e333656f4b21ead13b10a655ee150">onNavigateBodyFailed</a> ()</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#a8158dc2cc4ce7265406358e03d16be99" title="Navigate REEM body to a specified pose.">PyREEM.navigateBodyTo</a> method call is failed.  <a href="#a795e333656f4b21ead13b10a655ee150"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#aef4f15088470b496952f451c7cb23ebe">onGotoPOISuccess</a> (poi_name)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#aada3a28866b29273ac7b602099aa1fb6" title="Direct REEM drive autonomously to a Point of Interest (POI).">PyREEM.gotoPOI</a> method call is successful.  <a href="#aef4f15088470b496952f451c7cb23ebe"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ae07a62d6dbd67ea477a8c61a2c21cac4">onGotoPOIFailed</a> (poi_name)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when PyREEM.gotPOI method call is failed.  <a href="#ae07a62d6dbd67ea477a8c61a2c21cac4"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#aa01b04f06b360af889978a6f17837eb7">onHandActionSuccess</a> (is_left_hand)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#a8656b2f5610bbe6b132579662aa76769" title="Opens one or both REEM grippers.">PyREEM.openHand</a>, <a class="el" href="classPyREEM.html#a5513f5ba7c1fe11ad0f925d10f547fb3" title="Closes one or both REEM hand.">PyREEM.closeHand</a> and <a class="el" href="classPyREEM.html#af56dc8d51afafbfe02cc906cc8da297e" title="Move a REEM hand to the specified joint position within a time frame.">PyREEM.setHandPosition</a> method call is successful.  <a href="#aa01b04f06b360af889978a6f17837eb7"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a624f25119a654919e5da5eba36fb9ae7">onHandActionFailed</a> (is_left_hand)</td></tr>
@@ -224,9 +290,9 @@ Public Member Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a7a5fa7f075c36f30fb1a003d096d1ba3">onPlayMotionFailed</a> ()</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#ac9cbbde1b09aecb14622c65347a58861" title="play a default motion prebuilt with PAL.">PyREEM.playDefaultMotion</a> method call is failed.  <a href="#a7a5fa7f075c36f30fb1a003d096d1ba3"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a39137090ffb97097d7bdd186ffc2587e">onSpeakSuccess</a> ()</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when PyREEM.say method call is successful.  <a href="#a39137090ffb97097d7bdd186ffc2587e"></a><br/></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#af1db0209c92b8989db2bcdc76cc04ef3" title="Use Text-to-Speech system to say the input text.">PyREEM.say</a> method call is successful.  <a href="#a39137090ffb97097d7bdd186ffc2587e"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ad2619bc47da74d97fb1f70e2a6f0f5d0">onSpeakFailed</a> ()</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when PyREEM.say method call is failed.  <a href="#ad2619bc47da74d97fb1f70e2a6f0f5d0"></a><br/></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#af1db0209c92b8989db2bcdc76cc04ef3" title="Use Text-to-Speech system to say the input text.">PyREEM.say</a> method call is failed.  <a href="#ad2619bc47da74d97fb1f70e2a6f0f5d0"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#abc7d8a7ba502111201c3ab7f1d0c3d1a">onBatteryChargeChange</a> (battery_status)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when REEM battery status changes.  <a href="#abc7d8a7ba502111201c3ab7f1d0c3d1a"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a55b1d5e512841a5b44bbf1820eb0b629">onMoveBodySuccess</a> ()</td></tr>
@@ -290,6 +356,114 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a46c5b5974d8939800c8db11eb7b04837"></a><!-- doxytag: member="PyREEM::addTimer" ref="a46c5b5974d8939800c8db11eb7b04837" args="(init_start, repeats, interval)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a46c5b5974d8939800c8db11eb7b04837">addTimer</a> </td>
+          <td>(</td>
+          <td class="paramtype">init_start&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">repeats&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">interval&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Add a timer object. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">float</td><td>init_start. Initial start time (in seconds, precision to 10th of a second) after the method is called. </td></tr>
+    <tr><td class="paramname">long</td><td>repeats. A number of times the timer shall be called. -1 means infinite. </td></tr>
+    <tr><td class="paramname">float</td><td>interval. Time interval (in seconds, precision to 10th of a second) between timer callbacks. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>long The ID of the timer object. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a1b1baea5a73ed05eeae181c528c2f63f"></a><!-- doxytag: member="PyREEM::addUser" ref="a1b1baea5a73ed05eeae181c528c2f63f" args="(user_name, user_password)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a1b1baea5a73ed05eeae181c528c2f63f">addUser</a> </td>
+          <td>(</td>
+          <td class="paramtype">user_name&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">user_password&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Add a new remote user into the system. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>user_name. </td></tr>
+    <tr><td class="paramname">str</td><td>user_password. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ab67a1649d2764d9a68209d4cf78ee2a3"></a><!-- doxytag: member="PyREEM::blockRemoteExclusiveControl" ref="ab67a1649d2764d9a68209d4cf78ee2a3" args="(toblock)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#ab67a1649d2764d9a68209d4cf78ee2a3">blockRemoteExclusiveControl</a> </td>
+          <td>(</td>
+          <td class="paramtype">toblock&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Block or unblock exclusive control of connected remote clients. </p>
+<p>Allow or block the exclusive control right of remote clients. If a client has already taken the exclusive control, the control right will be revoked when the input is set to True. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bool</td><td>toblock. True for block; False for unblock. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a7171e648804261f9e3ea56ded44ac1b4"></a><!-- doxytag: member="PyREEM::cancelEarLEDEffect" ref="a7171e648804261f9e3ea56ded44ac1b4" args="(effect_id)" -->
 <div class="memitem">
 <div class="memproto">
@@ -313,6 +487,25 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>bool True = successful, otherwise False. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a22f052ce2e84964e3ca4c16a67b4f6c2"></a><!-- doxytag: member="PyREEM::cancelGotoPOI" ref="a22f052ce2e84964e3ca4c16a67b4f6c2" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a22f052ce2e84964e3ca4c16a67b4f6c2">cancelGotoPOI</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Cancel current autonomous navigation to a POI. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
 
 </div>
 </div>
@@ -360,6 +553,50 @@ Public Member Functions</h2></td></tr>
 <p>Cancel current body movement action invoked by <a class="el" href="classPyREEM.html#ac6d983eb5ce4481444832b4fc411de71" title="Move the REEM body to a pose at (x,y,theta).">PyREEM.moveBodyTo</a> or <a class="el" href="classPyREEM.html#ac3c9eb318a01ac16c6662637539c55f4" title="Set the REEM body moving speed in the form of (x,y,theta).">PyREEM.moveBodyWithSpeed</a> method call. </p>
 <dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd>This function has not been fully tested on REEM and may be buggy. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a42b4baae87e88a1278a95b65fe614c4b"></a><!-- doxytag: member="PyREEM::changeUserPassword" ref="a42b4baae87e88a1278a95b65fe614c4b" args="(user_name, old_password, new_password)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a42b4baae87e88a1278a95b65fe614c4b">changeUserPassword</a> </td>
+          <td>(</td>
+          <td class="paramtype">user_name&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">old_password&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">new_password&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Change an existing remote user's password. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>user_name name. </td></tr>
+    <tr><td class="paramname">str</td><td>old_password. </td></tr>
+    <tr><td class="paramname">str</td><td>new_password. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
 
 </div>
 </div>
@@ -442,6 +679,32 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a59d000e6b2f5c2d43c22942656270407"></a><!-- doxytag: member="PyREEM::disconnect" ref="a59d000e6b2f5c2d43c22942656270407" args="(username)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a59d000e6b2f5c2d43c22942656270407">disconnect</a> </td>
+          <td>(</td>
+          <td class="paramtype">username&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Disconnect all remote clients. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>username. Optional name of an online user to be disconnected. If no username is provided. All connected clients will be disconnected. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ad34ee9430b52db397f40faaeb1614c8a"></a><!-- doxytag: member="PyREEM::getArmJointPositions" ref="ad34ee9430b52db397f40faaeb1614c8a" args="(left_arm)" -->
 <div class="memitem">
 <div class="memproto">
@@ -513,6 +776,25 @@ Public Member Functions</h2></td></tr>
 <p>Return the current robot battery status. </p>
 <dl class="return"><dt><b>Returns:</b></dt><dd>tuple(battery percentage, is_plugged_in, estimated remaining battery time). </dd></dl>
 <dl class="note"><dt><b>Note:</b></dt><dd>REEM does not supply charging status and battery remaining estimate, hence the last two values are default dummy values. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a710eb5c8511243f7d35f07f7e33ce7a6"></a><!-- doxytag: member="PyREEM::getCurrentMapPOIs" ref="a710eb5c8511243f7d35f07f7e33ce7a6" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a710eb5c8511243f7d35f07f7e33ce7a6">getCurrentMapPOIs</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>retrieve a list (dictionary) of Points Of Interests (POIs) in the current map. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>dict: A list of POIs in { 'name': (x,y,z) } format </dd></dl>
 
 </div>
 </div>
@@ -607,6 +889,25 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="afab550231c059fdc85cd68af7bcd074a"></a><!-- doxytag: member="PyREEM::getMyIPAddress" ref="afab550231c059fdc85cd68af7bcd074a" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#afab550231c059fdc85cd68af7bcd074a">getMyIPAddress</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Get the IP address of the robot. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>The robot IP address in text. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a8d53fc0a16c6e79531ae24816f8ff20b"></a><!-- doxytag: member="PyREEM::getPositionForJoints" ref="a8d53fc0a16c6e79531ae24816f8ff20b" args="(joint_names)" -->
 <div class="memitem">
 <div class="memproto">
@@ -671,13 +972,14 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a4e319161c91dd7061a2b4b056979584a"></a><!-- doxytag: member="PyREEM::getRobotPose" ref="a4e319161c91dd7061a2b4b056979584a" args="()" -->
+<a class="anchor" id="abd8c72d337113bc9c2a5d36a618d2e8c"></a><!-- doxytag: member="PyREEM::getRobotPose" ref="abd8c72d337113bc9c2a5d36a618d2e8c" args="(in_map)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classPyREEM.html#a4e319161c91dd7061a2b4b056979584a">getRobotPose</a> </td>
+          <td class="memname"><a class="el" href="classPyREEM.html#abd8c72d337113bc9c2a5d36a618d2e8c">getRobotPose</a> </td>
           <td>(</td>
+          <td class="paramtype">in_map&#160;</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
@@ -685,9 +987,41 @@ Public Member Functions</h2></td></tr>
 </div>
 <div class="memdoc">
 
-<p>Get the current REEM body pose. </p>
+<p>Get the current REEM body pose w.r.t. odometry or map reference frame. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bool</td><td>in_map. Optional (default False). True for using map reference frame; otherwise False. </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>tuple(position,orientation). </dd></dl>
 <dl class="note"><dt><b>Note:</b></dt><dd>Orientation is in quaternion form (w,x,y,z). </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="aada3a28866b29273ac7b602099aa1fb6"></a><!-- doxytag: member="PyREEM::gotoPOI" ref="aada3a28866b29273ac7b602099aa1fb6" args="(poi_name)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#aada3a28866b29273ac7b602099aa1fb6">gotoPOI</a> </td>
+          <td>(</td>
+          <td class="paramtype">poi_name&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Direct REEM drive autonomously to a Point of Interest (POI). </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>poi_name. Name of the POI. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>True = Navigation successfully started, otherwise, False. </dd></dl>
 
 </div>
 </div>
@@ -713,6 +1047,70 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>bool. True == supported; False == not supported. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a2449f339acd1a7bb9ad9c2e5b82432b4"></a><!-- doxytag: member="PyREEM::isTimerRunning" ref="a2449f339acd1a7bb9ad9c2e5b82432b4" args="(timer_id)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a2449f339acd1a7bb9ad9c2e5b82432b4">isTimerRunning</a> </td>
+          <td>(</td>
+          <td class="paramtype">timer_id&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Check whether a timer object is still alive. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">long</td><td>timer_id. ID of the timer object. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>True = timer is alive; False = timer is dead. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ac6021a4cd791060aee26f8162a49b684"></a><!-- doxytag: member="PyREEM::listAllUsers" ref="ac6021a4cd791060aee26f8162a49b684" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#ac6021a4cd791060aee26f8162a49b684">listAllUsers</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Return a list of users who can log in remotely. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>A list of user names. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a26dffe7ef4c1e630adacc15b8db77706"></a><!-- doxytag: member="PyREEM::listCurrentUsers" ref="a26dffe7ef4c1e630adacc15b8db77706" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a26dffe7ef4c1e630adacc15b8db77706">listCurrentUsers</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Return a list of users who are currently logged in through remote clients. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>A list of user names. </dd></dl>
 
 </div>
 </div>
@@ -1207,6 +1605,46 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ae07a62d6dbd67ea477a8c61a2c21cac4"></a><!-- doxytag: member="PyREEM::onGotoPOIFailed" ref="ae07a62d6dbd67ea477a8c61a2c21cac4" args="(poi_name)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#ae07a62d6dbd67ea477a8c61a2c21cac4">onGotoPOIFailed</a> </td>
+          <td>(</td>
+          <td class="paramtype">poi_name&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback function when PyREEM.gotPOI method call is failed. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="aef4f15088470b496952f451c7cb23ebe"></a><!-- doxytag: member="PyREEM::onGotoPOISuccess" ref="aef4f15088470b496952f451c7cb23ebe" args="(poi_name)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#aef4f15088470b496952f451c7cb23ebe">onGotoPOISuccess</a> </td>
+          <td>(</td>
+          <td class="paramtype">poi_name&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback function when <a class="el" href="classPyREEM.html#aada3a28866b29273ac7b602099aa1fb6" title="Direct REEM drive autonomously to a Point of Interest (POI).">PyREEM.gotoPOI</a> method call is successful. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a624f25119a654919e5da5eba36fb9ae7"></a><!-- doxytag: member="PyREEM::onHandActionFailed" ref="a624f25119a654919e5da5eba36fb9ae7" args="(is_left_hand)" -->
 <div class="memitem">
 <div class="memproto">
@@ -1489,6 +1927,43 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a3db2e5359b0c6241217f446624072ae4"></a><!-- doxytag: member="PyREEM::onPeerMessage" ref="a3db2e5359b0c6241217f446624072ae4" args="(sender_id, message)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a3db2e5359b0c6241217f446624072ae4">onPeerMessage</a> </td>
+          <td>(</td>
+          <td class="paramtype">sender_id&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">message&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback function when a team message is received from a team member (calling <a class="el" href="classPyREEM.html#ae0c1b0f76c9dec4fc42d57e8f4f71125" title="Broadcast a message to other robots in the same team (colour).">PyREEM.sendTeamMessage</a>). </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">int</td><td>sender_id. The ID of the team member who sends the message. </td></tr>
+    <tr><td class="paramname">str</td><td>message. Text of the message. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a7a5fa7f075c36f30fb1a003d096d1ba3"></a><!-- doxytag: member="PyREEM::onPlayMotionFailed" ref="a7a5fa7f075c36f30fb1a003d096d1ba3" args="()" -->
 <div class="memitem">
 <div class="memproto">
@@ -1527,6 +2002,70 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ab066ed63929d4f1e7793724fd5401563"></a><!-- doxytag: member="PyREEM::onRemoteCommand" ref="ab066ed63929d4f1e7793724fd5401563" args="(cmd_id, cmd_text)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#ab066ed63929d4f1e7793724fd5401563">onRemoteCommand</a> </td>
+          <td>(</td>
+          <td class="paramtype">cmd_id&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cmd_text&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback function when a custom command is received from a remote client. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">int</td><td>cmd_id. Custom command ID. </td></tr>
+    <tr><td class="paramname">str</td><td>cmd_text. Custom command text string. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+<dl class="note"><dt><b>Note:</b></dt><dd>The remote client must take the exclusive control of the robot before its commands can trigger this callback function. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="af8bc1cd49c8ec2faea99608dca5a30e5"></a><!-- doxytag: member="PyREEM::onSnapshotImage" ref="af8bc1cd49c8ec2faea99608dca5a30e5" args="(image_name)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#af8bc1cd49c8ec2faea99608dca5a30e5">onSnapshotImage</a> </td>
+          <td>(</td>
+          <td class="paramtype">image_name&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback function when <a class="el" href="classPyREEM.html#a7b9410c34ceb40818f13b52211b83275" title="Take a snapshot for the robot camera(s)">PyREEM.takeCameraSnapshot</a> is called. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>image_name. Path for the saved image. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ad2619bc47da74d97fb1f70e2a6f0f5d0"></a><!-- doxytag: member="PyREEM::onSpeakFailed" ref="ad2619bc47da74d97fb1f70e2a6f0f5d0" args="()" -->
 <div class="memitem">
 <div class="memproto">
@@ -1541,7 +2080,7 @@ Public Member Functions</h2></td></tr>
 </div>
 <div class="memdoc">
 
-<p>Callback function when PyREEM.say method call is failed. </p>
+<p>Callback function when <a class="el" href="classPyREEM.html#af1db0209c92b8989db2bcdc76cc04ef3" title="Use Text-to-Speech system to say the input text.">PyREEM.say</a> method call is failed. </p>
 <dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
 
 </div>
@@ -1560,7 +2099,112 @@ Public Member Functions</h2></td></tr>
 </div>
 <div class="memdoc">
 
-<p>Callback function when PyREEM.say method call is successful. </p>
+<p>Callback function when <a class="el" href="classPyREEM.html#af1db0209c92b8989db2bcdc76cc04ef3" title="Use Text-to-Speech system to say the input text.">PyREEM.say</a> method call is successful. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a8fa658106e30657bb6523ba56c7b4a6d"></a><!-- doxytag: member="PyREEM::onTimer" ref="a8fa658106e30657bb6523ba56c7b4a6d" args="(timer_id)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a8fa658106e30657bb6523ba56c7b4a6d">onTimer</a> </td>
+          <td>(</td>
+          <td class="paramtype">timer_id&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback function when a timer object (created by <a class="el" href="classPyREEM.html#a46c5b5974d8939800c8db11eb7b04837" title="Add a timer object.">PyREEM.addTimer</a>) is fired. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">int</td><td>timer_id. ID of the timer object. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a140ec5e71ba22485085245ed2bd4e1a8"></a><!-- doxytag: member="PyREEM::onTimerLapsed" ref="a140ec5e71ba22485085245ed2bd4e1a8" args="(timer_id)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a140ec5e71ba22485085245ed2bd4e1a8">onTimerLapsed</a> </td>
+          <td>(</td>
+          <td class="paramtype">timer_id&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback function when a timer object (created by <a class="el" href="classPyREEM.html#a46c5b5974d8939800c8db11eb7b04837" title="Add a timer object.">PyREEM.addTimer</a>) is fired for the last time. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">int</td><td>timer_id. ID of the timer object. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+<dl class="note"><dt><b>Note:</b></dt><dd>This callback function works only on timers with limited life span. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ab7f2071168f860fce1c1337d020dc97d"></a><!-- doxytag: member="PyREEM::onUserLogOff" ref="ab7f2071168f860fce1c1337d020dc97d" args="(user_name)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#ab7f2071168f860fce1c1337d020dc97d">onUserLogOff</a> </td>
+          <td>(</td>
+          <td class="paramtype">user_name&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback function when a remote user logs off. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>user_name. The name of the user. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="adba214e24866376f3fe3a18bcdfd994e"></a><!-- doxytag: member="PyREEM::onUserLogOn" ref="adba214e24866376f3fe3a18bcdfd994e" args="(user_name)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#adba214e24866376f3fe3a18bcdfd994e">onUserLogOn</a> </td>
+          <td>(</td>
+          <td class="paramtype">user_name&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback function when a user logs in through a remote client. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>user_name. The name of the user. </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
 
 </div>
@@ -1655,7 +2299,7 @@ Public Member Functions</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>bool. True == success; False == otherwise. </dd></dl>
 <dl class="warning"><dt><b>Warning:</b></dt><dd>Not fully tested! </dd></dl>
-<dl class="note"><dt><b>Note:</b></dt><dd>Require MoveIt! to be running prior the start of PyRIDE. </dd></dl>
+<dl class="note"><dt><b>Note:</b></dt><dd>Require MoveIt! to be running prior the start of PyRIDE. Requires additional sensors. </dd></dl>
 
 </div>
 </div>
@@ -1722,7 +2366,7 @@ Public Member Functions</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>bool. True == success; False == otherwise. </dd></dl>
 <dl class="warning"><dt><b>Warning:</b></dt><dd>Not fully tested! </dd></dl>
-<dl class="note"><dt><b>Note:</b></dt><dd>Require MoveIt! to be running prior the start of PyRIDE. </dd></dl>
+<dl class="note"><dt><b>Note:</b></dt><dd>Require MoveIt! to be running prior the start of PyRIDE. Requires additional sensors. </dd></dl>
 
 </div>
 </div>
@@ -1980,6 +2624,122 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="af9bcb81751a454ae9e2e289ffc650490"></a><!-- doxytag: member="PyREEM::removeAllTimers" ref="af9bcb81751a454ae9e2e289ffc650490" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#af9bcb81751a454ae9e2e289ffc650490">removeAllTimers</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Remove all timer objects in the system. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a55104db9aa8af00e96d6d65e00e937d4"></a><!-- doxytag: member="PyREEM::removeTimer" ref="a55104db9aa8af00e96d6d65e00e937d4" args="(timer_id)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a55104db9aa8af00e96d6d65e00e937d4">removeTimer</a> </td>
+          <td>(</td>
+          <td class="paramtype">timer_id&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Remove a timer object. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">long</td><td>timer_id. ID of the timer object pending for removal. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ae96726d655a09a6fb636defd04bd2466"></a><!-- doxytag: member="PyREEM::removeUser" ref="ae96726d655a09a6fb636defd04bd2466" args="(user_name)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#ae96726d655a09a6fb636defd04bd2466">removeUser</a> </td>
+          <td>(</td>
+          <td class="paramtype">user_name&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Remove an existing remote user from the system. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>user_name name. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ac3fce7965c35f1d20bdfdb544fa682f2"></a><!-- doxytag: member="PyREEM::saveConfiguration" ref="ac3fce7965c35f1d20bdfdb544fa682f2" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#ac3fce7965c35f1d20bdfdb544fa682f2">saveConfiguration</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Save the current user access configuration. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="af1db0209c92b8989db2bcdc76cc04ef3"></a><!-- doxytag: member="PyREEM::say" ref="af1db0209c92b8989db2bcdc76cc04ef3" args="(text)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#af1db0209c92b8989db2bcdc76cc04ef3">say</a> </td>
+          <td>(</td>
+          <td class="paramtype">text&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Use Text-to-Speech system to say the input text. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>text. Text to be spoken by the robot. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a437882718bd29bdbd0ce0b827c990051"></a><!-- doxytag: member="PyREEM::sendMessageToNode" ref="a437882718bd29bdbd0ce0b827c990051" args="(node_id, message, priority)" -->
 <div class="memitem">
 <div class="memproto">
@@ -2021,6 +2781,33 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ae0c1b0f76c9dec4fc42d57e8f4f71125"></a><!-- doxytag: member="PyREEM::sendTeamMessage" ref="ae0c1b0f76c9dec4fc42d57e8f4f71125" args="(message)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#ae0c1b0f76c9dec4fc42d57e8f4f71125">sendTeamMessage</a> </td>
+          <td>(</td>
+          <td class="paramtype">message&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Broadcast a message to other robots in the same team (colour). </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>message. A text based message. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None </dd></dl>
+<dl class="note"><dt><b>Note:</b></dt><dd>(legacy) This is based on the team colour assignment defined in pyrideconfig.xml </dd></dl>
 
 </div>
 </div>
@@ -2146,6 +2933,83 @@ Public Member Functions</h2></td></tr>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">int</td><td>battery_percentage. Must be non-negative. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a994532de8e8326c7d3dffba68528fea1"></a><!-- doxytag: member="PyREEM::setRobotPoseInMap" ref="a994532de8e8326c7d3dffba68528fea1" args="(position, orientation)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a994532de8e8326c7d3dffba68528fea1">setRobotPoseInMap</a> </td>
+          <td>(</td>
+          <td class="paramtype">position&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">orientation&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Set REEM body to a specified pose in the current map. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">tuple</td><td>position. Position in the form of (x,y,z). </td></tr>
+    <tr><td class="paramname">tuple</td><td>orientation. Orientation in quaternion form (w,x,y,z). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+<dl class="note"><dt><b>Note:</b></dt><dd>Must have REEM navigation stack running prior the start of PyRIDE. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="afd5b4f1700e30f8a035109c584c6677a"></a><!-- doxytag: member="PyREEM::setTeamMemberID" ref="afd5b4f1700e30f8a035109c584c6677a" args="(member_id, team_id)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#afd5b4f1700e30f8a035109c584c6677a">setTeamMemberID</a> </td>
+          <td>(</td>
+          <td class="paramtype">member_id&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">team_id&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Sets the ID number of the robot. </p>
+<p>The robot can be assigned as a member of blue team (number 1) or pink team (number 2). This facilitates robot to robot communication. </p>
+<dl class="note"><dt><b>Note:</b></dt><dd>This function is inherited from robot soccer competition code for NAO. </dd></dl>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">int</td><td>member_id. Must be a non-negative integer. </td></tr>
+    <tr><td class="paramname">int</td><td>team_id. Must be either 1 (blue team) or 2 (pink team). </td></tr>
   </table>
   </dd>
 </dl>
@@ -2284,6 +3148,71 @@ Default output file name path is in the format of /removable/recordings/Ymd_HM_s
 
 </div>
 </div>
+<a class="anchor" id="a7b9410c34ceb40818f13b52211b83275"></a><!-- doxytag: member="PyREEM::takeCameraSnapshot" ref="a7b9410c34ceb40818f13b52211b83275" args="(all_camera)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a7b9410c34ceb40818f13b52211b83275">takeCameraSnapshot</a> </td>
+          <td>(</td>
+          <td class="paramtype">all_camera&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Take a snapshot for the robot camera(s) </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bool</td><td>all_camera. Take a snapshot from all available cameras. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None </dd></dl>
+<dl class="note"><dt><b>Note:</b></dt><dd>Image(s) taken from the robot camera(s) will be saved in <b>{robot home directory}/recordings/cameras</b> directory on the <a class="el" href="classPyREEM.html" title="PyREEM is the main Python extension module of PyRIDE on REEM/ROS system.">PyREEM</a>. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a875c4ebd24897d9e354d6ac09fa23e0c"></a><!-- doxytag: member="PyREEM::updateOperationalStatus" ref="a875c4ebd24897d9e354d6ac09fa23e0c" args="(op_state, op_text)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classPyREEM.html#a875c4ebd24897d9e354d6ac09fa23e0c">updateOperationalStatus</a> </td>
+          <td>(</td>
+          <td class="paramtype">op_state&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">op_text&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Send robot operational status notification to all connected remote clients. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">int</td><td>op_state. Must be a positive integer representing the operational status. </td></tr>
+    <tr><td class="paramname">str</td><td>op_text. Optional text for the operational status. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>None. </dd></dl>
+<dl class="note"><dt><b>Note:</b></dt><dd>For pre allocated operational status ID, check constants.py. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ab06a2dce82b816b110884bd4dd88117a"></a><!-- doxytag: member="PyREEM::useMoveIt" ref="ab06a2dce82b816b110884bd4dd88117a" args="()" -->
 <div class="memitem">
 <div class="memproto">
@@ -2305,6 +3234,8 @@ Default output file name path is in the format of /removable/recordings/Ymd_HM_s
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>src/PyREEMModule.cpp</li>
+<li>pyridecore/PyModuleStub.cpp</li>
+<li>pyridecore/PyModulePyCommon.cpp</li>
 <li>src/REEMProxyManager.cpp</li>
 <li>src/PyREEMServer.cpp</li>
 </ul>
@@ -2326,7 +3257,7 @@ Default output file name path is in the format of /removable/recordings/Ymd_HM_s
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jul 8 2016 12:21:06 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Oct 20 2016 11:11:42 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

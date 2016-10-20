@@ -1,10 +1,15 @@
 var searchData=
 [
+  ['saveconfiguration',['saveConfiguration',['../classPyREEM.html#ac3fce7965c35f1d20bdfdb544fa682f2',1,'PyREEM']]],
+  ['say',['say',['../classPyREEM.html#af1db0209c92b8989db2bcdc76cc04ef3',1,'PyREEM']]],
   ['sendmessagetonode',['sendMessageToNode',['../classPyREEM.html#a437882718bd29bdbd0ce0b827c990051',1,'PyREEM']]],
+  ['sendteammessage',['sendTeamMessage',['../classPyREEM.html#ae0c1b0f76c9dec4fc42d57e8f4f71125',1,'PyREEM']]],
   ['setarmstiffness',['setArmStiffness',['../classPyREEM.html#a637a770d22b3c66e21df137720d0b879',1,'PyREEM']]],
   ['setearled',['setEarLED',['../classPyREEM.html#a01426e4ea139de985bdc2d69fdc6f046',1,'PyREEM']]],
   ['sethandposition',['setHandPosition',['../classPyREEM.html#af56dc8d51afafbfe02cc906cc8da297e',1,'PyREEM']]],
   ['setlowpowerthreshold',['setLowPowerThreshold',['../classPyREEM.html#a4d23e7ab37261cddc6f8afdb620cc84e',1,'PyREEM']]],
+  ['setrobotposeinmap',['setRobotPoseInMap',['../classPyREEM.html#a994532de8e8326c7d3dffba68528fea1',1,'PyREEM']]],
+  ['setteammemberid',['setTeamMemberID',['../classPyREEM.html#afd5b4f1700e30f8a035109c584c6677a',1,'PyREEM']]],
   ['settorsostiffness',['setTorsoStiffness',['../classPyREEM.html#aa5ebd97338ecaff03c67387503301971',1,'PyREEM']]],
   ['startdatarecording',['startDataRecording',['../classPyREEM.html#ab936f344fa76977901ac56a73891e78b',1,'PyREEM']]],
   ['startpalfaceenrollment',['startPalFaceEnrollment',['../classPyREEM.html#a26b2cbf32895f1cc18882b400b611436',1,'PyREEM']]],
