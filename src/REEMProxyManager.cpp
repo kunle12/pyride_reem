@@ -275,7 +275,7 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
     trials++;
   }
   if (!gotoPOIClient_->isServerConnected()) {
-    ROS_INFO( "MPOI navigation action server is down." );
+    ROS_INFO( "POI navigation action server is down." );
     delete gotoPOIClient_;
     gotoPOIClient_ = NULL;
   }

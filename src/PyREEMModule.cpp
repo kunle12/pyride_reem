@@ -1833,7 +1833,7 @@ static PyObject * PyModule_REEMListSolidObjects( PyObject * self )
  *  \param float distance_from. Approaching distance from the object.
  *  \return bool. True == success; False == otherwise.
  *  \warning Not fully tested!
- *  \note Require MoveIt! to be running prior the start of PyRIDE.
+ *  \note Require MoveIt! to be running prior the start of PyRIDE. Requires additional sensors.
  */
 /*! \fn placeObject(name,place,place_position,place_orientation,use_left_arm,distance_from)
  *  \memberof PyREEM
@@ -1846,7 +1846,7 @@ static PyObject * PyModule_REEMListSolidObjects( PyObject * self )
  *  \param float distance_from. Retreating distance from the object.
  *  \return bool. True == success; False == otherwise.
  *  \warning Not fully tested!
- *  \note Require MoveIt! to be running prior the start of PyRIDE.
+ *  \note Require MoveIt! to be running prior the start of PyRIDE. Requires additional sensors.
  */
 
 static PyObject * PyModule_REEMPickUpAndPlaceObject( bool to_place, PyObject * self, PyObject * args, PyObject * keywds )

@@ -744,7 +744,7 @@ IMAGE_PATH             =
 # If FILTER_PATTERNS is specified, this tag will be
 # ignored.
 
-INPUT_FILTER           = "sed 's/ROBOT_MODEL_DOXYGEN/PyPR2/g'"
+INPUT_FILTER           = "sed 's/ROBOT_MODEL_DOXYGEN/PyREEM/g'"
 
 # The FILTER_PATTERNS tag can be used to specify filters on a per file pattern
 # basis.
