@@ -1525,6 +1525,36 @@ static PyObject * PyModule_REEMPlayDefaultMotion( PyObject * self, PyObject * ar
   Py_RETURN_NONE;
 }
 
+/*! \fn playAudioFile(file_name)
+ *  \memberof PyREEM
+ *  \brief play an audio file.
+ *  \param str file_name. The full path of the audio file
+ *  \return None
+ */
+static PyObject * PyModule_REEMPlayAudioFile( PyObject * self, PyObject * args )
+{
+  char * audio = NULL;
+
+  if (!PyArg_ParseTuple( args, "s", &audio )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  REEMProxyManager::instance()->playAudioFile( audio );
+  Py_RETURN_NONE;
+}
+
+/*! \fn cancelAudioPlay()
+ *  \memberof PyREEM
+ *  \brief Stop the currently playing audio.
+ *  \return None.
+ */
+static PyObject * PyModule_REEMCancelAudioPlay( PyObject * self )
+{
+  REEMProxyManager::instance()->cancelAudioPlay();
+  Py_RETURN_NONE;
+}
+
 /*! \fn registerBaseScanCallback( callback_function, target_frame )
  *  \memberof PyREEM
  *  \brief Register a callback function for receiving base laser scan data.
@@ -2323,6 +2353,10 @@ static PyMethodDef PyModule_methods[] = {
     "Check whether the input TF frames is supported." },
   { "playDefaultMotion", (PyCFunction)PyModule_REEMPlayDefaultMotion, METH_VARARGS,
     "Let REEM play one of its default motion." },
+  { "playAudioFile", (PyCFunction)PyModule_REEMPlayAudioFile, METH_VARARGS,
+    "Let REEM play an audio file (mp3 or wav)." },
+  { "cancelAudioPlay", (PyCFunction)PyModule_REEMCancelAudioPlay, METH_NOARGS,
+    "Cancel playing of the current audio." },
   { "useMoveIt", (PyCFunction)PyModule_REEMUseMoveIt, METH_NOARGS,
     "Check whether MoveIt is in use." },
   { "addSolidObject", (PyCFunction)PyModule_REEMAddSolidObject, METH_VARARGS|METH_KEYWORDS,

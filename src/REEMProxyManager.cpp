@@ -292,6 +292,19 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
     moveBaseClient_ = NULL;
   }
 
+  trials = 0;
+  playAudioClient_ = new PlayAudioClient( "/audio_file_player", true );
+
+  while (!playAudioClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
+    ROS_INFO( "Waiting for the audio player action server to come up." );
+    trials++;
+  }
+  if (!playAudioClient_->isServerConnected()) {
+    ROS_INFO( "Audio player action server is down." );
+    delete playAudioClient_;
+    playAudioClient_ = NULL;
+  }
+
   if (useMoveIt) {
     ROS_INFO( "Loading MoveIt service..." );
     try {
@@ -430,6 +443,10 @@ void REEMProxyManager::fini()
   if (playMotionClient_) {
     delete playMotionClient_;
     playMotionClient_ = NULL;
+  }
+  if (playAudioClient_) {
+    delete playAudioClient_;
+    playAudioClient_ = NULL;
   }
   jointSub_.shutdown();
   powerSub_.shutdown();
@@ -827,6 +844,39 @@ void REEMProxyManager::donePlayMotionAction( const actionlib::SimpleClientGoalSt
   PyGILState_Release( gstate );
 
   ROS_INFO( "On play default motion finished in state [%s]", state.toString().c_str());
+}
+
+/*! \typedef onPlayAudioSuccess()
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.playAudioFile method call is successful.
+ *  \return None.
+ */
+/*! \typedef onPlayAudioFailed(reason)
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.playAudioFile method call is failed.
+ *  \param str reason. The reason for failed audio play.
+ *  \return None.
+ */
+void REEMProxyManager::donePlayAudioAction( const actionlib::SimpleClientGoalState & state,
+                          const AudioFilePlayResultConstPtr & result )
+{
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
+    PyREEMModule::instance()->invokeCallback( "onPlayAudioSuccess", NULL );
+  }
+  else {
+    PyObject * arg = Py_BuildValue( "(s)", result->reason.c_str() );
+
+    PyREEMModule::instance()->invokeCallback( "onPlayAudioFailed", NULL );
+
+    Py_DECREF( arg );
+  }
+
+  PyGILState_Release( gstate );
+
+  ROS_INFO( "On play audio file finished in state [%s]", state.toString().c_str());
 }
 
 /*! \typedef onSpeakSuccess()
@@ -1891,6 +1941,13 @@ void REEMProxyManager::cancelGotoPOI()
   }
 }
 
+void REEMProxyManager::cancelAudioPlay()
+{
+  if (playAudioClient_->getState() == actionlib::SimpleClientGoalState::ACTIVE) {
+    playAudioClient_->cancelGoal();
+  }
+}
+
 void REEMProxyManager::playDefaultMotion( const std::string & motion_name )
 {
   if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ ||
@@ -1909,6 +1966,18 @@ void REEMProxyManager::playDefaultMotion( const std::string & motion_name )
                       boost::bind( &REEMProxyManager::donePlayMotionAction, this, _1, _2 ),
                       PlayMotionClient::SimpleActiveCallback(),
                       PlayMotionClient::SimpleFeedbackCallback() );
+}
+
+void REEMProxyManager::playAudioFile( const std::string & audio_name )
+{
+  audio_file_player::AudioFilePlayGoal goal;
+
+  goal.filepath = audio_name;
+
+  playAudioClient_->sendGoal( goal,
+                      boost::bind( &REEMProxyManager::donePlayAudioAction, this, _1, _2 ),
+                      PlayAudioClient::SimpleActiveCallback(),
+                      PlayAudioClient::SimpleFeedbackCallback() );
 }
 
 bool REEMProxyManager::palFaceStartEnrollment( const std::string & name )
