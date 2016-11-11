@@ -112,6 +112,7 @@ REEMProxyManager::REEMProxyManager() :
   moveBaseClient_( NULL ),
   gotoPOIClient_( NULL ),
   playMotionClient_( NULL ),
+  playAudioClient_( NULL ),
   isCharging_( true ),
   batCapacity_( 100.0 ),
   lowPowerThreshold_( 0 ), // # no active power monitoring
@@ -910,7 +911,7 @@ void REEMProxyManager::doneSpeakAction( const actionlib::SimpleClientGoalState &
 void REEMProxyManager::sayWithVolume( const std::string & text, float volume, bool toBlock )
 {
   if (!soundClient_)
-	return;
+    return;
 
   pal_interaction_msgs::TtsGoal goal;
 
@@ -1200,6 +1201,7 @@ bool REEMProxyManager::navigateBodyTo( const std::vector<double> & positions, co
   bodyCtrlWithNavigation_ = true;
   return true;
 }
+
 bool REEMProxyManager::gotoPOI( const std::string & poi_name )
 {
   if (bodyCtrlWithNavigation_ || bodyCtrlWithOdmetry_ || !gotoPOIClient_)
@@ -1561,7 +1563,7 @@ void REEMProxyManager::moveHeadWithJointTrajectory( std::vector< std::vector<dou
 
 bool REEMProxyManager::pointHeadTo( const std::string & frame, float x, float y, float z )
 {
-  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_)
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || !phClient_)
     return false;
 
   tf::StampedTransform transform;
@@ -1900,7 +1902,7 @@ bool REEMProxyManager::moveArmWithGoalPose( bool isLeftArm, std::vector<double> 
 void REEMProxyManager::cancelArmMovement( bool isLeftArm )
 {
   if (isLeftArm) {
-    if (!lArmCtrl_) {
+    if (!lArmCtrl_ || !mlacClient_) {
       return;
     }
     if (mlacClient_->getState() == actionlib::SimpleClientGoalState::ACTIVE ||
@@ -1911,7 +1913,7 @@ void REEMProxyManager::cancelArmMovement( bool isLeftArm )
     lArmCtrl_ = false;
   }
   else {
-    if (!rArmCtrl_) {
+    if (!rArmCtrl_ || !mracClient_) {
       return;
     }
     if (mracClient_->getState() == actionlib::SimpleClientGoalState::ACTIVE ||
@@ -1932,8 +1934,22 @@ void REEMProxyManager::cancelBodyMovement()
   bodyCtrlWithOdmetry_ = false;
 }
 
+void REEMProxyManager::cancelBodyNavigation()
+{
+  if (!moveBaseClient_)
+    return;
+
+  if (bodyCtrlWithNavigation_ && moveBaseClient_->getState() == actionlib::SimpleClientGoalState::ACTIVE) {
+    moveBaseClient_->cancelGoal();
+    bodyCtrlWithNavigation_ = false;
+  }
+}
+
 void REEMProxyManager::cancelGotoPOI()
 {
+  if (!gotoPOIClient_)
+    return;
+
   if (bodyCtrlWithNavigation_ && gotoPOIClient_->getState() == actionlib::SimpleClientGoalState::ACTIVE) {
     gotoPOIClient_->cancelGoal();
     targetPOIName_= "";
@@ -1943,17 +1959,30 @@ void REEMProxyManager::cancelGotoPOI()
 
 void REEMProxyManager::cancelAudioPlay()
 {
+  if (!playAudioClient_)
+    return;
+
   if (playAudioClient_->getState() == actionlib::SimpleClientGoalState::ACTIVE) {
     playAudioClient_->cancelGoal();
   }
 }
 
-void REEMProxyManager::playDefaultMotion( const std::string & motion_name )
+void REEMProxyManager::cancelDefaultMotion()
+{
+  if (!playMotionClient_)
+    return;
+
+  if (playMotionClient_->getState() == actionlib::SimpleClientGoalState::ACTIVE) {
+    playMotionClient_->cancelGoal();
+  }
+}
+
+bool REEMProxyManager::playDefaultMotion( const std::string & motion_name )
 {
   if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ ||
-      rArmCtrl_ || lArmCtrl_ || torsoCtrl_)
+      rArmCtrl_ || lArmCtrl_ || torsoCtrl_ || !playMotionClient_)
   {
-    return;
+    return false;
   }
   
   play_motion_msgs::PlayMotionGoal goal;
@@ -1966,10 +1995,14 @@ void REEMProxyManager::playDefaultMotion( const std::string & motion_name )
                       boost::bind( &REEMProxyManager::donePlayMotionAction, this, _1, _2 ),
                       PlayMotionClient::SimpleActiveCallback(),
                       PlayMotionClient::SimpleFeedbackCallback() );
+  return true;
 }
 
-void REEMProxyManager::playAudioFile( const std::string & audio_name )
+bool REEMProxyManager::playAudioFile( const std::string & audio_name )
 {
+  if (!playAudioClient_)
+    return false;
+
   audio_file_player::AudioFilePlayGoal goal;
 
   goal.filepath = audio_name;
@@ -1978,6 +2011,7 @@ void REEMProxyManager::playAudioFile( const std::string & audio_name )
                       boost::bind( &REEMProxyManager::donePlayAudioAction, this, _1, _2 ),
                       PlayAudioClient::SimpleActiveCallback(),
                       PlayAudioClient::SimpleFeedbackCallback() );
+  return true;
 }
 
 bool REEMProxyManager::palFaceStartEnrollment( const std::string & name )

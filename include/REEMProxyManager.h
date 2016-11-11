@@ -159,9 +159,9 @@ public:
   void moveTorsoWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
                                      std::vector<float> & times_to_reach );
 
-  void playDefaultMotion( const std::string & motion_name );
+  bool playDefaultMotion( const std::string & motion_name );
 
-  void playAudioFile( const std::string & audio_name );
+  bool playAudioFile( const std::string & audio_name );
 
   void updateBodyPose( const RobotPose & pose, bool localupdate = false );
   
@@ -169,6 +169,10 @@ public:
                       const std::vector<double> & orientation );
   
   bool gotoPOI( const std::string & poi_name );
+
+  void cancelDefaultMotion();
+
+  void cancelBodyNavigation();
 
   void cancelBodyMovement();
 
