@@ -28,6 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   topic_tools
+  audio_file_player
 )
 
 ## System dependencies are found with CMake's conventions

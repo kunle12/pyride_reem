@@ -58,7 +58,7 @@
   <build_depend>pal_control_msgs</build_depend>
   <build_depend>pal_web_msgs</build_depend>
   <build_depend>play_motion_msgs</build_depend>
-  <build_depend>pride_common_msgs</build_depend>
+  <build_depend>pyride_common_msgs</build_depend>
   <build_depend>diagnostic_msgs</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>tf</build_depend>
@@ -66,6 +66,7 @@
   <build_depend>libccrtp-dev</build_depend>
   <build_depend>libssl-dev</build_depend>
   <build_depend>python2.7-dev</build_depend>
+  <build_depend>audio_file_player</build_depend>
 
   <run_depend>actionlib</run_depend>
   <run_depend>cv_bridge</run_depend>
@@ -85,7 +86,7 @@
   <run_depend>pal_control_msgs</run_depend>
   <run_depend>pal_web_msgs</run_depend>
   <run_depend>play_motion_msgs</run_depend>
-  <run_depend>pride_common_msgs</run_depend>
+  <run_depend>pyride_common_msgs</run_depend>
   <run_depend>diagnostic_msgs</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>tf</run_depend>
@@ -93,6 +94,7 @@
   <run_depend>libccrtp1-1.8-0</run_depend>
   <run_depend>libssl1.0.0</run_depend>
   <run_depend>libpython2.7</run_depend>
+  <run_depend>audio_file_player</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

@@ -46,7 +46,7 @@
 #include <tf/message_filter.h>
 #include <tf/transform_listener.h>
 
-
+#include <audio_file_player/AudioFilePlayAction.h>
 // moveit interface
 #include <moveit/move_group_interface/move_group.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
@@ -62,6 +62,7 @@ using namespace pal_interaction_msgs;
 using namespace move_base_msgs;
 using namespace play_motion_msgs;
 using namespace pal_navigation_msgs;
+using namespace audio_file_player;
 
 namespace pyride {
 
@@ -72,6 +73,7 @@ typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 typedef actionlib::SimpleActionClient<pal_navigation_msgs::GoToPOIAction> GotoPOIClient;
 typedef actionlib::SimpleActionClient<play_motion_msgs::PlayMotionAction> PlayMotionClient;
+typedef actionlib::SimpleActionClient<audio_file_player::AudioFilePlayAction> PlayAudioClient;
 
 typedef enum {
   WHITE = 0,
@@ -157,7 +159,9 @@ public:
   void moveTorsoWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
                                      std::vector<float> & times_to_reach );
 
-  void playDefaultMotion( const std::string & motion_name );
+  bool playDefaultMotion( const std::string & motion_name );
+
+  bool playAudioFile( const std::string & audio_name );
 
   void updateBodyPose( const RobotPose & pose, bool localupdate = false );
   
@@ -166,9 +170,15 @@ public:
   
   bool gotoPOI( const std::string & poi_name );
 
+  void cancelDefaultMotion();
+
+  void cancelBodyNavigation();
+
   void cancelBodyMovement();
 
   void cancelGotoPOI();
+
+  void cancelAudioPlay();
 
   void publishCommands();
   
@@ -292,6 +302,7 @@ private:
   MoveBaseClient * moveBaseClient_;
   GotoPOIClient * gotoPOIClient_;
   PlayMotionClient * playMotionClient_;
+  PlayAudioClient * playAudioClient_;
 
   moveit::planning_interface::MoveGroup * rarmGroup_;
   moveit::planning_interface::MoveGroup * larmGroup_;
@@ -356,6 +367,9 @@ private:
 
   void donePlayMotionAction( const actionlib::SimpleClientGoalState & state,
                               const PlayMotionResultConstPtr & result );
+
+  void donePlayAudioAction( const actionlib::SimpleClientGoalState & state,
+                              const AudioFilePlayResultConstPtr & result );
 
   void moveLHandActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback );
   void moveRHandActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback );

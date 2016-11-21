@@ -975,6 +975,28 @@ static PyObject * PyModule_REEMNavigateBodyTo( PyObject * self, PyObject * args,
   Py_RETURN_NONE;
 }
 
+/*! \fn cancelBodyNavigation()
+ *  \memberof PyREEM
+ *  \brief Stop the currently autonomously navigated body movement.
+ *  \return None.
+ */
+static PyObject * PyModule_REEMCancelBodyNavigation( PyObject * self )
+{
+  REEMProxyManager::instance()->cancelBodyNavigation();
+  Py_RETURN_NONE;
+}
+
+/*! \fn cancelDefaultMotion()
+ *  \memberof PyREEM
+ *  \brief Stop the currently playing default motion.
+ *  \return None.
+ */
+static PyObject * PyModule_REEMCancelDefaultMotion( PyObject * self )
+{
+  REEMProxyManager::instance()->cancelDefaultMotion();
+  Py_RETURN_NONE;
+}
+
 /*! \fn setRobotPoseInMap(position, orientation)
  *  \memberof PyREEM
  *  \brief Set REEM body to a specified pose in the current map.
@@ -1510,7 +1532,7 @@ static PyObject * PyModule_REEMSetHandPosition( PyObject * self, PyObject * args
  *  \memberof PyREEM
  *  \brief play a default motion prebuilt with PAL.
  *  \param string name. Motion name
- *  \return None
+ *  \return bool. True == valid command; False == invalid command.
  */
 static PyObject * PyModule_REEMPlayDefaultMotion( PyObject * self, PyObject * args )
 {
@@ -1521,7 +1543,41 @@ static PyObject * PyModule_REEMPlayDefaultMotion( PyObject * self, PyObject * ar
     return NULL;
   }
 
-  REEMProxyManager::instance()->playDefaultMotion( motion );
+  if (REEMProxyManager::instance()->playDefaultMotion( motion ))
+    Py_RETURN_TRUE;
+  else
+    Py_RETURN_FALSE;
+}
+
+/*! \fn playAudioFile(file_name)
+ *  \memberof PyREEM
+ *  \brief play an audio file.
+ *  \param str file_name. The full path of the audio file
+ *  \return bool. True == valid command; False == invalid command.
+ */
+static PyObject * PyModule_REEMPlayAudioFile( PyObject * self, PyObject * args )
+{
+  char * audio = NULL;
+
+  if (!PyArg_ParseTuple( args, "s", &audio )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  if (REEMProxyManager::instance()->playAudioFile( audio ))
+    Py_RETURN_TRUE;
+  else
+    Py_RETURN_FALSE;
+}
+
+/*! \fn cancelAudioPlay()
+ *  \memberof PyREEM
+ *  \brief Stop the currently playing audio.
+ *  \return None.
+ */
+static PyObject * PyModule_REEMCancelAudioPlay( PyObject * self )
+{
+  REEMProxyManager::instance()->cancelAudioPlay();
   Py_RETURN_NONE;
 }
 
@@ -2277,6 +2333,8 @@ static PyMethodDef PyModule_methods[] = {
     "Set REEM base moving speed." },
   { "navigateBodyTo", (PyCFunction)PyModule_REEMNavigateBodyTo, METH_VARARGS|METH_KEYWORDS,
     "Navigate REEM base to a new pose." },
+  { "cancelBodyNavigation", (PyCFunction)PyModule_REEMCancelBodyNavigation, METH_NOARGS,
+    "Cancel currently running autonomously navigated body movement." },
   { "setRobotPoseInMap", (PyCFunction)PyModule_REEMSetRobotPoseInMap, METH_VARARGS|METH_KEYWORDS,
     "Set REEM's pose in the current map." },
   { "cancelMoveBodyAction", (PyCFunction)PyModule_REEMCancelMoveBodyAction, METH_NOARGS,
@@ -2323,6 +2381,12 @@ static PyMethodDef PyModule_methods[] = {
     "Check whether the input TF frames is supported." },
   { "playDefaultMotion", (PyCFunction)PyModule_REEMPlayDefaultMotion, METH_VARARGS,
     "Let REEM play one of its default motion." },
+  { "cancelDefaultMotion", (PyCFunction)PyModule_REEMCancelDefaultMotion, METH_NOARGS,
+    "Cancel currently playing default motion." },
+  { "playAudioFile", (PyCFunction)PyModule_REEMPlayAudioFile, METH_VARARGS,
+    "Let REEM play an audio file (mp3 or wav)." },
+  { "cancelAudioPlay", (PyCFunction)PyModule_REEMCancelAudioPlay, METH_NOARGS,
+    "Cancel playing of the current audio." },
   { "useMoveIt", (PyCFunction)PyModule_REEMUseMoveIt, METH_NOARGS,
     "Check whether MoveIt is in use." },
   { "addSolidObject", (PyCFunction)PyModule_REEMAddSolidObject, METH_VARARGS|METH_KEYWORDS,
