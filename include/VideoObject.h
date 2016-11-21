@@ -50,6 +50,7 @@ private:
   boost::thread * streaming_data_thread_;
 
   boost::mutex mutex_;
+  boost::condition_variable imageCon_;
 
   CallbackQueue imgQueue_;
 

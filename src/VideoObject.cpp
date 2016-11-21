@@ -104,10 +104,8 @@ void VideoObject::doImageStreaming()
     clock_gettime( CLOCK_MONOTONIC, &time1 );
     {
       boost::mutex::scoped_lock lock( mutex_ );
-      
-      if (imgMsgPtr_.get() == NULL) {
-        usleep( 5000 ); // wait for 5ms
-        continue;
+      while (!imgMsgPtr_) {
+        imageCon_.wait( lock );
       }
       try {
         cv_ptr = cv_bridge::toCvCopy( imgMsgPtr_, sensor_msgs::image_encodings::RGB8 );
@@ -115,7 +113,6 @@ void VideoObject::doImageStreaming()
       catch (cv_bridge::Exception & e) {
         imgMsgPtr_.reset();
         ROS_ERROR( "Unable to convert image message to mat." );
-        usleep( 5000 ); // wait for 5ms
         continue;
       }
     }
@@ -135,15 +132,20 @@ void VideoObject::doImageStreaming()
 void VideoObject::continueProcessing( const sensor_msgs::ImageConstPtr& msg )
 {
   // assume we cannot control the framerate (i.e. default 30FPS)
-  boost::mutex::scoped_lock lock( mutex_ );
+  boost::mutex::scoped_lock lock( mutex_, boost::try_to_lock );
   
-  imgMsgPtr_ = msg;
+  if (lock) {
+    imgMsgPtr_ = msg;
 
-  if (takeSnapShot_ && !isStreaming_) {
-    cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy( msg, sensor_msgs::image_encodings::RGB8 );
-    saveToJPEG( cv_ptr->image.data, cv_ptr->image.total()*cv_ptr->image.elemSize(), RGB );
-    takeSnapShot_ = false;
-    imgSub_.shutdown();
+    if (takeSnapShot_ && !isStreaming_) {
+      cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy( msg, sensor_msgs::image_encodings::RGB8 );
+      saveToJPEG( cv_ptr->image.data, cv_ptr->image.total()*cv_ptr->image.elemSize(), RGB );
+      takeSnapShot_ = false;
+      imgSub_.shutdown();
+    }
+    else {
+      imageCon_.notify_one();
+    }
   }
 }
 
