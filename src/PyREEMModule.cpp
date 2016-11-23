@@ -834,6 +834,7 @@ static PyObject * PyModule_REEMGetRobotPose( PyObject * self, PyObject * args )
 {
   std::vector<double> positions(3, 0.0);
   std::vector<double> orientation(4, 0.0);
+  bool inmap = false;
 
   PyObject * boolObj = NULL;
 
@@ -842,12 +843,15 @@ static PyObject * PyModule_REEMGetRobotPose( PyObject * self, PyObject * args )
     return NULL;
   }
 
-  if (!PyBool_Check( boolObj )) {
-    PyErr_Format( PyExc_ValueError, "PyREEM.getRobotPose: the optional input parameter must be a boolean!" );
-    return NULL;
+  if (boolObj) {
+    if (!PyBool_Check( boolObj )) {
+      PyErr_Format( PyExc_ValueError, "PyREEM.getRobotPose: the optional input parameter must be a boolean!" );
+      return NULL;
+    }
+    inmap = PyObject_IsTrue( boolObj );
   }
 
-  if (REEMProxyManager::instance()->getRobotPose( positions, orientation, PyObject_IsTrue( boolObj ) )) {
+  if (REEMProxyManager::instance()->getRobotPose( positions, orientation, inmap )) {
     PyObject * retObj = PyDict_New();
     PyObject * posObj = PyTuple_New( 3 );
     PyObject * orientObj = PyTuple_New( 4 );
