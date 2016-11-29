@@ -60,7 +60,7 @@ bool PyREEMServer::init()
     ERROR_MSG( "Unable to initialise any active robot audio device.\n" );
   }
 
-  nodeStatusSub_ = hcNodeHandle_->subscribe( "pyride/node_status", 1, &PyREEMServer::nodeStatusCB, this );
+  nodeStatusSub_ = hcNodeHandle_->subscribe( "pyride/node_status", 10, &PyREEMServer::nodeStatusCB, this );
 
   REEMProxyManager::instance()->initWithNodeHandle( hcNodeHandle_, useOptionNodes, useMoveIt );
   ServerDataProcessor::instance()->init( activeVideoDevices_, activeAudioDevices_ );
