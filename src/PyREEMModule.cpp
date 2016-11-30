@@ -418,6 +418,11 @@ static PyObject * PyModule_REEMMoveBodyTo( PyObject * self, PyObject * args )
   pose.y = ycoord;
   pose.theta = theta;
 
+  if (bestTime <= 0.0) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.moveBodyTo: last input parameter must be greater than 0.0." );
+    return NULL;
+  }
+
   if (REEMProxyManager::instance()->moveBodyTo( pose, bestTime ))
     Py_RETURN_TRUE;
   else
