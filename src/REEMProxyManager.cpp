@@ -1182,7 +1182,7 @@ bool REEMProxyManager::navigateBodyTo( const std::vector<double> & positions, co
 
   move_base_msgs::MoveBaseGoal goal;
   
-  goal.target_pose.header.frame_id = "base_link";
+  goal.target_pose.header.frame_id = "map";
   goal.target_pose.header.stamp = ros::Time::now();
   
   goal.target_pose.pose.position.x = positions[0];
