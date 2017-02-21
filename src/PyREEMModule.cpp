@@ -2482,7 +2482,7 @@ static PyMethodDef PyModule_methods[] = {
 
 PyREEMModule::PyREEMModule() : PyModuleExtension( "PyREEM" )
 {
-  baseScanCB_ = tiltScanCB_ = palFaceCB_ = torsoSonarCB_ = NULL;
+  baseScanCB_ = tiltScanCB_ = palFaceCB_ = torsoSonarCB_ = objectDetectCB_ = objectTrackCB_ = NULL;
 }
 
 PyREEMModule::~PyREEMModule()
@@ -2498,6 +2498,14 @@ PyREEMModule::~PyREEMModule()
   if (palFaceCB_){
     Py_DECREF( palFaceCB_ );
     palFaceCB_ = NULL;
+  }
+  if (objectDetectCB_) {
+    Py_DECREF( objectDetectCB_ );
+    objectDetectCB_ = NULL;
+  }
+  if (objectTrackCB_) {
+    Py_DECREF( objectTrackCB_ );
+    objectTrackCB_ = NULL;
   }
 }
 
