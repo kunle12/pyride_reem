@@ -503,6 +503,8 @@ void REEMProxyManager::doneHeadTrajAction( const actionlib::SimpleClientGoalStat
 {
   headCtrlWithTrajActionClient_ = false;
 
+  this->getHeadPos( reqHeadYaw_, reqHeadPitch_ );
+
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
 
