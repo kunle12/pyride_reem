@@ -29,6 +29,10 @@ public:
   void setTiltScanCallback( PyObject * obj );
   void setPalFaceCallback( PyObject * obj );
   void setTorsoSonarCallback( PyObject* obj );
+  void setObjectDTCallback( PyObject * detectcb, PyObject * trackcb );
+
+  void invokeObjectDetectionCallback( PyObject * arg );
+  void invokeObjectTrackingCallback( PyObject * arg );
 
 private:
   static PyREEMModule * s_pyREEMModule;
@@ -37,6 +41,8 @@ private:
   PyObject * tiltScanCB_;
   PyObject * palFaceCB_;
   PyObject * torsoSonarCB_;
+  PyObject * objectDetectCB_;
+  PyObject * objectTrackCB_;
 
   PyREEMModule();
   PyObject * createPyModule();

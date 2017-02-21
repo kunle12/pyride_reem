@@ -53,6 +53,9 @@
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #include <shape_tools/solid_primitive_dims.h>
 
+#include <pyride_common_msgs/TrackedObjectStatusChange.h>
+#include <pyride_common_msgs/TrackedObjectUpdate.h>
+
 #include "PyRideCommon.h"
 
 using namespace std;
@@ -200,6 +203,9 @@ public:
   void registerForSonarData();
   void deregisterForSonarData();
 
+  void registerForHumanData( bool tracking_data );
+  void deregisterForHumanData();
+
   void directToWeb( const std::string & uri );
 
   int setEarLED( const REEMLedColour colour, const int side = 3 );
@@ -243,6 +249,9 @@ private:
   ServiceClient ledColourClient_;
   ServiceClient ledPulseClient_;
   ServiceClient cancelLedClient_;
+
+  Subscriber * htObjStatusSub_;
+  Subscriber * htObjUpdateSub_;
 
   ServiceClient palFaceEnablerClient_;
   ServiceClient palFaceEnrolStartClient_;
@@ -385,6 +394,10 @@ private:
   void torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg );
 
   bool findSolidObjectInScene( const std::string & name );
+
+  void htObjStatusCB( const pyride_common_msgs::TrackedObjectStatusChangeConstPtr & msg );
+  void htObjUpdateCB( const pyride_common_msgs::TrackedObjectUpdateConstPtr & msg );
+
   std_msgs::ColorRGBA colour2RGB( const REEMLedColour colour );
   void initMotorStiffnessValue();
 };

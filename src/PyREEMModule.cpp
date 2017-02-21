@@ -2301,6 +2301,49 @@ static PyObject * PyModule_REEMSendMessageToNode( PyObject * self, PyObject * ar
   Py_RETURN_NONE;
 }
 
+/*! \fn registerHumanDetectTracking( detection_callback, tracking_callback )
+ *  \memberof PyREEM
+ *  \brief Register callback functions to receive human detection and tracking information.
+ *  Currently support only detection and tracking human (object).
+ *  None object can be used to stop receiving human detection and tracking notifications.
+ *  \param detection_callback function that takes inputs of (object_type, detection_id, identification_number, status)
+ *  \param tracking_callback (optional) function that takes a list of dictionaries of { 'object_type', 'track_id',
+ *  'bound' (in topleft x, y, width, height), 'est_pos' (in x, y z)}.
+ *  \return None
+ *  \note est_pos is not working at this moment.
+ */
+static PyObject * PyModule_REEMRegisterObjectDetectTracking( PyObject * self, PyObject * args )
+{
+  PyObject * detectcb = NULL;
+  PyObject * trackcb = NULL;
+
+  if (!PyArg_ParseTuple( args, "O|O", &detectcb, &trackcb )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  if (detectcb == Py_None) {
+    PyREEMModule::instance()->setObjectDTCallback( NULL, NULL );
+    REEMProxyManager::instance()->deregisterForHumanData();
+    Py_RETURN_NONE;
+  }
+
+  if (!PyCallable_Check( detectcb )) {
+    PyErr_Format( PyExc_ValueError, "First input parameter is not a callable object" );
+    return NULL;
+  }
+
+  if (trackcb && !PyCallable_Check( trackcb )) {
+    PyErr_Format( PyExc_ValueError, "Secode input parameter is not a callable object" );
+    return NULL;
+  }
+
+  PyREEMModule::instance()->setObjectDTCallback( detectcb, trackcb );
+
+  REEMProxyManager::instance()->registerForHumanData( (trackcb != NULL) );
+  Py_RETURN_NONE;
+}
+
 /**@}*/
 #define INCLUDE_COMMON_PYMODULE_MEHTODS
 #include "../pyridecore/PyModulePyCommon.cpp"
@@ -2416,6 +2459,8 @@ static PyMethodDef PyModule_methods[] = {
     "Register (or deregister) a callback function to get REEM torso sonar data." },
   { "registerPalFaceCallback", (PyCFunction)PyModule_REEMRegisterPalFaceData, METH_VARARGS,
     "Register (or deregister) a callback function to get PAL built-in face detector." },
+  { "registerHumanDetectTracking", (PyCFunction)PyModule_REEMRegisterObjectDetectTracking, METH_VARARGS,
+    "Register (or deregister) callback functions to get human detection and tracking information." },
   { "startPalFaceEnrollment", (PyCFunction)PyModule_REEMStartPalFaceEnrollment, METH_VARARGS,
     "Start PAL built-in face enrollment." },
   { "stopPalFaceEnrollment", (PyCFunction)PyModule_REEMStopPalFaceEnrollment, METH_NOARGS,
@@ -2508,4 +2553,21 @@ void PyREEMModule::setPalFaceCallback( PyObject * obj )
 {
   this->swapCallbackHandler( palFaceCB_, obj );
 }
+
+void PyREEMModule::invokeObjectDetectionCallback( PyObject * arg )
+{
+  this->invokeCallbackHandler( objectDetectCB_, arg );
+}
+
+void PyREEMModule::invokeObjectTrackingCallback( PyObject * arg )
+{
+  this->invokeCallbackHandler( objectTrackCB_, arg );
+}
+
+void PyREEMModule::setObjectDTCallback( PyObject * detectcb, PyObject * trackcb )
+{
+  this->swapCallbackHandler( objectDetectCB_, detectcb );
+  this->swapCallbackHandler( objectTrackCB_, trackcb );
+}
+
 } // namespace pyride

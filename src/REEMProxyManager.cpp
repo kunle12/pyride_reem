@@ -84,6 +84,8 @@ REEMProxyManager::REEMProxyManager() :
   tiltScanNotifier_( NULL ),
   torsoSonarSub_( NULL ),
   faceDetectSub_( NULL ),
+  htObjStatusSub_( NULL ),
+  htObjUpdateSub_( NULL ),
   bodyCtrlWithOdmetry_( false ),
   bodyCtrlWithNavigation_( false ),
   torsoCtrl_( false ),
@@ -452,6 +454,7 @@ void REEMProxyManager::fini()
   jointSub_.shutdown();
   powerSub_.shutdown();
 
+  deregisterForHumanData();
   deregisterForBaseScanData();
   deregisterForTiltScanData();
   deregisterForPalFaceData();
@@ -1101,6 +1104,70 @@ void REEMProxyManager::torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg 
   PyGILState_Release( gstate );
 }
 
+void REEMProxyManager::htObjStatusCB( const pyride_common_msgs::TrackedObjectStatusChangeConstPtr & msg )
+{
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  PyObject * arg = Py_BuildValue( "(iisi)", msg->objtype, msg->trackid,
+                                 msg->name.c_str(), msg->status );
+
+  PyREEMModule::instance()->invokeObjectDetectionCallback( arg );
+
+  Py_DECREF( arg );
+
+  PyGILState_Release( gstate );
+}
+
+void REEMProxyManager::htObjUpdateCB( const pyride_common_msgs::TrackedObjectUpdateConstPtr & msg )
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    size_t rsize = msg->objects.size();
+
+    PyObject * retList = PyList_New( rsize );
+
+    for (size_t i = 0; i < rsize; ++i) {
+      pyride_common_msgs::TrackedObjectInfo obj = msg->objects[i];
+
+      PyObject * retObj = PyDict_New();
+      PyObject * elemObj = PyInt_FromLong( obj.objtype );
+      PyDict_SetItemString( retObj, "object_type", elemObj );
+      Py_DECREF( elemObj );
+
+      elemObj = PyInt_FromLong( obj.id );
+      PyDict_SetItemString( retObj, "track_id", elemObj );
+      Py_DECREF( elemObj );
+
+      elemObj = PyTuple_New( 4 );
+      PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( obj.bound.tl_x ) );
+      PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( obj.bound.tl_y ) );
+      PyTuple_SetItem( elemObj, 2, PyFloat_FromDouble( obj.bound.width ) );
+      PyTuple_SetItem( elemObj, 3, PyFloat_FromDouble( obj.bound.height ) );
+      PyDict_SetItemString( retObj, "bound", elemObj );
+      Py_DECREF( elemObj );
+
+      elemObj = PyTuple_New( 3 );
+      PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( obj.est_pos.x ) );
+      PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( obj.est_pos.y ) );
+      PyTuple_SetItem( elemObj, 2, PyFloat_FromDouble( obj.est_pos.z ) );
+      PyDict_SetItemString( retObj, "est_pos", elemObj );
+      Py_DECREF( elemObj );
+
+      PyList_SetItem( retList, i, retObj );
+    }
+
+    PyObject * arg = Py_BuildValue( "(O)", retList );
+
+    PyREEMModule::instance()->invokeObjectTrackingCallback( arg );
+
+    Py_DECREF( arg );
+    Py_DECREF( retList );
+
+    PyGILState_Release( gstate );
+}
+
 bool REEMProxyManager::getRobotPose( std::vector<double> & positions, std::vector<double> & orientation, bool in_map )
 {
   tf::StampedTransform curTransform;
@@ -1420,6 +1487,33 @@ void REEMProxyManager::deregisterForSonarData()
     torsoSonarSub_->shutdown();
     delete torsoSonarSub_;
     torsoSonarSub_ = NULL;
+  }
+}
+
+void REEMProxyManager::registerForHumanData( bool tracking_data )
+{
+  if (htObjStatusSub_) {
+    ROS_WARN( "Already registered for human detection data." );
+  }
+  else {
+    htObjStatusSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "/people_dtr/object_status", 1, &REEMProxyManager::htObjStatusCB, this ) );
+    if (tracking_data) {
+      htObjUpdateSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "/people_dtr/object_update", 1, &REEMProxyManager::htObjUpdateCB, this ) );
+    }
+  }
+}
+
+void REEMProxyManager::deregisterForHumanData()
+{
+  if (htObjStatusSub_) {
+    htObjStatusSub_->shutdown();
+    delete htObjStatusSub_;
+    htObjStatusSub_ = NULL;
+  }
+  if (htObjUpdateSub_) {
+    htObjUpdateSub_->shutdown();
+    delete htObjUpdateSub_;
+    htObjUpdateSub_ = NULL;
   }
 }
 
