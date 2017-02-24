@@ -98,6 +98,7 @@ void VideoObject::doImageStreaming()
   //long tick = 0;
   timespec time1, time2;
   long interval = long(1.0 / (double)vSettings_.fps * 1E6);
+  long proctime = 0;
 
   while (isStreaming_) {
     //tick = cv::getTickCount();
@@ -123,8 +124,11 @@ void VideoObject::doImageStreaming()
       takeSnapShot_ = false;
     }
     clock_gettime( CLOCK_MONOTONIC, &time2 );
-    //printf( "%d %d\n", interval, timediff_usec( time1, time2 ));
-    usleep( interval - timediff_usec( time1, time2 ) );
+    proctime = timediff_usec( time1, time2 );
+    //printf( "processing time %li usec\n",  proctime);
+    if (interval > proctime)
+      usleep( interval - proctime );
+
     //usleep( long((1.0 / (double)vSettings_.fps - double(cv::getTickCount() - tick) / cv::getTickFrequency()) * 1E6) );
   }
 }

@@ -98,7 +98,7 @@ void AudioObject::doAudioStreaming()
       }
       continue;
     }
-    printf( "nof of frames %d\n", (int)frames );
+    //printf( "nof of frames %d\n", (int)frames );
     this->processAndSendAudioData( (short*)audioBuffers, frames );
   }
   delete [] audioBuffers;
