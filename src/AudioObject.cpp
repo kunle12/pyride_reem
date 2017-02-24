@@ -35,7 +35,7 @@ bool AudioObject::initDevice()
 
   int err = 0;
   const char * device = "plughw:0,0"; // TODO. hardcoded for now
-  err = snd_pcm_open( &audioDevice_, device, SND_PCM_STREAM_CAPTURE, 0 );
+  err = snd_pcm_open( &audioDevice_, device, SND_PCM_STREAM_CAPTURE, SND_PCM_NONBLOCK );
   if (err < 0) {
     ERROR_MSG( "Unable to open audio capturing device %s (%s).\n", device,
               snd_strerror( err ) );
@@ -89,16 +89,20 @@ void AudioObject::doAudioStreaming()
   unsigned char * audioBuffers = new unsigned char[PYRIDE_AUDIO_FRAME_SIZE*8];
 
   while (isStreaming_) {
-    frames = snd_pcm_readi( audioDevice_, (void *)audioBuffers, (PYRIDE_AUDIO_FRAME_SIZE*2) );
-    if (frames < 0) {
-      int err =  runtimeErrorRecovery( frames );
-      if (err < 0) {
-        ERROR_MSG( "Unable to recover from runtime error, exit loop!\n" );
-        isStreaming_ = false;
-      }
+    int stat = snd_pcm_wait( audioDevice_, 100 );
+    if (stat < 0 && runtimeErrorRecovery( stat ) != 0) {
+      ERROR_MSG( "Unable to recover from runtime error, exit loop!\n" );
+      isStreaming_ = false;
+      break;
+    }
+    else {
       continue;
     }
-    //printf( "nof of frames %d\n", (int)frames );
+    frames = snd_pcm_readi( audioDevice_, (void *)audioBuffers, (PYRIDE_AUDIO_FRAME_SIZE*2) );
+    if (frames < 0) {
+      continue;
+    }
+    printf( "nof of frames %d\n", (int)frames );
     this->processAndSendAudioData( (short*)audioBuffers, frames );
   }
   delete [] audioBuffers;
@@ -236,6 +240,9 @@ int AudioObject::runtimeErrorRecovery( int err )
                   "from suspend, prepare failed: %s\n", snd_strerror( err ) );
       }
     }
+    return 0;
+  }
+  else if (err == -EAGAIN) {
     return 0;
   }
   return err;
