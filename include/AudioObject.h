@@ -16,11 +16,14 @@
 #include <boost/thread/thread.hpp>
 
 #include <ccrtp/rtp.h>
-#include <alsa/asoundlib.h>
+#include <ros/ros.h>
+#include <ros/callback_queue.h>
+#include <audio_common_msgs/AudioData.h>
 
 #include "DeviceController.h"
 
 using namespace std;
+using namespace ros;
 using namespace ost;
 
 namespace pyride {
@@ -33,23 +36,20 @@ public:
   void finiDevice();
 
 private:
-  struct mmapBufferInfo {
-    unsigned char * start;
-    size_t length;
-  };
+  NodeHandle priAudioNode_;
+  Subscriber * audioSub_;
 
-  snd_pcm_t * audioDevice_;
+  CallbackQueue audioQueue_;
 
-  boost::thread * streaming_data_thread_;
+  AsyncSpinner * procThread_;
 
   bool setDefaultAudioParameters();
-  int runtimeErrorRecovery( int err );
   //void getUDPSourcePorts();
   
   bool initWorkerThread();
   void finiWorkerThread();
   
-  void doAudioStreaming();
+  void doAudioStreaming( const audio_common_msgs::AudioDataConstPtr& msg );
 };
 } // namespace pyride
 #endif // AUDIOOJECT_H
