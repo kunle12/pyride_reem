@@ -47,6 +47,7 @@
 #include <tf/transform_listener.h>
 
 #include <audio_file_player/AudioFilePlayAction.h>
+#include <audio_stream/RecordAudioAction.h>
 // moveit interface
 #include <moveit/move_group_interface/move_group.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
@@ -66,6 +67,7 @@ using namespace move_base_msgs;
 using namespace play_motion_msgs;
 using namespace pal_navigation_msgs;
 using namespace audio_file_player;
+using namespace audio_stream;
 
 namespace pyride {
 
@@ -77,6 +79,7 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 typedef actionlib::SimpleActionClient<pal_navigation_msgs::GoToPOIAction> GotoPOIClient;
 typedef actionlib::SimpleActionClient<play_motion_msgs::PlayMotionAction> PlayMotionClient;
 typedef actionlib::SimpleActionClient<audio_file_player::AudioFilePlayAction> PlayAudioClient;
+typedef actionlib::SimpleActionClient<audio_stream::RecordAudioAction> RecordAudioClient;
 
 typedef enum {
   WHITE = 0,
@@ -166,6 +169,8 @@ public:
 
   bool playAudioFile( const std::string & audio_name );
 
+  bool recordAudioFile( const std::string & audio_name, const float period );
+
   void updateBodyPose( const RobotPose & pose, bool localupdate = false );
   
   bool navigateBodyTo( const std::vector<double> & positions,
@@ -182,6 +187,8 @@ public:
   void cancelGotoPOI();
 
   void cancelAudioPlay();
+
+  void cancelAudioRecording();
 
   void publishCommands();
   
@@ -312,6 +319,7 @@ private:
   GotoPOIClient * gotoPOIClient_;
   PlayMotionClient * playMotionClient_;
   PlayAudioClient * playAudioClient_;
+  RecordAudioClient * recordAudioClient_;
 
   moveit::planning_interface::MoveGroup * rarmGroup_;
   moveit::planning_interface::MoveGroup * larmGroup_;
@@ -379,6 +387,9 @@ private:
 
   void donePlayAudioAction( const actionlib::SimpleClientGoalState & state,
                               const AudioFilePlayResultConstPtr & result );
+
+  void doneRecordAudioAction( const actionlib::SimpleClientGoalState & state,
+                            const RecordAudioResultConstPtr & result );
 
   void moveLHandActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback );
   void moveRHandActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback );

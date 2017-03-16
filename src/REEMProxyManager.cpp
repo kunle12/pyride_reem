@@ -115,6 +115,7 @@ REEMProxyManager::REEMProxyManager() :
   gotoPOIClient_( NULL ),
   playMotionClient_( NULL ),
   playAudioClient_( NULL ),
+  recordAudioClient_( NULL ),
   isCharging_( true ),
   batCapacity_( 100.0 ),
   lowPowerThreshold_( 0 ), // # no active power monitoring
@@ -308,6 +309,19 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
     playAudioClient_ = NULL;
   }
 
+  trials = 0;
+  recordAudioClient_ = new RecordAudioClient( "/audio_stream/record_audio", true );
+
+  while (!recordAudioClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
+    ROS_INFO( "Waiting for the audio record action server to come up." );
+    trials++;
+  }
+  if (!recordAudioClient_->isServerConnected()) {
+    ROS_INFO( "Audio record action server is down." );
+    delete recordAudioClient_;
+    recordAudioClient_ = NULL;
+  }
+
   if (useMoveIt) {
     ROS_INFO( "Loading MoveIt service..." );
     try {
@@ -450,6 +464,10 @@ void REEMProxyManager::fini()
   if (playAudioClient_) {
     delete playAudioClient_;
     playAudioClient_ = NULL;
+  }
+  if (recordAudioClient_) {
+    delete recordAudioClient_;
+    recordAudioClient_ = NULL;
   }
   jointSub_.shutdown();
   powerSub_.shutdown();
@@ -883,6 +901,39 @@ void REEMProxyManager::donePlayAudioAction( const actionlib::SimpleClientGoalSta
   PyGILState_Release( gstate );
 
   ROS_INFO( "On play audio file finished in state [%s]", state.toString().c_str());
+}
+
+/*! \typedef onRecordAudioSuccess()
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.recordAudioFile method call is successful.
+ *  \return None.
+ */
+/*! \typedef onRecordAudioFailed(reason)
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.recordAudioFile method call is failed.
+ *  \param str reason. The reason for failed audio play.
+ *  \return None.
+ */
+void REEMProxyManager::doneRecordAudioAction( const actionlib::SimpleClientGoalState & state,
+                          const RecordAudioResultConstPtr & result )
+{
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
+    PyREEMModule::instance()->invokeCallback( "onRecordAudioSuccess", NULL );
+  }
+  else {
+    PyObject * arg = Py_BuildValue( "(s)", result->reason.c_str() );
+
+    PyREEMModule::instance()->invokeCallback( "onRecordAudioFailed", NULL );
+
+    Py_DECREF( arg );
+  }
+
+  PyGILState_Release( gstate );
+
+  ROS_INFO( "On record audio file finished in state [%s]", state.toString().c_str());
 }
 
 /*! \typedef onSpeakSuccess()
@@ -2063,6 +2114,16 @@ void REEMProxyManager::cancelAudioPlay()
   }
 }
 
+void REEMProxyManager::cancelAudioRecording()
+{
+  if (!recordAudioClient_)
+    return;
+
+  if (recordAudioClient_->getState() == actionlib::SimpleClientGoalState::ACTIVE) {
+    recordAudioClient_->cancelGoal();
+  }
+}
+
 void REEMProxyManager::cancelDefaultMotion()
 {
   if (!playMotionClient_)
@@ -2107,6 +2168,24 @@ bool REEMProxyManager::playAudioFile( const std::string & audio_name )
                       boost::bind( &REEMProxyManager::donePlayAudioAction, this, _1, _2 ),
                       PlayAudioClient::SimpleActiveCallback(),
                       PlayAudioClient::SimpleFeedbackCallback() );
+  return true;
+}
+
+bool REEMProxyManager::recordAudioFile( const std::string & audio_name, const float period )
+{
+  if (!recordAudioClient_)
+    return false;
+
+  audio_stream::RecordAudioGoal goal;
+
+  goal.format = "wave";
+  goal.period = period;
+  goal.filename = audio_name;
+
+  recordAudioClient_->sendGoal( goal,
+                      boost::bind( &REEMProxyManager::doneRecordAudioAction, this, _1, _2 ),
+                      RecordAudioClient::SimpleActiveCallback(),
+                      RecordAudioClient::SimpleFeedbackCallback() );
   return true;
 }
 

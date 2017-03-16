@@ -1590,6 +1590,46 @@ static PyObject * PyModule_REEMCancelAudioPlay( PyObject * self )
   Py_RETURN_NONE;
 }
 
+/*! \fn recordAudioFile(file_name, period)
+ *  \memberof PyREEM
+ *  \brief record an audio file.
+ *  \param str file_name. The full path of the audio file
+ *  \param float period. The length of the audio to be recorded.
+ *  \return bool. True == valid command; False == invalid command.
+ */
+static PyObject * PyModule_REEMRecordAudioFile( PyObject * self, PyObject * args )
+{
+  char * audio = NULL;
+  float period = 0.0;
+
+  if (!PyArg_ParseTuple( args, "sf", &audio, &period )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  if (period < 1.0) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.recordAudioFile: period must be greater than 1 second." );
+    return NULL;
+  }
+
+  if (REEMProxyManager::instance()->recordAudioFile( audio, period ))
+    Py_RETURN_TRUE;
+  else
+    Py_RETURN_FALSE;
+}
+
+/*! \fn cancelAudioRecording()
+ *  \memberof PyREEM
+ *  \brief Stop recording an audio file.
+ *  \return None.
+ *  \note What has been recorded prior to record canceling is still saved in the specified file.
+ */
+static PyObject * PyModule_REEMCancelAudioRecording( PyObject * self )
+{
+  REEMProxyManager::instance()->cancelAudioRecording();
+  Py_RETURN_NONE;
+}
+
 /*! \fn registerBaseScanCallback( callback_function, target_frame )
  *  \memberof PyREEM
  *  \brief Register a callback function for receiving base laser scan data.
@@ -2439,6 +2479,10 @@ static PyMethodDef PyModule_methods[] = {
     "Let REEM play an audio file (mp3 or wav)." },
   { "cancelAudioPlay", (PyCFunction)PyModule_REEMCancelAudioPlay, METH_NOARGS,
     "Cancel playing of the current audio." },
+  { "recordAudioFile", (PyCFunction)PyModule_REEMRecordAudioFile, METH_VARARGS,
+    "Let REEM record an audio file (in wave format) with a name and length." },
+  { "cancelAudioRecording", (PyCFunction)PyModule_REEMCancelAudioRecording, METH_NOARGS,
+    "Cancel current audio recording." },
   { "useMoveIt", (PyCFunction)PyModule_REEMUseMoveIt, METH_NOARGS,
     "Check whether MoveIt is in use." },
   { "addSolidObject", (PyCFunction)PyModule_REEMAddSolidObject, METH_VARARGS|METH_KEYWORDS,

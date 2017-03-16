@@ -29,6 +29,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   topic_tools
   audio_file_player
+  audio_stream
 )
 
 ## System dependencies are found with CMake's conventions
