@@ -83,12 +83,11 @@ bool VideoObject::initWorkerThread()
 
 void VideoObject::finiWorkerThread()
 {
-  imgSub_.shutdown();
-
   if (streaming_data_thread_) {
     streaming_data_thread_->join();
     delete streaming_data_thread_;
     streaming_data_thread_ = NULL;
+    imgSub_.shutdown();
   }
 }
   
