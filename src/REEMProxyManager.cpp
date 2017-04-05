@@ -1573,7 +1573,7 @@ void REEMProxyManager::deregisterForHumanData()
 int REEMProxyManager::setEarLED( const REEMLedColour colour, const int side )
 {
   if (!ledColourClient_.exists()) {
-    return false;
+    return -1;
   }
   pal_device_msgs::TimedColourEffect srvMsg;
 
@@ -1590,7 +1590,7 @@ int REEMProxyManager::setEarLED( const REEMLedColour colour, const int side )
 int REEMProxyManager::pulseEarLED( const REEMLedColour colour1, const REEMLedColour colour2, const int side, const float period )
 {
   if (!ledPulseClient_.exists()) {
-    return false;
+    return -1;
   }
   pal_device_msgs::TimedFadeEffect srvMsg;
 
