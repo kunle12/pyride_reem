@@ -262,7 +262,7 @@ static PyObject * PyModule_REEMSetAudioVolume( PyObject * self, PyObject * args 
     // PyArg_ParseTuple will set the error status.
     return NULL;
   }
-  if (vol < 0 || vol >= 100) {
+  if (vol < 0 || vol > 100) {
     PyErr_Format( PyExc_ValueError, "PyREEM.setAudioVolume: input must be an integer within [0..100]!" );
     return NULL;
   }
