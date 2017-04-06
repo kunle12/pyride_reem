@@ -236,6 +236,40 @@ static PyObject * PyModule_REEMSetLowPowerThreshold( PyObject * self, PyObject *
   Py_RETURN_NONE;
 }
 
+/*! \fn getAudioVolume()
+ *  \memberof PyREEM
+ *  \brief Return the current audio volume.
+ *  \return Audio volume percentage integer.
+ */
+static PyObject * PyModule_REEMGetAudioVolume( PyObject * self )
+{
+  return Py_BuildValue( "i", REEMProxyManager::instance()->getAudioVolume() );
+}
+
+/*! \fn setAudioVolume(volume)
+ *  \memberof PyREEM
+ *  \brief Set robot audio volume.
+ *
+ *  \param int volume. Must be between 0 and 100.
+ *  \return None.
+ */
+/**@}*/
+static PyObject * PyModule_REEMSetAudioVolume( PyObject * self, PyObject * args )
+{
+  int vol = 0;
+
+  if (!PyArg_ParseTuple( args, "i", &vol )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+  if (vol < 0 || vol >= 100) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.setAudioVolume: input must be an integer within [0..100]!" );
+    return NULL;
+  }
+  REEMProxyManager::instance()->setAudioVolume( vol );
+  Py_RETURN_NONE;
+}
+
 /*! \fn listTFFrames()
  *  \memberof PyREEM
  *  \brief Return a list of supported REEM TF frame names.
@@ -2457,6 +2491,10 @@ static PyMethodDef PyModule_methods[] = {
     "Get the low power warning threshold." },
   { "setLowPowerThreshold", (PyCFunction)PyModule_REEMSetLowPowerThreshold, METH_VARARGS,
     "Set the low power warning threshold." },
+  { "getAudioVolume", (PyCFunction)PyModule_REEMGetAudioVolume, METH_NOARGS,
+    "Return the current audio volume in [0..100]." },
+  { "setAudioVolume", (PyCFunction)PyModule_REEMSetAudioVolume, METH_VARARGS,
+    "Set robot audio volume to a specified integer within [0..100]." },
   { "setEarLED", (PyCFunction)PyModule_REEMSetEarLED, METH_VARARGS,
       "Set the colour of the ear LEDs on REEM." },
   { "pulseEarLED", (PyCFunction)PyModule_REEMPulseEarLED, METH_VARARGS,

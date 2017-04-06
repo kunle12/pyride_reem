@@ -32,6 +32,7 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/ColorRGBA.h>
+#include <std_msgs/Int8.h>
 
 #include <pal_detection_msgs/FaceDetections.h>
 #include <pal_control_msgs/ActuatorCurrentLimit.h>
@@ -100,7 +101,9 @@ public:
   void initWithNodeHandle( NodeHandle * nodeHandle, bool useOptionNodes = false, bool useMoveIt = false );
     
   void sayWithVolume( const std::string & text, float volume  = 0.0, bool toBlock = false );
-  void setAudioVolume( const float vol );
+  void setAudioVolume( const int vol );
+
+  int getAudioVolume() const { return audioVolume_; }
 
   bool getPositionForJoints( std::vector<std::string> & joint_names,
                             std::vector<double> & positions );
@@ -238,12 +241,14 @@ private:
   Publisher mPub_;
   Publisher hPub_;
   Publisher wPub_;
+  Publisher aPub_;
   Publisher cPub_;
   Publisher bPub_;
   Publisher pPub_;
   Publisher colObjPub_;
   Subscriber jointSub_;
   Subscriber powerSub_;
+  Subscriber volumeSub_;
 
   Subscriber * rawBaseScanSub_;
   Subscriber * rawTiltScanSub_;
@@ -290,6 +295,8 @@ private:
   bool rArmCtrl_;
   bool palFaceDatabaseInit_;
   
+  int audioVolume_;
+
   float lArmActionTimeout_;
   float rArmActionTimeout_;
   float lHandActionTimeout_;
@@ -399,6 +406,7 @@ private:
 
   void jointStateDataCB( const sensor_msgs::JointStateConstPtr & msg );
   void powerStateDataCB( const diagnostic_msgs::DiagnosticArrayConstPtr & msg );
+  void audioVolumeDataCB( const std_msgs::Int8ConstPtr & msg );
   void baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg );
   void tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg );
   void palFaceDataCB( const pal_detection_msgs::FaceDetectionsConstPtr & msg );

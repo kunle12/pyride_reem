@@ -96,6 +96,7 @@ REEMProxyManager::REEMProxyManager() :
   lArmCtrl_( false ),
   rArmCtrl_( false ),
   palFaceDatabaseInit_( false ),
+  audioVolume_( 0 ),
   lArmActionTimeout_( 20 ),
   rArmActionTimeout_( 20 ),
   lHandActionTimeout_( 20 ),
@@ -143,10 +144,12 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   pPub_ = mCtrlNode_->advertise<geometry_msgs::PoseWithCovarianceStamped>( "initialpose", 1 );
   hPub_ = mCtrlNode_->advertise<trajectory_msgs::JointTrajectory>( "head_vel", 1 );
   wPub_ = mCtrlNode_->advertise<pal_web_msgs::WebGoTo>( "web", 1 );
+  aPub_ = mCtrlNode_->advertise<std_msgs::Int8>( "volume_manager/set_volume", 1 );
   cPub_ = mCtrlNode_->advertise<pal_control_msgs::ActuatorCurrentLimit>( "current_limit", 1 );
   bPub_ = mCtrlNode_->advertise<pyride_common_msgs::NodeMessage>( "pyride/node_message", 1 );
 
   powerSub_ = mCtrlNode_->subscribe( "diagnostics_agg", 1, &REEMProxyManager::powerStateDataCB, this );
+  volumeSub_ = mCtrlNode_->subscribe( "volume_manager/get_volume", 1, &REEMProxyManager::audioVolumeDataCB, this );
 
   this->initMotorStiffnessValue();
   ros::SubscribeOptions sopts = ros::SubscribeOptions::create<sensor_msgs::JointState>( "joint_states",
@@ -471,6 +474,7 @@ void REEMProxyManager::fini()
   }
   jointSub_.shutdown();
   powerSub_.shutdown();
+  volumeSub_.shutdown();
 
   deregisterForHumanData();
   deregisterForBaseScanData();
@@ -980,9 +984,14 @@ void REEMProxyManager::sayWithVolume( const std::string & text, float volume, bo
                         TTSClient::SimpleFeedbackCallback() );
 }
 
-void REEMProxyManager::setAudioVolume( const float vol )
+void REEMProxyManager::setAudioVolume( const int vol )
 {
-  
+  if (vol < 0 || vol > 100)
+    return;
+
+  std_msgs::Int8 msg;
+  msg.data = vol;
+  aPub_.publish( msg );
 }
 
 void REEMProxyManager::baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg )
@@ -2574,6 +2583,11 @@ void REEMProxyManager::powerStateDataCB( const diagnostic_msgs::DiagnosticArrayC
       }
     }
   }
+}
+
+void REEMProxyManager::audioVolumeDataCB( const std_msgs::Int8ConstPtr & msg )
+{
+  audioVolume_ = msg->data;
 }
 
 void REEMProxyManager::palFaceDataCB( const pal_detection_msgs::FaceDetectionsConstPtr & msg )
