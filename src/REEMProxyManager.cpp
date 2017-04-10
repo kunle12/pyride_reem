@@ -144,12 +144,12 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   pPub_ = mCtrlNode_->advertise<geometry_msgs::PoseWithCovarianceStamped>( "initialpose", 1 );
   hPub_ = mCtrlNode_->advertise<trajectory_msgs::JointTrajectory>( "head_vel", 1 );
   wPub_ = mCtrlNode_->advertise<pal_web_msgs::WebGoTo>( "web", 1 );
-  aPub_ = mCtrlNode_->advertise<std_msgs::Int8>( "volume_manager/set_volume", 1 );
+  aPub_ = mCtrlNode_->advertise<std_msgs::Int8>( "audio_file_player/set_volume", 1 );
   cPub_ = mCtrlNode_->advertise<pal_control_msgs::ActuatorCurrentLimit>( "current_limit", 1 );
   bPub_ = mCtrlNode_->advertise<pyride_common_msgs::NodeMessage>( "pyride/node_message", 1 );
 
   powerSub_ = mCtrlNode_->subscribe( "diagnostics_agg", 1, &REEMProxyManager::powerStateDataCB, this );
-  volumeSub_ = mCtrlNode_->subscribe( "volume_manager/get_volume", 1, &REEMProxyManager::audioVolumeDataCB, this );
+  volumeSub_ = mCtrlNode_->subscribe( "audio_file_player/get_volume", 1, &REEMProxyManager::audioVolumeDataCB, this );
 
   this->initMotorStiffnessValue();
   ros::SubscribeOptions sopts = ros::SubscribeOptions::create<sensor_msgs::JointState>( "joint_states",
