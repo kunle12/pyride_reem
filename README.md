@@ -1,6 +1,6 @@
-#Python based Robot Interactive Development Environment (PyRIDE) for ROS/REEM
+# Python based Robot Interactive Development Environment (PyRIDE) for ROS/REEM
 
-##Introduction
+## Introduction
 Python based Robot Interactive Development Environment (PyRIDE) is a middleware that provides a self-contained development environment for rapid interactive programming of robot skills and behaviours using Python scripting language (see Figure 1). PyRIDE functions as a software integration tool that aggregates disparate robot software modules and exposes their functionalities to an embedded Python interpreter engine through a unified programming interface. Robot programmers can access the embedded Python engine and the unified robot function programming interface using a remote interactive shell service. One can code, perform experiments/test, debug programs interactively in the same way as using the standard Python interactive interpreter. Programs can transit seamlessly from development to deployment through a simple bootstrap mechanism. PyRIDE also provides remote user level accesses of the robot functionalities, e.g. real-time robot camera image data, through a client-server mechanism. You can view a live demonstration video [here](https://www.youtube.com/watch?v=0DTB62lm8z4).
 
 <img src="https://cloud.githubusercontent.com/assets/6646691/9621498/735b65f6-516a-11e5-9f66-e7a628951460.png" width="500">
@@ -26,7 +26,7 @@ catkin_make install
 
 PyRIDE should be compiled and installed under the catkin install directory along with all necessary dependent libraries.
 
-##Generate PyRIDE on REEM API documentation
+## Generate PyRIDE on REEM API documentation
 You can use doxygen to generate the latest API documentation of PyRIDE on REEM. Simply run:
 
 ```
@@ -43,7 +43,7 @@ roslaunch pyride_reem pyride.launch
 
 **NOTE:** fully functioning PyRIDE depends on several subsystems such as MoveIt!, 2D navigation stack. If you want to use functionalities related to these subsystems, make sure these subsystems are operating before launching PyRIDE.
 
-##Access embedded interactive Python console
+## Access embedded interactive Python console
 PyRIDE contains a fully functional Python intepreter. One can access its interactive remote shell
 via
 ```
@@ -58,21 +58,21 @@ where ```host``` is the robot/machine PyRIDE is running on. Figure 2 shows the t
 **NOTE:** You can turn off the remote shell access by setting *RemotePythonAccess* tag to **disable** in ```pyrideconfig.xml``` configuration
 file.
 
-##Load user-developed Python scripts
+## Load user-developed Python scripts
 PyRIDE on REEM can automatically load and execute Python scripts on its start up. It searches for a ```py_main.py``` under a predefined script directory and executes its ```main()``` function. Check ```scripts/py_main.py``` under this repository for further details. A working application example that receives and sends messages to a twitter account is also provided.
 
 **NOTE:** You can specify the directory where you want PyRIDE load Python scripts under ```script_dir``` parameter in the ```pyride.launch``` file.
 
-##Remote client access
+## Remote client access
 One of the key components in PyRIDE is the client server subsystem that offers remote user level access of robot system using PyRIDE. This facility differs from the remote shell access that supports interactive software development. PyRIDE clients allow remote monitoring and control of a robot system developed under PyRIDE software framework. PyRIDE clients should be custom developed according to your own requirements. We provide the client SDK as a separate package. Check https://github.com/uts-magic-lab/pyride_clients for relevant code library and documentation on how to develop custom PyRIDE remote clients. The following subsections describe necessary steps for a remote client to interact with PyRIDE.
 
-###User authentication
+### User authentication
 Similar to other client/server based systems, PyRIDE requires user authentication from remote clients in order to establish communication channels. That is, a user account must be created on the PyRIDE 'server', client must supply the correct password to the server to set up the connection. **NOTE:** PyRIDE uses a password based authentication system, i.e. each account is associated with a unique password, PyRIDE identifies remote user using the provided password. To created a user account, use ```PyREEM.addUser``` method. All user account information is saved in an encrypted form based on SHA256.
 
-###Client/Server data communication security
+### Client/Server data communication security
 All data communications with client and server are based on a PyRIDE customised messaging protocol on the top of TCP/IP stack. The communication is fully encrypted with a symmetrical blowfish cipher. If the data security is important to you, it is highly recommended that you change the default cipher key (see ```PyRideCommon.cpp``` line 30 for details) on both server and client code, recompiling your own binaries.
 
-###Remote control commands from client
+### Remote control commands from client
 PyRIDE client can issue command string to PyRIDE server to control the behaviour of the robot system. All commands from a PyRIDE client is routed through ```PyREEM.onRemoteCommand``` callback function in the embeded Python engine. You need to write the callback handler function attach to ```PyREEM.onRemoteCommand``` to process commands from clients.  A remote client command consists of a command type (a integer value) and a free form command argument text string.
 
 As PyRIDE supports simultaneous connections from multiple clients, a client must *take exclusive control* of the PyRIDE system (see client documentation) before it can issue commands to PyRIDE. Otherwise, all commands from the client will be silently dropped and ```PyREEM.onRemoteCommand``` callback will not be invoked.
@@ -80,10 +80,10 @@ As PyRIDE supports simultaneous connections from multiple clients, a client must
 **NOTE:** Scripts running on the PyRIDE embeded Python engine can override exclusive control taken by a remote client at *anytime* by calling ```PyREEM.blockRemoteExclusiveControl``` method.
 
 
-##Logging system
+## Logging system
 PyRIDE uses its own logging system. You can find the log output under ```.ros/pyride_reem*.log```.
 
-##Choose a suitable Inverse Kinematic engine
+## Choose a suitable Inverse Kinematic engine
 PyRIDE natively supports MoveIt! as well as S-REEM/Magiks. You can choose either Inverse Kinematic package to drive REEM arms in the task space (with odometry_combined as the default reference frame). To support adoption and further development of S-REEM/Magiks, PyRIDE selects S-REEM as its default Inverse Kinematic engine. However, you still need to manually install all required dependencies and clone the entire Magiks repository under the script directory before running PyRIDE. Since S-REEM runs entirely under PyRIDE. You have direct access to its advanced features and the vast array of library functions within the package through PyRIDE remote console.
 
 Currently, PyRIDE provides only basic level support for MoveIt! and methods relate to MoveIt! have not
@@ -95,7 +95,7 @@ been fully tested. To enable MoveIt! under PyRIDE, you need to do the following 
 
 Note that regardless which inverse kinematic engine is selected, you can move a REEM arm use the same ```PyREEM.moveArmTo``` method. Check API documentation for further details. Another important issue you need to keep in mind is that the reference frames used in MoveIt! and S-REEM are slightly different. You cannot switch between MoveIt! and S-REEM transparently without adjust your target position and orientation calculations. We will improve the wrapper functions so that you can transit between the two seamlessly in the future.
 
-##Third-party ROS node integration with PyRIDE
+## Third-party ROS node integration with PyRIDE
 PyRIDE for REEM already provides some of the most commonly used functionalities on REEM by integrating the respective ROS nodes into the PyRIDE framework. You may want to integrate additional third party ROS node with PyRIDE. PyRIDE supports two approaches for ROS node integration:
 
 1. "Deep" integration: This approach requires modifications of PyRIDE source code. ```REEMProxyManager``` class is the main class that is responsible for communicating with foreign ROS nodes and providing C++ based wrapper functions to interface with these node. You should create necessary subscriber or publishers to the node in the ```initWithNodeHandle``` method and the corresponding clean up code in the ```fini``` method. You should write necessary callback functions for your subscriber and command methods for your publisher (or action client) as methods of ```REEMProxyManager```. ```PyREEMModule``` class provides wrapper functions to expose C++ methods (usually) of ```REEMProxyManager``` class to the embedded Python engine. It uses the standard embedded Python programming approach and APIs. See source code further details and examples.
@@ -103,7 +103,7 @@ PyRIDE for REEM already provides some of the most commonly used functionalities 
 
 2. "Shallow" integration: This approach represents a simpler way of sending messages from an external ROS node to PyRIDE. PyRIDE constantly listens on a ```/pyride/node_status``` topic. A ROS node can publish ```NodeStatus``` (see ```pyride_common_msgs/NodeStatus.msg``` for message structure) messages to this topic, PyRIDE will automatically forward the received messages to ```PyREEM.onNodeStatusUpdate``` Python callback function in the embedded Python environment. See ```py_main.py``` for further details on this callback function.
 
-##Limited use of ```rospy``` under PyRIDE environment
+## Limited use of ```rospy``` under PyRIDE environment
 In ideal circumstance, PyRIDE should be used as a full replacement for ```rospy``` with custom integration of third party ROS modules. However, it is possible to use ```rospy``` in a limited way under PyRIDE to publish messages to other ROS node. Use the following example code snippet to create an *addon* node and publish messages.
 
 ```python
