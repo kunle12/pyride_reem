@@ -89,8 +89,7 @@ bool AudioObject::setDefaultAudioParameters()
   aSettings_.sampling = (short)val;
   ros::param::param( "/audio_stream/depth", val, 16 );
   aSettings_.samplebytes = (char)(val / 8);
-  this->setProcessParameters();
-  return true;
+  return this->setProcessParameters();
 }
 
 void AudioObject::finiDevice()
