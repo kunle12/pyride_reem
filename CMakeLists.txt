@@ -22,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
   pal_detection_msgs
   pal_control_msgs
   pal_web_msgs
+  people_msgs
   play_motion_msgs
   pyride_common_msgs
   diagnostic_msgs

@@ -1829,6 +1829,45 @@ static PyObject * PyModule_REEMRegisterPalFaceData( PyObject * self, PyObject * 
   Py_RETURN_NONE;
 }
 
+/*! \fn registerLegDetectCallback( callback_function, distance )
+ *  \memberof PyREEM
+ *  \brief Register a callback function for leg detection data.
+ *  None object can be used to stop receiving the leg detection data.
+ *  \param callback_function that takes a list of detected legs (data).
+ *  \param float distance. distance where the leg detection callback will be triggered. Optional, default 1.0 metre.
+ *  \return None
+ */
+static PyObject * PyModule_REEMRegisterLegDetectData( PyObject * self, PyObject * args )
+{
+  PyObject * callbackFn = NULL;
+  float distance = 1.0;
+
+  if (!PyArg_ParseTuple( args, "O|f", &callbackFn, &distance )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  if (distance < 0.0 || distance > 20.0 ) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.registerLegDetectCallback: distance must be in [0,20] metre." );
+    return NULL;
+  }
+
+  if (callbackFn == Py_None) {
+    PyREEMModule::instance()->setLegDetectCallback( NULL );
+    REEMProxyManager::instance()->deregisterForLegData();
+    Py_RETURN_NONE;
+  }
+
+  if (!PyCallable_Check( callbackFn )) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.registerLegDetectCallback:: first input parameter is not a callable object" );
+    return NULL;
+  }
+
+  PyREEMModule::instance()->setLegDetectCallback( callbackFn );
+  REEMProxyManager::instance()->registerForLegData( distance );
+  Py_RETURN_NONE;
+}
+
 /*! \fn addSolidObject(name,volume,position,orientation)
  *  \memberof PyREEM
  *  \brief Add a solid object to the current collision scene.
@@ -2541,6 +2580,8 @@ static PyMethodDef PyModule_methods[] = {
     "Register (or deregister) a callback function to get REEM torso sonar data." },
   { "registerPalFaceCallback", (PyCFunction)PyModule_REEMRegisterPalFaceData, METH_VARARGS,
     "Register (or deregister) a callback function to get PAL built-in face detector." },
+  { "registerLegDetectCallback", (PyCFunction)PyModule_REEMRegisterLegDetectData, METH_VARARGS,
+    "Register (or deregister) a callback function to get leg detection data." },
   { "registerHumanDetectTracking", (PyCFunction)PyModule_REEMRegisterObjectDetectTracking, METH_VARARGS,
     "Register (or deregister) callback functions to get human detection and tracking information." },
   { "startPalFaceEnrollment", (PyCFunction)PyModule_REEMStartPalFaceEnrollment, METH_VARARGS,
@@ -2564,7 +2605,7 @@ static PyMethodDef PyModule_methods[] = {
 
 PyREEMModule::PyREEMModule() : PyModuleExtension( "PyREEM" )
 {
-  baseScanCB_ = tiltScanCB_ = palFaceCB_ = torsoSonarCB_ = objectDetectCB_ = objectTrackCB_ = NULL;
+  baseScanCB_ = tiltScanCB_ = palFaceCB_ = torsoSonarCB_ = objectDetectCB_ = objectTrackCB_ = legDetectCB_ = NULL;
 }
 
 PyREEMModule::~PyREEMModule()
@@ -2580,6 +2621,10 @@ PyREEMModule::~PyREEMModule()
   if (palFaceCB_){
     Py_DECREF( palFaceCB_ );
     palFaceCB_ = NULL;
+  }
+  if (legDetectCB_){
+    Py_DECREF( legDetectCB_ );
+    legDetectCB_ = NULL;
   }
   if (objectDetectCB_) {
     Py_DECREF( objectDetectCB_ );
@@ -2624,6 +2669,11 @@ void PyREEMModule::invokePalFaceCallback( PyObject * arg )
   this->invokeCallbackHandler( palFaceCB_, arg );
 }
 
+void PyREEMModule::invokeLegDetectCallback( PyObject * arg )
+{
+  this->invokeCallbackHandler( legDetectCB_, arg );
+}
+
 void PyREEMModule::setBaseScanCallback( PyObject * obj )
 {
   this->swapCallbackHandler( baseScanCB_, obj );
@@ -2642,6 +2692,11 @@ void PyREEMModule::setTorsoSonarCallback( PyObject * obj )
 void PyREEMModule::setPalFaceCallback( PyObject * obj )
 {
   this->swapCallbackHandler( palFaceCB_, obj );
+}
+
+void PyREEMModule::setLegDetectCallback( PyObject * obj )
+{
+  this->swapCallbackHandler( legDetectCB_, obj );
 }
 
 void PyREEMModule::invokeObjectDetectionCallback( PyObject * arg )

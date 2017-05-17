@@ -84,6 +84,7 @@ REEMProxyManager::REEMProxyManager() :
   tiltScanNotifier_( NULL ),
   torsoSonarSub_( NULL ),
   faceDetectSub_( NULL ),
+  legDetectSub_( NULL ),
   htObjStatusSub_( NULL ),
   htObjUpdateSub_( NULL ),
   bodyCtrlWithOdmetry_( false ),
@@ -102,6 +103,7 @@ REEMProxyManager::REEMProxyManager() :
   lHandActionTimeout_( 20 ),
   rHandActionTimeout_( 20 ),
   bodyActionTimeout_( 100 ),
+  legDetectDistance_( 1.0 ),
   soundClient_( NULL ),
   headClient_( NULL ),
   torsoClient_( NULL ),
@@ -480,6 +482,7 @@ void REEMProxyManager::fini()
   deregisterForBaseScanData();
   deregisterForTiltScanData();
   deregisterForPalFaceData();
+  deregisterForLegData();
   deregisterForSonarData();
 
   jointDataThread_->stop();
@@ -1530,6 +1533,26 @@ void REEMProxyManager::deregisterForPalFaceData()
     faceDetectSub_->shutdown();
     delete faceDetectSub_;
     faceDetectSub_ = NULL;
+  }
+}
+
+void REEMProxyManager::registerForLegData( const float distance )
+{
+  if (legDetectSub_) {
+    ROS_WARN( "Already registered for leg detection." );
+  }
+  else {
+    legDetectDistance_ = distance * distance;
+    legDetectSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "leg_tracker_measurements", 1, &REEMProxyManager::legDataCB, this ) );
+  }
+}
+
+void REEMProxyManager::deregisterForLegData()
+{
+  if (legDetectSub_) {
+    legDetectSub_->shutdown();
+    delete legDetectSub_;
+    legDetectSub_ = NULL;
   }
 }
 
@@ -2635,6 +2658,53 @@ void REEMProxyManager::palFaceDataCB( const pal_detection_msgs::FaceDetectionsCo
   PyREEMModule::instance()->invokePalFaceCallback( arg );
 
   Py_DECREF( arg );
+  Py_DECREF( retList );
+
+  PyGILState_Release( gstate );
+}
+
+void REEMProxyManager::legDataCB( const people_msgs::PositionMeasurementArrayConstPtr & msg )
+{
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  size_t rsize = msg->people.size();
+
+  PyObject * retList = PyList_New( rsize );
+
+  int count = 0;
+  for (size_t i = 0; i < rsize; i++) {
+    const people_msgs::PositionMeasurement & person = msg->people[i];
+
+    if ((person.pos.x * person.pos.x + person.pos.y * person.pos.y) > legDetectDistance_) {
+      // filter out person outside of specified distance
+      continue;
+    }
+    PyObject * retObj = PyDict_New();
+    PyObject * elemObj = PyString_FromString( person.object_id.c_str() );
+    PyDict_SetItemString( retObj, "id", elemObj );
+    Py_DECREF( elemObj );
+
+    elemObj = PyFloat_FromDouble( person.reliability );
+    PyDict_SetItemString( retObj, "confidence", elemObj );
+    Py_DECREF( elemObj );
+
+    elemObj = PyTuple_New( 2 );
+    PyTuple_SetItem( elemObj, 0, PyInt_FromLong( person.pos.x ) );
+    PyTuple_SetItem( elemObj, 1, PyInt_FromLong( person.pos.y ) );
+    PyDict_SetItemString( retObj, "position", elemObj );
+    Py_DECREF( elemObj );
+
+    PyList_SetItem( retList, count++, retObj );
+  }
+
+  if (count > 0) {
+    PyObject * arg = Py_BuildValue( "(O)", retList );
+
+    PyREEMModule::instance()->invokeLegDetectCallback( arg );
+
+    Py_DECREF( arg );
+  }
   Py_DECREF( retList );
 
   PyGILState_Release( gstate );

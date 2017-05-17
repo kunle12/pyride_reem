@@ -24,11 +24,13 @@ public:
   void invokeTiltScanCallback( PyObject * arg );
   void invokePalFaceCallback( PyObject * arg );
   void invokeTorsoSonarCallback( PyObject * arg );
+  void invokeLegDetectCallback( PyObject * arg );
   
   void setBaseScanCallback( PyObject * obj );
   void setTiltScanCallback( PyObject * obj );
   void setPalFaceCallback( PyObject * obj );
   void setTorsoSonarCallback( PyObject* obj );
+  void setLegDetectCallback( PyObject* obj );
   void setObjectDTCallback( PyObject * detectcb, PyObject * trackcb );
 
   void invokeObjectDetectionCallback( PyObject * arg );
@@ -43,6 +45,7 @@ private:
   PyObject * torsoSonarCB_;
   PyObject * objectDetectCB_;
   PyObject * objectTrackCB_;
+  PyObject * legDetectCB_;
 
   PyREEMModule();
   PyObject * createPyModule();

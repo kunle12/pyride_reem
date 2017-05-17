@@ -36,6 +36,7 @@
 
 #include <pal_detection_msgs/FaceDetections.h>
 #include <pal_control_msgs/ActuatorCurrentLimit.h>
+#include <people_msgs/PositionMeasurementArray.h>
 
 #include <play_motion_msgs/PlayMotionAction.h>
 #include <trajectory_msgs/JointTrajectory.h>
@@ -203,6 +204,9 @@ public:
   void registerForPalFaceData();
   void deregisterForPalFaceData();
 
+  void registerForLegData( const float distance = 1.0 );
+  void deregisterForLegData();
+
   void registerForBaseScanData();
   void registerForTiltScanData();
   void registerForBaseScanData( const std::string & target_frame );
@@ -254,6 +258,7 @@ private:
   Subscriber * rawTiltScanSub_;
   Subscriber * torsoSonarSub_;
   Subscriber * faceDetectSub_;
+  Subscriber * legDetectSub_;
 
   AsyncSpinner * jointDataThread_;
   CallbackQueue jointDataQueue_;
@@ -314,6 +319,8 @@ private:
   tf::TransformListener tflistener_;
   tf::StampedTransform startTransform_;
   
+  float legDetectDistance_;
+
   FollowTrajectoryClient * headClient_;
   FollowTrajectoryClient * torsoClient_;
   FollowTrajectoryClient * lhandClient_;
@@ -410,6 +417,7 @@ private:
   void baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg );
   void tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg );
   void palFaceDataCB( const pal_detection_msgs::FaceDetectionsConstPtr & msg );
+  void legDataCB( const people_msgs::PositionMeasurementArrayConstPtr & msg );
   void torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg );
 
   bool findSolidObjectInScene( const std::string & name );
