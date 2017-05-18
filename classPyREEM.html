@@ -221,6 +221,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a34ceecf3dddc75a09fb919980d1fda85"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a34ceecf3dddc75a09fb919980d1fda85">registerPalFaceCallback</a> (callback_function)</td></tr>
 <tr class="memdesc:a34ceecf3dddc75a09fb919980d1fda85"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register a callback function for receiving face data. None object can be used to stop receiving the face data.  <a href="#a34ceecf3dddc75a09fb919980d1fda85">More...</a><br/></td></tr>
 <tr class="separator:a34ceecf3dddc75a09fb919980d1fda85"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c3dd2fccda543e2abd97bc2385207fd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a2c3dd2fccda543e2abd97bc2385207fd">registerLegDetectCallback</a> (callback_function, distance)</td></tr>
+<tr class="memdesc:a2c3dd2fccda543e2abd97bc2385207fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register a callback function for leg detection data. None object can be used to stop receiving the leg detection data.  <a href="#a2c3dd2fccda543e2abd97bc2385207fd">More...</a><br/></td></tr>
+<tr class="separator:a2c3dd2fccda543e2abd97bc2385207fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a98f28470e4d404bec32cfca7a7c0034e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a98f28470e4d404bec32cfca7a7c0034e">addSolidObject</a> (name, volume, position, orientation)</td></tr>
 <tr class="memdesc:a98f28470e4d404bec32cfca7a7c0034e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a solid object to the current collision scene.  <a href="#a98f28470e4d404bec32cfca7a7c0034e">More...</a><br/></td></tr>
 <tr class="separator:a98f28470e4d404bec32cfca7a7c0034e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -2877,6 +2880,42 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a2c3dd2fccda543e2abd97bc2385207fd"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">registerLegDetectCallback </td>
+          <td>(</td>
+          <td class="paramtype">callback_function&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">distance&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Register a callback function for leg detection data. None object can be used to stop receiving the leg detection data. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">callback_function</td><td>that takes a list of detected legs data, dictionary of {'id', 'confidence', 'position' (x,y)} </td></tr>
+    <tr><td class="paramname">float</td><td>distance. distance where the leg detection callback will be triggered. Optional, default 1.0 metre. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>None. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a34ceecf3dddc75a09fb919980d1fda85"></a>
 <div class="memitem">
 <div class="memproto">
@@ -3584,7 +3623,7 @@ Default output file name path is in the format of /removable/recordings/Ymd_HM_s
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Apr 20 2017 11:23:16 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu May 18 2017 10:52:22 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
