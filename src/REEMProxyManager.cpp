@@ -2620,6 +2620,10 @@ void REEMProxyManager::palFaceDataCB( const pal_detection_msgs::FaceDetectionsCo
 
   size_t rsize = msg->faces.size();
 
+  if (rsize == 0) {
+    return;
+  }
+
   PyObject * retList = PyList_New( rsize );
 
   for (size_t i = 0; i < rsize; i++) {
@@ -2670,9 +2674,20 @@ void REEMProxyManager::legDataCB( const people_msgs::PositionMeasurementArrayCon
 
   size_t rsize = msg->people.size();
 
-  PyObject * retList = PyList_New( rsize );
-
   int count = 0;
+  for (size_t i = 0; i < rsize; i++) {
+    const people_msgs::PositionMeasurement & person = msg->people[i];
+
+    if ((person.pos.x * person.pos.x + person.pos.y * person.pos.y) > legDetectDistance_) {
+      // filter out person outside of specified distance
+      continue;
+    }
+    count++;
+  }
+
+  PyObject * retList = PyList_New( count );
+  count = 0;
+
   for (size_t i = 0; i < rsize; i++) {
     const people_msgs::PositionMeasurement & person = msg->people[i];
 
