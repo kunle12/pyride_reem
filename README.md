@@ -9,8 +9,8 @@ Python based Robot Interactive Development Environment (PyRIDE) is a middleware 
 
 Finally, PyRIDE is written in portable C++ and can be ported to various robot platform with relative ease. Currently, PyRIDE runs on NAO, ROS/REEM and iOS/ROMO platforms. This repository contains PyRIDE source code for the ROS/REEM platform.
 
-##Compile source code
-###Prerequisites
+## Compile source code
+### Prerequisites
 PyRIDE on ROS/REEM uses the standard catkin build system. It requires a full REEM Hydro installation on a Ubuntu Linux system. In particular, make sure you have the following packages installed on your system:
 
 * ros-hydro-moveit-resources
@@ -34,7 +34,7 @@ doxygen pyride.dox
 ```
 under the `pyride_reem` directory. The API documentation will be generated under `doc` sub-directory. **NOTE:** The API documentation is incomplete at this stage. You can find the latest doxygen generated documentation at http://kunle12.github.io/pyride_reem
 
-##Launch PyRIDE on REEM
+## Launch PyRIDE on REEM
 Make sure you have started up a full REEM simulation or on a REEM robot and sourced appropriate catkin overlay. Do:
 
 ```

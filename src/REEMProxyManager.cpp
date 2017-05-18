@@ -2690,8 +2690,8 @@ void REEMProxyManager::legDataCB( const people_msgs::PositionMeasurementArrayCon
     Py_DECREF( elemObj );
 
     elemObj = PyTuple_New( 2 );
-    PyTuple_SetItem( elemObj, 0, PyInt_FromLong( person.pos.x ) );
-    PyTuple_SetItem( elemObj, 1, PyInt_FromLong( person.pos.y ) );
+    PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( person.pos.x ) );
+    PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( person.pos.y ) );
     PyDict_SetItemString( retObj, "position", elemObj );
     Py_DECREF( elemObj );
 

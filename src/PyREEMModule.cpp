@@ -1833,9 +1833,9 @@ static PyObject * PyModule_REEMRegisterPalFaceData( PyObject * self, PyObject * 
  *  \memberof PyREEM
  *  \brief Register a callback function for leg detection data.
  *  None object can be used to stop receiving the leg detection data.
- *  \param callback_function that takes a list of detected legs (data).
+ *  \param callback_function that takes a list of detected legs data, dictionary of {'id', 'confidence', 'position' (x,y)}
  *  \param float distance. distance where the leg detection callback will be triggered. Optional, default 1.0 metre.
- *  \return None
+ *  \return None.
  */
 static PyObject * PyModule_REEMRegisterLegDetectData( PyObject * self, PyObject * args )
 {
