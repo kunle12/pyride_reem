@@ -2615,14 +2615,14 @@ void REEMProxyManager::audioVolumeDataCB( const std_msgs::Int8ConstPtr & msg )
 
 void REEMProxyManager::palFaceDataCB( const pal_detection_msgs::FaceDetectionsConstPtr & msg )
 {
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
-
   size_t rsize = msg->faces.size();
 
   if (rsize == 0) {
     return;
   }
+
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
 
   PyObject * retList = PyList_New( rsize );
 
