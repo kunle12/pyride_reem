@@ -496,12 +496,12 @@ void REEMProxyManager::fini()
 /**@{*/
 /*! \typedef onHeadActionSuccess()
  *  \memberof PyREEM.
- *  \brief Callback function when PyREEM.pointHeadTo method call is successful.
+ *  \brief Callback function when PyREEM.moveHeadTo or PyREEM.moveHeadWithJointTrajectory or PyREEM.pointHeadTo method call is successful.
  *  \return None.
  */
 /*! \typedef onHeadActionFailed()
  *  \memberof PyREEM.
- *  \brief Callback function when PyREEM.pointHeadTo method call is failed.
+ *  \brief Callback function when PyREEM.moveHeadTo or PyREEM.moveHeadWithJointTrajectory or PyREEM.pointHeadTo method call is failed.
  *  \return None.
  */
 void REEMProxyManager::doneHeadAction( const actionlib::SimpleClientGoalState & state,

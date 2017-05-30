@@ -162,6 +162,14 @@ bool PyREEMServer::executeRemoteCommand( PyRideExtendedCommand command,
       REEMProxyManager::instance()->updateBodyPose( newPose );
     }
       break;
+    case UPDATE_AUDIO_SETTINGS:
+    {
+      unsigned char * dataPtr = (unsigned char *)optionalData;
+      int volume;
+      memcpy( &volume, dataPtr, sizeof( int ) );
+      REEMProxyManager::instance()->setAudioVolume( volume );
+    }
+      break;
     default:
       status = false;
       break;
