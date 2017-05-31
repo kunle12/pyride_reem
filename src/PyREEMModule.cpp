@@ -190,13 +190,13 @@ static PyObject * PyModule_REEMSayWithVolume( PyObject * self, PyObject * args )
 static PyObject * PyModule_REEMGetBatteryStatus( PyObject * self )
 {
   float batpercent = 0;
-  bool isplugged = false;
+  REEMChargingState charging = UNKNOWN;
   float time_remain = 0.0;
   
-  REEMProxyManager::instance()->getBatteryStatus( batpercent, isplugged, time_remain );
+  REEMProxyManager::instance()->getBatteryStatus( batpercent, charging, time_remain );
   
-  return Py_BuildValue( "(fsf)", batpercent, isplugged ? "plugged in" :
-                       "unplugged", time_remain );
+  return Py_BuildValue( "(fsf)", batpercent, charging == UNKNOWN ? "unknown" : (charging == CHARGING ? "charging" : "unplugged"),
+                       time_remain );
 }
 
 /*! \fn getLowPowerThreshold()

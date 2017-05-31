@@ -98,6 +98,7 @@ REEMProxyManager::REEMProxyManager() :
   rArmCtrl_( false ),
   palFaceDatabaseInit_( false ),
   audioVolume_( 0 ),
+  powerVoltage_( -1 ),
   lArmActionTimeout_( 20 ),
   rArmActionTimeout_( 20 ),
   lHandActionTimeout_( 20 ),
@@ -119,7 +120,7 @@ REEMProxyManager::REEMProxyManager() :
   playMotionClient_( NULL ),
   playAudioClient_( NULL ),
   recordAudioClient_( NULL ),
-  isCharging_( true ),
+  batChargingState_( UNKNOWN ),
   batCapacity_( 100.0 ),
   lowPowerThreshold_( 0 ), // # no active power monitoring
   batTimeRemain_( Duration( 1.0 ) )
@@ -161,6 +162,14 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
 
   jointDataThread_ = new ros::AsyncSpinner( 1, &jointDataQueue_ );
   jointDataThread_->start();
+
+  ros::SubscribeOptions sopts2 = ros::SubscribeOptions::create<sb04_power_board::PowerBoard>( "power_board",
+        1, boost::bind( &REEMProxyManager::voltageStateDataCB, this, _1 ), ros::VoidPtr(), &powerBoardDataQueue_ );
+
+  voltageSub_ = mCtrlNode_->subscribe( sopts2 );
+
+  powerBoardDataThread_ = new ros::AsyncSpinner( 1, &powerBoardDataQueue_ );
+  powerBoardDataThread_->start();
 
   mCmd_.linear.x = mCmd_.linear.y = mCmd_.angular.z = 0;
   headPitchRate_ = headYawRate_ = 0.0;
@@ -484,6 +493,10 @@ void REEMProxyManager::fini()
   deregisterForPalFaceData();
   deregisterForLegData();
   deregisterForSonarData();
+
+  powerBoardDataThread_->stop();
+  delete powerBoardDataThread_;
+  powerBoardDataThread_ = NULL;
 
   jointDataThread_->stop();
   delete jointDataThread_;
@@ -2568,31 +2581,16 @@ void REEMProxyManager::powerStateDataCB( const diagnostic_msgs::DiagnosticArrayC
       if (batStatus.values[j].key.compare( "Battery Level" ) == 0) {
         boost::mutex::scoped_lock lock( bat_mutex_ );
 
-        //bool charging = (msg->AC_present > 0);
-        bool charging = false;
         float batpercent = strtof( batStatus.values[j].value.c_str(), NULL );
         //batTimeRemain_ = msg->time_remaining;
 
         if (lowPowerThreshold_ > 0) {
           PyObject * arg = NULL;
-          /*
-          if (charging != isCharging_) {
-            PyGILState_STATE gstate;
-            gstate = PyGILState_Ensure();
-
-            arg = Py_BuildValue( "(O)", charging ? Py_True : Py_False );
-
-            PyREEMModule::instance()->invokeCallback( "onPowerPluggedChange", arg );
-            Py_DECREF( arg );
-
-            PyGILState_Release( gstate );
-          }
-          */
           if (fabs(batpercent - batCapacity_) >= 1.0) {
             PyGILState_STATE gstate;
             gstate = PyGILState_Ensure();
 
-            arg = Py_BuildValue( "(fOO)", batpercent, charging ? Py_True : Py_False,
+            arg = Py_BuildValue( "(fOO)", batpercent, batChargingState_ == CHARGING ? Py_True : Py_False,
                                   (batpercent < (float)lowPowerThreshold_ ? Py_True : Py_False) );
 
             PyREEMModule::instance()->invokeCallback( "onBatteryChargeChange", arg );
@@ -2601,10 +2599,52 @@ void REEMProxyManager::powerStateDataCB( const diagnostic_msgs::DiagnosticArrayC
             PyGILState_Release( gstate );
           }
         }
-        isCharging_ = charging;
         batCapacity_ = batpercent;
       }
     }
+  }
+}
+
+void REEMProxyManager::voltageStateDataCB( const sb04_power_board::PowerBoardConstPtr & msg )
+{
+  int curvol = msg->voltage;
+  if (powerVoltage_ == -1) { // initialisation
+    powerVoltage_ = curvol;
+    return;
+  }
+
+  int voldiff = curvol - powerVoltage_;
+  powerVoltage_ = curvol;
+
+  if (voldiff > 300) { // sudden increase of voltage means we have put on main power
+    {
+      boost::mutex::scoped_lock lock( voltage_mutex_ );
+      batChargingState_ = CHARGING;
+    }
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject * arg = Py_BuildValue( "(O)", Py_True );
+
+    PyREEMModule::instance()->invokeCallback( "onPowerPluggedChange", arg );
+    Py_DECREF( arg );
+
+    PyGILState_Release( gstate );
+  }
+  else if (voldiff < -300) { // sudden decrease of voltage means we have unplugged in robot.
+    {
+      boost::mutex::scoped_lock lock( voltage_mutex_ );
+      batChargingState_ = NOTCHARGING;
+    }
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject * arg = Py_BuildValue( "(O)", Py_False );
+
+    PyREEMModule::instance()->invokeCallback( "onPowerPluggedChange", arg );
+    Py_DECREF( arg );
+
+    PyGILState_Release( gstate );
   }
 }
 
@@ -2732,12 +2772,17 @@ void REEMProxyManager::setLowPowerThreshold( int percent )
   }
 }
 
-void REEMProxyManager::getBatteryStatus( float & percentage, bool & isplugged, float & timeremain )
+void REEMProxyManager::getBatteryStatus( float & percentage, REEMChargingState & charging, float & timeremain )
 {
-  boost::mutex::scoped_lock lock( bat_mutex_ );
-  isplugged = isCharging_;
-  percentage = floorf(batCapacity_ * 100.0) / 100.0;
-  timeremain = (float)batTimeRemain_.toSec();
+  {
+    boost::mutex::scoped_lock lock( bat_mutex_ );
+    percentage = floorf(batCapacity_ * 100.0) / 100.0;
+    timeremain = (float)batTimeRemain_.toSec();
+  }
+  {
+    boost::mutex::scoped_lock lock( voltage_mutex_ );
+    charging = batChargingState_;
+  }
 }
 
 void REEMProxyManager::setTorsoStiffness( const float stiffness )

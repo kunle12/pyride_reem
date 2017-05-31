@@ -38,6 +38,8 @@
 #include <pal_control_msgs/ActuatorCurrentLimit.h>
 #include <people_msgs/PositionMeasurementArray.h>
 
+#include <sb04_power_board/PowerBoard.h>
+
 #include <play_motion_msgs/PlayMotionAction.h>
 #include <trajectory_msgs/JointTrajectory.h>
 #include <geometry_msgs/Twist.h>
@@ -92,6 +94,12 @@ typedef enum {
   YELLOW,
   PINK
 } REEMLedColour;
+
+typedef enum {
+  UNKNOWN = 0,
+  CHARGING,
+  NOTCHARGING
+} REEMChargingState;
 
 class REEMProxyManager
 {
@@ -196,7 +204,7 @@ public:
 
   void publishCommands();
   
-  void getBatteryStatus( float & percentage, bool & isplugged, float & timeremain );
+  void getBatteryStatus( float & percentage, REEMChargingState & charging, float & timeremain );
 
   int getLowPowerThreshold() { return lowPowerThreshold_; }
   void setLowPowerThreshold( int percent );
@@ -252,6 +260,7 @@ private:
   Publisher colObjPub_;
   Subscriber jointSub_;
   Subscriber powerSub_;
+  Subscriber voltageSub_;
   Subscriber volumeSub_;
 
   Subscriber * rawBaseScanSub_;
@@ -262,6 +271,9 @@ private:
 
   AsyncSpinner * jointDataThread_;
   CallbackQueue jointDataQueue_;
+
+  AsyncSpinner * powerBoardDataThread_;
+  CallbackQueue powerBoardDataQueue_;
 
   ServiceClient ledColourClient_;
   ServiceClient ledPulseClient_;
@@ -288,6 +300,7 @@ private:
   
   boost::mutex bat_mutex_;
   boost::mutex joint_mutex_;
+  boost::mutex voltage_mutex_;
   
   bool bodyCtrlWithOdmetry_;
   bool bodyCtrlWithNavigation_;
@@ -301,6 +314,7 @@ private:
   bool palFaceDatabaseInit_;
   
   int audioVolume_;
+  int powerVoltage_;
 
   float lArmActionTimeout_;
   float rArmActionTimeout_;
@@ -356,7 +370,7 @@ private:
   pal_control_msgs::ActuatorCurrentLimit stiffCmd_;
 
   // power state
-  bool isCharging_;
+  REEMChargingState batChargingState_;
   float batCapacity_;
   int lowPowerThreshold_;
   Duration batTimeRemain_;
@@ -413,6 +427,7 @@ private:
 
   void jointStateDataCB( const sensor_msgs::JointStateConstPtr & msg );
   void powerStateDataCB( const diagnostic_msgs::DiagnosticArrayConstPtr & msg );
+  void voltageStateDataCB( const sb04_power_board::PowerBoardConstPtr & msg );
   void audioVolumeDataCB( const std_msgs::Int8ConstPtr & msg );
   void baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg );
   void tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg );

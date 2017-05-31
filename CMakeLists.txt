@@ -31,6 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
   topic_tools
   audio_file_player
   audio_stream
+  sb04_power_board
 )
 
 ## System dependencies are found with CMake's conventions
