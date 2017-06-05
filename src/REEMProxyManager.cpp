@@ -1199,51 +1199,51 @@ void REEMProxyManager::htObjStatusCB( const pyride_common_msgs::TrackedObjectSta
 
 void REEMProxyManager::htObjUpdateCB( const pyride_common_msgs::TrackedObjectUpdateConstPtr & msg )
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+  size_t rsize = msg->objects.size();
 
-    size_t rsize = msg->objects.size();
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
 
-    PyObject * retList = PyList_New( rsize );
+  PyObject * retList = PyList_New( rsize );
 
-    for (size_t i = 0; i < rsize; ++i) {
-      pyride_common_msgs::TrackedObjectInfo obj = msg->objects[i];
+  for (size_t i = 0; i < rsize; i++) {
+    pyride_common_msgs::TrackedObjectInfo obj = msg->objects[i];
 
-      PyObject * retObj = PyDict_New();
-      PyObject * elemObj = PyInt_FromLong( obj.objtype );
-      PyDict_SetItemString( retObj, "object_type", elemObj );
-      Py_DECREF( elemObj );
+    PyObject * retObj = PyDict_New();
+    PyObject * elemObj = PyInt_FromLong( obj.objtype );
+    PyDict_SetItemString( retObj, "object_type", elemObj );
+    Py_DECREF( elemObj );
 
-      elemObj = PyInt_FromLong( obj.id );
-      PyDict_SetItemString( retObj, "track_id", elemObj );
-      Py_DECREF( elemObj );
+    elemObj = PyInt_FromLong( obj.id );
+    PyDict_SetItemString( retObj, "track_id", elemObj );
+    Py_DECREF( elemObj );
 
-      elemObj = PyTuple_New( 4 );
-      PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( obj.bound.tl_x ) );
-      PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( obj.bound.tl_y ) );
-      PyTuple_SetItem( elemObj, 2, PyFloat_FromDouble( obj.bound.width ) );
-      PyTuple_SetItem( elemObj, 3, PyFloat_FromDouble( obj.bound.height ) );
-      PyDict_SetItemString( retObj, "bound", elemObj );
-      Py_DECREF( elemObj );
+    elemObj = PyTuple_New( 4 );
+    PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( obj.bound.tl_x ) );
+    PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( obj.bound.tl_y ) );
+    PyTuple_SetItem( elemObj, 2, PyFloat_FromDouble( obj.bound.width ) );
+    PyTuple_SetItem( elemObj, 3, PyFloat_FromDouble( obj.bound.height ) );
+    PyDict_SetItemString( retObj, "bound", elemObj );
+    Py_DECREF( elemObj );
 
-      elemObj = PyTuple_New( 3 );
-      PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( obj.est_pos.x ) );
-      PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( obj.est_pos.y ) );
-      PyTuple_SetItem( elemObj, 2, PyFloat_FromDouble( obj.est_pos.z ) );
-      PyDict_SetItemString( retObj, "est_pos", elemObj );
-      Py_DECREF( elemObj );
+    elemObj = PyTuple_New( 3 );
+    PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( obj.est_pos.x ) );
+    PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( obj.est_pos.y ) );
+    PyTuple_SetItem( elemObj, 2, PyFloat_FromDouble( obj.est_pos.z ) );
+    PyDict_SetItemString( retObj, "est_pos", elemObj );
+    Py_DECREF( elemObj );
 
-      PyList_SetItem( retList, i, retObj );
-    }
+    PyList_SetItem( retList, i, retObj );
+  }
 
-    PyObject * arg = Py_BuildValue( "(O)", retList );
+  PyObject * arg = Py_BuildValue( "(O)", retList );
 
-    PyREEMModule::instance()->invokeObjectTrackingCallback( arg );
+  PyREEMModule::instance()->invokeObjectTrackingCallback( arg );
 
-    Py_DECREF( arg );
-    Py_DECREF( retList );
+  Py_DECREF( arg );
+  Py_DECREF( retList );
 
-    PyGILState_Release( gstate );
+  PyGILState_Release( gstate );
 }
 
 bool REEMProxyManager::getRobotPose( std::vector<double> & positions, std::vector<double> & orientation, bool in_map )
@@ -2585,12 +2585,11 @@ void REEMProxyManager::powerStateDataCB( const diagnostic_msgs::DiagnosticArrayC
         //batTimeRemain_ = msg->time_remaining;
 
         if (lowPowerThreshold_ > 0) {
-          PyObject * arg = NULL;
           if (fabs(batpercent - batCapacity_) >= 1.0) {
             PyGILState_STATE gstate;
             gstate = PyGILState_Ensure();
 
-            arg = Py_BuildValue( "(fOO)", batpercent, batChargingState_ == CHARGING ? Py_True : Py_False,
+            PyObject * arg = Py_BuildValue( "(fOO)", batpercent, batChargingState_ == CHARGING ? Py_True : Py_False,
                                   (batpercent < (float)lowPowerThreshold_ ? Py_True : Py_False) );
 
             PyREEMModule::instance()->invokeCallback( "onBatteryChargeChange", arg );
@@ -2709,9 +2708,6 @@ void REEMProxyManager::palFaceDataCB( const pal_detection_msgs::FaceDetectionsCo
 
 void REEMProxyManager::legDataCB( const people_msgs::PositionMeasurementArrayConstPtr & msg )
 {
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
-
   size_t rsize = msg->people.size();
 
   int count = 0;
@@ -2724,6 +2720,9 @@ void REEMProxyManager::legDataCB( const people_msgs::PositionMeasurementArrayCon
     }
     count++;
   }
+
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
 
   PyObject * retList = PyList_New( count );
   count = 0;
@@ -2753,13 +2752,11 @@ void REEMProxyManager::legDataCB( const people_msgs::PositionMeasurementArrayCon
     PyList_SetItem( retList, count++, retObj );
   }
 
-  if (count > 0) {
-    PyObject * arg = Py_BuildValue( "(O)", retList );
+  PyObject * arg = Py_BuildValue( "(O)", retList );
 
-    PyREEMModule::instance()->invokeLegDetectCallback( arg );
+  PyREEMModule::instance()->invokeLegDetectCallback( arg );
 
-    Py_DECREF( arg );
-  }
+  Py_DECREF( arg );
   Py_DECREF( retList );
 
   PyGILState_Release( gstate );

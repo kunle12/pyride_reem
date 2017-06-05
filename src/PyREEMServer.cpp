@@ -269,9 +269,7 @@ void PyREEMServer::nodeStatusCB( const pyride_common_msgs::NodeStatusConstPtr & 
                                                                 (int)ss.str().length() );
     return;
   }
-  
-  PyObject * arg = NULL;
-  
+
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
   
@@ -293,12 +291,12 @@ void PyREEMServer::nodeStatusCB( const pyride_common_msgs::NodeStatusConstPtr & 
   PyDict_SetItemString( retObj, "message", elemObj );
   Py_DECREF( elemObj );
 
-  arg = Py_BuildValue( "(O)", retObj );
+  PyObject * arg = Py_BuildValue( "(O)", retObj );
 
   PyREEMModule::instance()->invokeCallback( "onNodeStatusUpdate", arg );
   
-  Py_DECREF( retObj );
   Py_DECREF( arg );
+  Py_DECREF( retObj );
 
   PyGILState_Release( gstate );    
 }
