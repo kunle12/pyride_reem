@@ -2616,7 +2616,7 @@ void REEMProxyManager::voltageStateDataCB( const sb04_power_board::PowerBoardCon
   int voldiff = curvol - powerVoltage_;
   powerVoltage_ = curvol;
 
-  if (voldiff > 250) { // sudden increase of voltage means we have put on main power
+  if (voldiff > 300) { // sudden increase of voltage means we have put on main power
     {
       boost::mutex::scoped_lock lock( voltage_mutex_ );
       batChargingState_ = CHARGING;
@@ -2631,7 +2631,7 @@ void REEMProxyManager::voltageStateDataCB( const sb04_power_board::PowerBoardCon
 
     PyGILState_Release( gstate );
   }
-  else if (voldiff < -250) { // sudden decrease of voltage means we have unplugged in robot.
+  else if (voldiff < -300) { // sudden decrease of voltage means we have unplugged in robot.
     {
       boost::mutex::scoped_lock lock( voltage_mutex_ );
       batChargingState_ = NOTCHARGING;
