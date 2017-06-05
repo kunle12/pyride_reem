@@ -66,7 +66,8 @@ bool PyREEMServer::init()
   ServerDataProcessor::instance()->init( activeVideoDevices_, activeAudioDevices_ );
   ServerDataProcessor::instance()->addCommandHandler( this );
   ServerDataProcessor::instance()->setClientID( AppConfigManager::instance()->clientID() );
-  ServerDataProcessor::instance()->setDefaultRobotInfo( REEM, AppConfigManager::instance()->startPosition() );
+  ServerDataProcessor::instance()->setDefaultRobotInfo( REEM, AppConfigManager::instance()->startPosition(),
+      MOBILITY|VIDEO_FEEBACK|AUDIO_FEEBACK|MANIPULATION );
   
   PythonServer::instance()->init( AppConfigManager::instance()->enablePythonConsole(),
       PyREEMModule::instance(), scriptdir.c_str() );
