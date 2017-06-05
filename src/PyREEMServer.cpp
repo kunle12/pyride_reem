@@ -67,7 +67,7 @@ bool PyREEMServer::init()
   ServerDataProcessor::instance()->addCommandHandler( this );
   ServerDataProcessor::instance()->setClientID( AppConfigManager::instance()->clientID() );
   ServerDataProcessor::instance()->setDefaultRobotInfo( REEM, AppConfigManager::instance()->startPosition(),
-      MOBILITY|VIDEO_FEEBACK|AUDIO_FEEBACK|MANIPULATION );
+      (RobotCapability)(MOBILITY|VIDEO_FEEBACK|AUDIO_FEEBACK|MANIPULATION) );
   
   PythonServer::instance()->init( AppConfigManager::instance()->enablePythonConsole(),
       PyREEMModule::instance(), scriptdir.c_str() );
