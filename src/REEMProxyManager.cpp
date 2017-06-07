@@ -174,7 +174,7 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
   mCmd_.linear.x = mCmd_.linear.y = mCmd_.angular.z = 0;
   headPitchRate_ = headYawRate_ = 0.0;
   targetYaw_ = targetPitch_ = 0.0;
-  
+
   int trials = 0;
   phClient_ = new PointHeadClient( "head_controller/point_head_action", true );
   while (!phClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
