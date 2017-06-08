@@ -1708,10 +1708,10 @@ bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative, floa
   // To be reached 2 seconds after starting along the trajectory
   goal.trajectory.points[0].time_from_start = ros::Duration( time_to_reach );
 
-  headCtrlWithActionClient_ = true;
+  headCtrlWithTrajActionClient_ = true;
 
   headClient_->sendGoal( goal,
-                          boost::bind( &REEMProxyManager::doneHeadAction, this, _1, _2 ),
+                          boost::bind( &REEMProxyManager::doneHeadTrajAction, this, _1, _2 ),
                           FollowTrajectoryClient::SimpleActiveCallback(),
                           FollowTrajectoryClient::SimpleFeedbackCallback() );
 
@@ -1789,13 +1789,14 @@ bool REEMProxyManager::pointHeadTo( const std::string & frame, float x, float y,
   //and go no faster than 1 rad/s
   goal.max_velocity = 1.0;
 
+  headCtrlWithActionClient_ = true;
+
   // Need boost::bind to pass in the 'this' pointer
   phClient_->sendGoal( goal,
                       boost::bind( &REEMProxyManager::doneHeadAction, this, _1, _2 ),
                       PointHeadClient::SimpleActiveCallback(),
                       PointHeadClient::SimpleFeedbackCallback() );
 
-  headCtrlWithActionClient_ = true;
   return true;
 }
 
