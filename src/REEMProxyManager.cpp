@@ -92,6 +92,7 @@ REEMProxyManager::REEMProxyManager() :
   torsoCtrl_( false ),
   headCtrlWithTrajActionClient_( false ),
   headCtrlWithActionClient_( false ),
+  defaultMotionCtrl_( false ),
   lHandCtrl_( false ),
   rHandCtrl_( false ),
   lArmCtrl_( false ),
@@ -520,8 +521,6 @@ void REEMProxyManager::fini()
 void REEMProxyManager::doneHeadAction( const actionlib::SimpleClientGoalState & state,
             const PointHeadResultConstPtr & result )
 {
-  headCtrlWithActionClient_ = false;
-  
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
   
@@ -533,14 +532,14 @@ void REEMProxyManager::doneHeadAction( const actionlib::SimpleClientGoalState & 
   }
   PyGILState_Release( gstate );
   
+  headCtrlWithActionClient_ = false;
+
   ROS_INFO("Head action finished in state [%s]", state.toString().c_str());
 }
 
 void REEMProxyManager::doneHeadTrajAction( const actionlib::SimpleClientGoalState & state,
             const FollowJointTrajectoryResultConstPtr & result )
 {
-  headCtrlWithTrajActionClient_ = false;
-
   this->getHeadPos( reqHeadYaw_, reqHeadPitch_ );
 
   PyGILState_STATE gstate;
@@ -553,6 +552,8 @@ void REEMProxyManager::doneHeadTrajAction( const actionlib::SimpleClientGoalStat
     PyREEMModule::instance()->invokeCallback( "onHeadActionFailed", NULL );
   }
   PyGILState_Release( gstate );
+
+  headCtrlWithTrajActionClient_ = false;
 
   ROS_INFO("Head traj action finished in state [%s]", state.toString().c_str());
 }
@@ -572,8 +573,6 @@ void REEMProxyManager::doneHeadTrajAction( const actionlib::SimpleClientGoalStat
 void REEMProxyManager::doneMoveLArmAction( const actionlib::SimpleClientGoalState & state,
                                         const FollowJointTrajectoryResultConstPtr & result)
 {
-  lArmCtrl_ = false;
-
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
 
@@ -589,14 +588,14 @@ void REEMProxyManager::doneMoveLArmAction( const actionlib::SimpleClientGoalStat
   
   PyGILState_Release( gstate );
 
+  lArmCtrl_ = false;
+
   ROS_INFO("move arm action finished in state [%s]", state.toString().c_str());
 }
 
 void REEMProxyManager::doneMoveRArmAction( const actionlib::SimpleClientGoalState & state,
                                          const FollowJointTrajectoryResultConstPtr & result)
 {
-  rArmCtrl_ = false;
-  
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
   
@@ -612,6 +611,8 @@ void REEMProxyManager::doneMoveRArmAction( const actionlib::SimpleClientGoalStat
   
   PyGILState_Release( gstate );
   
+  rArmCtrl_ = false;
+
   ROS_INFO("move arm action finished in state [%s]", state.toString().c_str());
 }
 
@@ -628,8 +629,6 @@ void REEMProxyManager::doneMoveRArmAction( const actionlib::SimpleClientGoalStat
 void REEMProxyManager::doneTorsoAction( const actionlib::SimpleClientGoalState & state,
                                       const FollowJointTrajectoryResultConstPtr & result )
 {
-  torsoCtrl_ = false;
-  
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
   
@@ -642,6 +641,8 @@ void REEMProxyManager::doneTorsoAction( const actionlib::SimpleClientGoalState &
   
   PyGILState_Release( gstate );
   
+  torsoCtrl_ = false;
+
   ROS_INFO( "Torso action finished in state [%s]", state.toString().c_str());
 }
 
@@ -658,8 +659,6 @@ void REEMProxyManager::doneTorsoAction( const actionlib::SimpleClientGoalState &
 void REEMProxyManager::doneNavgiateBodyAction( const actionlib::SimpleClientGoalState & state,
                                              const MoveBaseResultConstPtr & result )
 {
-  bodyCtrlWithNavigation_ = false;
-  
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
   
@@ -672,6 +671,8 @@ void REEMProxyManager::doneNavgiateBodyAction( const actionlib::SimpleClientGoal
   
   PyGILState_Release( gstate );
   
+  bodyCtrlWithNavigation_ = false;
+
   ROS_INFO("nagivate body finished in state [%s]", state.toString().c_str());
 }
 
@@ -688,8 +689,6 @@ void REEMProxyManager::doneNavgiateBodyAction( const actionlib::SimpleClientGoal
 void REEMProxyManager::doneGotoPOIAction( const actionlib::SimpleClientGoalState & state,
                                              const GoToPOIResultConstPtr & result )
 {
-  bodyCtrlWithNavigation_ = false;
-
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
 
@@ -706,6 +705,8 @@ void REEMProxyManager::doneGotoPOIAction( const actionlib::SimpleClientGoalState
   PyGILState_Release( gstate );
 
   targetPOIName_ = "";
+
+  bodyCtrlWithNavigation_ = false;
 
   ROS_INFO("go to POI finished in state [%s]", state.toString().c_str());
 }
@@ -819,8 +820,6 @@ void REEMProxyManager::moveRHandActionFeedback( const FollowJointTrajectoryFeedb
 void REEMProxyManager::doneLHandAction( const actionlib::SimpleClientGoalState & state,
                                          const FollowJointTrajectoryResultConstPtr & result )
 {
-  lHandCtrl_ = false;
-  
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
 
@@ -836,14 +835,14 @@ void REEMProxyManager::doneLHandAction( const actionlib::SimpleClientGoalState &
   
   PyGILState_Release( gstate );
   
+  lHandCtrl_ = false;
+
   ROS_INFO( "Left hand action finished in state [%s]", state.toString().c_str());
 }
 
 void REEMProxyManager::doneRHandAction( const actionlib::SimpleClientGoalState & state,
                                          const FollowJointTrajectoryResultConstPtr & result )
 {
-  rHandCtrl_ = false;
-  
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
   
@@ -858,7 +857,9 @@ void REEMProxyManager::doneRHandAction( const actionlib::SimpleClientGoalState &
   Py_DECREF( arg );
   
   PyGILState_Release( gstate );
-  
+
+  rHandCtrl_ = false;
+
   ROS_INFO( "Right hand action finished in state [%s]", state.toString().c_str());
 }
 
@@ -886,6 +887,8 @@ void REEMProxyManager::donePlayMotionAction( const actionlib::SimpleClientGoalSt
   }
 
   PyGILState_Release( gstate );
+
+  defaultMotionCtrl_ = false;
 
   ROS_INFO( "On play default motion finished in state [%s]", state.toString().c_str());
 }
@@ -1666,7 +1669,7 @@ bool REEMProxyManager::cancelEarLED( const int effectID )
 
 bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative, float time_to_reach )
 {
-  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || !headClient_)
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || defaultMotionCtrl_ || !headClient_)
     return false;
   
   double newYaw, newPitch;
@@ -1705,10 +1708,10 @@ bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative, floa
   // To be reached 2 seconds after starting along the trajectory
   goal.trajectory.points[0].time_from_start = ros::Duration( time_to_reach );
 
-  headCtrlWithTrajActionClient_ = true;
+  headCtrlWithActionClient_ = true;
 
   headClient_->sendGoal( goal,
-                          boost::bind( &REEMProxyManager::doneHeadTrajAction, this, _1, _2 ),
+                          boost::bind( &REEMProxyManager::doneHeadAction, this, _1, _2 ),
                           FollowTrajectoryClient::SimpleActiveCallback(),
                           FollowTrajectoryClient::SimpleFeedbackCallback() );
 
@@ -1718,7 +1721,7 @@ bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative, floa
 void REEMProxyManager::moveHeadWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
                                    std::vector<float> & times_to_reach )
 {
-  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || !headClient_)
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || defaultMotionCtrl_ || !headClient_)
     return;
 
   control_msgs::FollowJointTrajectoryGoal goal;
@@ -1755,7 +1758,7 @@ void REEMProxyManager::moveHeadWithJointTrajectory( std::vector< std::vector<dou
 
 bool REEMProxyManager::pointHeadTo( const std::string & frame, float x, float y, float z )
 {
-  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || !phClient_)
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || defaultMotionCtrl_ || !phClient_)
     return false;
 
   tf::StampedTransform transform;
@@ -1798,6 +1801,11 @@ bool REEMProxyManager::pointHeadTo( const std::string & frame, float x, float y,
 
 void REEMProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> & positions, float time_to_reach )
 {
+  if (defaultMotionCtrl_) {
+    ROS_WARN( "Default motion is executing." );
+    return;
+  }
+
   if (positions.size() != 7) {
     return;
   }
@@ -1875,6 +1883,11 @@ void REEMProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> 
 void REEMProxyManager::moveArmWithJointTrajectory( bool isLeftArm, std::vector< std::vector<double> > & trajectory,
                                                   std::vector<float> & times_to_reach )
 {
+  if (defaultMotionCtrl_) {
+    ROS_WARN( "Default motion is executing." );
+    return;
+  }
+
   control_msgs::FollowJointTrajectoryGoal goal;
   
   // First, the joint names, which apply to all waypoints
@@ -1951,6 +1964,11 @@ void REEMProxyManager::moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
                                         std::vector< std::vector<double> > & joint_velocities,
                                         std::vector<float> & times_to_reach )
 {
+  if (defaultMotionCtrl_) {
+    ROS_WARN( "Default motion is executing." );
+    return;
+  }
+
   control_msgs::FollowJointTrajectoryGoal goal;
   
   // First, the joint names, which apply to all waypoints
@@ -2025,6 +2043,11 @@ void REEMProxyManager::moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
 bool REEMProxyManager::moveArmWithGoalPose( bool isLeftArm, std::vector<double> & position,
                                           std::vector<double> & orientation, float time_to_reach )
 {
+  if (defaultMotionCtrl_) {
+    ROS_WARN( "Default motion is executing." );
+    return false;
+  }
+
   if (!rarmGroup_ || !larmGroup_)
     return false;
 
@@ -2182,7 +2205,7 @@ void REEMProxyManager::cancelDefaultMotion()
 bool REEMProxyManager::playDefaultMotion( const std::string & motion_name )
 {
   if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ ||
-      rArmCtrl_ || lArmCtrl_ || torsoCtrl_ || !playMotionClient_)
+      rArmCtrl_ || lArmCtrl_ || torsoCtrl_ || defaultMotionCtrl_ || !playMotionClient_)
   {
     return false;
   }
@@ -2192,6 +2215,8 @@ bool REEMProxyManager::playDefaultMotion( const std::string & motion_name )
   goal.motion_name = motion_name;
   goal.skip_planning = false;
   goal.priority = 20;
+
+  defaultMotionCtrl_ = true;
 
   playMotionClient_->sendGoal( goal,
                       boost::bind( &REEMProxyManager::donePlayMotionAction, this, _1, _2 ),
@@ -2298,6 +2323,11 @@ void REEMProxyManager::enablePalFaceDetection( bool enable, float confidence )
 
 bool REEMProxyManager::setHandPosition( bool isLeftHand, std::vector<double> & positions, float time_to_reach )
 {
+  if (defaultMotionCtrl_) {
+    ROS_WARN( "Default motion is executing." );
+    return false;
+  }
+
   if (positions.size() != 3) {
     return false;
   }
@@ -2378,7 +2408,7 @@ bool REEMProxyManager::setHandPosition( bool isLeftHand, std::vector<double> & p
 
 void REEMProxyManager::updateHeadPos( float yaw, float pitch )
 {
-  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_)
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || defaultMotionCtrl_)
     return;
   
   headYawRate_ = clamp( yaw, kHeadYawRate );
@@ -2460,7 +2490,7 @@ void REEMProxyManager::updateBodyPose( const RobotPose & speed, bool localupdate
 
 bool REEMProxyManager::moveTorsoTo( double yaw, double pitch, bool relative, float time_to_reach )
 {
-  if (torsoCtrl_ || !torsoClient_)
+  if (torsoCtrl_ || defaultMotionCtrl_ || !torsoClient_)
     return false;
 
   double newYaw, newPitch;
@@ -2513,7 +2543,7 @@ bool REEMProxyManager::moveTorsoTo( double yaw, double pitch, bool relative, flo
 void REEMProxyManager::moveTorsoWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
                                    std::vector<float> & times_to_reach )
 {
-  if (torsoCtrl_ || !torsoClient_)
+  if (torsoCtrl_ || defaultMotionCtrl_ || !torsoClient_)
     return;
 
   control_msgs::FollowJointTrajectoryGoal goal;

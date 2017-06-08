@@ -307,6 +307,7 @@ private:
   bool torsoCtrl_;
   bool headCtrlWithTrajActionClient_;
   bool headCtrlWithActionClient_;
+  bool defaultMotionCtrl_;
   bool lHandCtrl_;
   bool rHandCtrl_;
   bool lArmCtrl_;
