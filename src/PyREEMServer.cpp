@@ -110,7 +110,7 @@ void PyREEMServer::fini()
   ServerDataProcessor::instance()->fini();
 }
 
-bool PyREEMServer::executeRemoteCommand( PyRideExtendedCommand command,
+bool PyREEMServer::executeRemoteCommand( PyRideExtendedCommand command, int & retVal,
                                            const unsigned char * optionalData,
                                            const int optionalDataLength )
 {
@@ -118,6 +118,7 @@ bool PyREEMServer::executeRemoteCommand( PyRideExtendedCommand command,
   // in PyRideCommon.h
   // for example:
   bool status = true;
+  retVal = 0;
   switch (command) {
     case SPEAK:
     {

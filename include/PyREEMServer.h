@@ -58,7 +58,7 @@ private:
 
   void notifySystemShutdown();
 
-  bool executeRemoteCommand( PyRideExtendedCommand command,
+  bool executeRemoteCommand( PyRideExtendedCommand command, int & retVal,
                             const unsigned char * optionalData = NULL,
                             const int optionalDataLength = 0 );
 
