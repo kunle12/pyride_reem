@@ -2200,6 +2200,7 @@ void REEMProxyManager::cancelDefaultMotion()
 
   if (playMotionClient_->getState() == actionlib::SimpleClientGoalState::ACTIVE) {
     playMotionClient_->cancelGoal();
+    defaultMotionCtrl_ = false;
   }
 }
 
