@@ -17,6 +17,7 @@
 #include "PyREEMModule.h"
 #include "VideoObject.h"
 #include "AudioObject.h"
+#include "VideoToWebBridge.h"
 
 PYRIDE_LOGGING_DECLARE( "pyride_reem.log" );
 
@@ -170,6 +171,29 @@ bool PyREEMServer::executeRemoteCommand( PyRideExtendedCommand command, int & re
       int volume;
       memcpy( &volume, dataPtr, sizeof( int ) );
       REEMProxyManager::instance()->setAudioVolume( volume );
+    }
+      break;
+    case VIDEO_FEEDBACK:
+    {
+      bool ison = (bool)optionalData[0];
+      if (ison) { // only the client with the exclusive control can do video feedback
+        VideoToWebBridge::instance()->start();
+        retVal = 1;
+      }
+      else {
+        VideoToWebBridge::instance()->stop();
+        retVal = 0;
+      }
+      PyGILState_STATE gstate;
+      gstate = PyGILState_Ensure();
+
+      PyObject * arg = Py_BuildValue( "(O)", ison ? Py_True : Py_False );
+
+      PyREEMModule::instance()->invokeCallback( "onVideoFeedback", arg );
+
+      Py_DECREF( arg );
+
+      PyGILState_Release( gstate );
     }
       break;
     default:

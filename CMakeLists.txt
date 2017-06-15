@@ -32,6 +32,7 @@ find_package(catkin REQUIRED COMPONENTS
   audio_file_player
   audio_stream
   sb04_power_board
+  async_web_server_cpp
 )
 
 ## System dependencies are found with CMake's conventions
@@ -124,11 +125,13 @@ add_executable(pyride_reem pyridecore/AppConfigManager.cpp
                           pyridecore/PyRideNetComm.cpp
                           pyridecore/PythonServer.cpp
                           pyridecore/PyModuleStub.cpp
+                          pyridecore/RTPDataReceiver.cpp
                           src/PyREEMServer.cpp
                           src/REEMProxyManager.cpp
                           src/PyREEMModule.cpp
                           src/VideoObject.cpp
                           src/AudioObject.cpp
+                          src/VideoToWebBridge.cpp
                           src/main.cpp)
 
 ## Add cmake target dependencies of the executable/library
