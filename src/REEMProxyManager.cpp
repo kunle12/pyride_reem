@@ -2582,9 +2582,12 @@ void REEMProxyManager::moveTorsoWithJointTrajectory( std::vector< std::vector<do
 
 void REEMProxyManager::jointStateDataCB( const sensor_msgs::JointStateConstPtr & msg )
 {
-  boost::mutex::scoped_lock lock( joint_mutex_ );
-  curJointNames_ = msg->name;
-  curJointPositions_ = msg->position;
+  boost::mutex::scoped_lock lock( joint_mutex_, boost::try_to_lock );
+
+  if (lock) {
+    curJointNames_ = msg->name;
+    curJointPositions_ = msg->position;
+  }
 }
 
 /* \typedef onPowerPluggedChange(is_plugged_in)
