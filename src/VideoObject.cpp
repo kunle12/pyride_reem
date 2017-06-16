@@ -182,8 +182,10 @@ void VideoObject::finiDevice()
 
   if (isStreaming_) {
     isStreaming_ = false;
+    this->finiWorkerThread();
   }
-  
+
+  procThread_->stop();
   delete procThread_;
   procThread_ = NULL;
 

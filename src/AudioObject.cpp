@@ -99,8 +99,13 @@ void AudioObject::finiDevice()
 
   if (isStreaming_) {
     isStreaming_ = false;
+    this->finiWorkerThread();
   }
   
+  procThread_->stop();
+  delete procThread_;
+  procThread_ = NULL;
+
   packetStamp_ = 0;
 
   isInitialised_ = false;
