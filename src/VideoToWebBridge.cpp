@@ -78,7 +78,7 @@ bool VideoToWebBridge::start()
   }
 
   dataStream_ = new RTPDataReceiver();
-  dataStream_->init( PYRIDE_VIDEO_STREAM_BASE_PORT - 2, true );
+  dataStream_->init( PYRIDE_VIDEO_STREAM_BASE_PORT - 20, true );
 
   isRunning_ = true;
   streaming_data_thread_ = new boost::thread( &VideoToWebBridge::grabAndDispatchVideoStreamData, this );
@@ -93,7 +93,7 @@ bool VideoToWebBridge::start()
     ERROR_MSG( "Exception when creating the web server! %s:%d.\n", address_.c_str(), port_);
     return false;
   }
-
+  server_->run();
   return true;
 }
 
@@ -103,6 +103,8 @@ void VideoToWebBridge::stop()
     return;
 
   isRunning_ = false;
+
+  server_->stop();
 
   if (streaming_data_thread_) {
     streaming_data_thread_->join();
@@ -261,11 +263,11 @@ void VideoToWebBridge::grabAndDispatchVideoStreamData()
     if (dataSize == 0)
       continue;
 
-    //printf( "Got video data %d.\n", dataSize );
     struct timeval now;
     gettimeofday( &now, NULL );
 
-    float time = now.tv_sec + ((float)now.tv_usec / 1.0E6);
+    double ts = double(now.tv_sec) + (double(now.tv_usec) / 1000000.0);
+    DEBUG_MSG( "Got video data %d %lu %lu.\n", dataSize, now.tv_sec, now.tv_usec );
     std::vector<unsigned char> dispatchdata( data, data+dataSize );
     {
       boost::mutex::scoped_lock lock( subscriber_mutex_, boost::try_to_lock );
@@ -276,7 +278,10 @@ void VideoToWebBridge::grabAndDispatchVideoStreamData()
         for (itr_type iter = image_subscribers_.begin(); iter != image_subscribers_.end();) {
           bool inerror = false;
           try {
-            (*iter)->sendImage( time, dispatchdata );
+            if (dispatchdata.size() > 0) { // don't know why sometime it send zero size.
+              DEBUG_MSG( "Sending data to chip monitor %d %.6lf.\n", (int)dispatchdata.size(), ts );
+              (*iter)->sendImage( ts, dispatchdata );
+            }
           }
           catch (boost::system::system_error &e) {
             // happens when client disconnects
@@ -310,7 +315,7 @@ JpegImageStreamer::JpegImageStreamer( const async_web_server_cpp::HttpRequest &r
   stream_.sendInitialHeader();
 }
 
-void JpegImageStreamer::sendImage( const float time, std::vector<unsigned char> & data )
+void JpegImageStreamer::sendImage( const double time, std::vector<unsigned char> & data )
 {
   stream_.sendPartAndClear( time, "image/jpeg", data );
 }
@@ -327,7 +332,7 @@ void MultipartStream::sendInitialHeader() {
   connection_->write("--"+boundry_+"\r\n");
 }
 
-void MultipartStream::sendPartHeader( const float time, const std::string & type, size_t payload_size) {
+void MultipartStream::sendPartHeader( const double time, const std::string & type, size_t payload_size) {
   char stamp[20];
   sprintf( stamp, "%.06lf", time );
   boost::shared_ptr<std::vector<async_web_server_cpp::HttpHeader> > headers(
@@ -344,14 +349,14 @@ void MultipartStream::sendPartFooter() {
   connection_->write("\r\n--"+boundry_+"\r\n");
 }
 
-void MultipartStream::sendPartAndClear(const float time, const std::string& type,
+void MultipartStream::sendPartAndClear(const double time, const std::string& type,
                std::vector<unsigned char> &data) {
   sendPartHeader(time, type, data.size());
   connection_->write_and_clear(data);
   sendPartFooter();
 }
 
-void MultipartStream::sendPart(const float time, const std::string& type,
+void MultipartStream::sendPart(const double time, const std::string& type,
              const boost::asio::const_buffer &buffer,
              async_web_server_cpp::HttpConnection::ResourcePtr resource) {
   sendPartHeader(time, type, boost::asio::buffer_size(buffer));

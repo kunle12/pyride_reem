@@ -29,10 +29,10 @@ public:
   MultipartStream( async_web_server_cpp::HttpConnectionPtr& connection, const std::string& boundry="boundarydonotcross" );
 
   void sendInitialHeader();
-  void sendPartHeader(const float time, const std::string& type, size_t payload_size);
+  void sendPartHeader(const double time, const std::string& type, size_t payload_size);
   void sendPartFooter();
-  void sendPartAndClear( const float time, const std::string & type, std::vector<unsigned char> & data );
-  void sendPart(const float time, const std::string& type, const boost::asio::const_buffer &buffer,
+  void sendPartAndClear( const double time, const std::string & type, std::vector<unsigned char> & data );
+  void sendPart(const double time, const std::string& type, const boost::asio::const_buffer &buffer,
     async_web_server_cpp::HttpConnection::ResourcePtr resource );
 
 private:
@@ -46,7 +46,7 @@ public:
   JpegImageStreamer( const async_web_server_cpp::HttpRequest &request,
     async_web_server_cpp::HttpConnectionPtr connection );
 
-  void sendImage( const float time, std::vector<unsigned char> & data );
+  void sendImage( const double time, std::vector<unsigned char> & data );
 
 private:
   //async_web_server_cpp::HttpConnectionPtr connection_;
