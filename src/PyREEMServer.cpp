@@ -73,6 +73,7 @@ bool PyREEMServer::init()
   PythonServer::instance()->init( AppConfigManager::instance()->enablePythonConsole(),
       PyREEMModule::instance(), scriptdir.c_str() );
   ServerDataProcessor::instance()->discoverConsoles();
+  VideoToWebBridge::instance()->setPyModuleExtension( PyREEMModule::instance() );
   return true;
 }
 
@@ -184,16 +185,6 @@ bool PyREEMServer::executeRemoteCommand( PyRideExtendedCommand command, int & re
         VideoToWebBridge::instance()->stop();
         retVal = 0;
       }
-      PyGILState_STATE gstate;
-      gstate = PyGILState_Ensure();
-
-      PyObject * arg = Py_BuildValue( "(O)", ison ? Py_True : Py_False );
-
-      PyREEMModule::instance()->invokeCallback( "onVideoFeedback", arg );
-
-      Py_DECREF( arg );
-
-      PyGILState_Release( gstate );
     }
       break;
     default:

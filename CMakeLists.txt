@@ -126,12 +126,12 @@ add_executable(pyride_reem pyridecore/AppConfigManager.cpp
                           pyridecore/PythonServer.cpp
                           pyridecore/PyModuleStub.cpp
                           pyridecore/RTPDataReceiver.cpp
+                          pyridecore/VideoToWebBridge.cpp
                           src/PyREEMServer.cpp
                           src/REEMProxyManager.cpp
                           src/PyREEMModule.cpp
                           src/VideoObject.cpp
                           src/AudioObject.cpp
-                          src/VideoToWebBridge.cpp
                           src/main.cpp)
 
 ## Add cmake target dependencies of the executable/library
