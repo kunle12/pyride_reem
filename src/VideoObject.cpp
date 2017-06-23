@@ -105,7 +105,13 @@ void VideoObject::doImageStreaming()
     {
       boost::mutex::scoped_lock lock( mutex_ );
       while (!imgMsgPtr_) {
-        imageCon_.wait( lock );
+        // prevent this thread goes into infinite loop and
+        // still respond to external control, if the input data
+        // stream is dead.
+        if (isStreaming_)
+          imageCon_.wait( lock );
+        else
+          break;
       }
       try {
         cv_ptr = cv_bridge::toCvCopy( imgMsgPtr_, sensor_msgs::image_encodings::RGB8 );
