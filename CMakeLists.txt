@@ -132,6 +132,7 @@ add_executable(pyride_reem pyridecore/AppConfigManager.cpp
                           src/PyREEMModule.cpp
                           src/VideoObject.cpp
                           src/AudioObject.cpp
+                          src/AudioFeedbackStream.cpp
                           src/main.cpp)
 
 ## Add cmake target dependencies of the executable/library

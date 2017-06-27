@@ -17,6 +17,7 @@
 #include "PyREEMModule.h"
 #include "VideoObject.h"
 #include "AudioObject.h"
+#include "AudioFeedbackStream.h"
 #include "VideoToWebBridge.h"
 
 PYRIDE_LOGGING_DECLARE( "pyride_reem.log" );
@@ -74,6 +75,7 @@ bool PyREEMServer::init()
       PyREEMModule::instance(), scriptdir.c_str() );
   ServerDataProcessor::instance()->discoverConsoles();
   VideoToWebBridge::instance()->setPyModuleExtension( PyREEMModule::instance() );
+  AudioFeedbackStream::instance()->initWithNode( hcNodeHandle_ );
   return true;
 }
 
@@ -183,6 +185,19 @@ bool PyREEMServer::executeRemoteCommand( PyRideExtendedCommand command, int & re
       }
       else {
         VideoToWebBridge::instance()->stop();
+        retVal = 0;
+      }
+    }
+      break;
+    case AUDIO_FEEDBACK:
+    {
+      bool ison = (bool)optionalData[0];
+      if (ison) { // only the client with the exclusive control can do video feedback
+        AudioFeedbackStream::instance()->addClient();
+        retVal = 1;
+      }
+      else {
+        AudioFeedbackStream::instance()->removeClient();
         retVal = 0;
       }
     }
