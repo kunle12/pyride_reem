@@ -48,7 +48,7 @@ AudioFeedbackStream * AudioFeedbackStream::instance()
 void AudioFeedbackStream::initWithNode( NodeHandle * nodeHandle )
 {
   mCtrlNode_ = nodeHandle;
-  audioPub_ = mCtrlNode_->advertise<audio_common_msgs::AudioData>( "/audio_stream_play/audio", 1 );
+  audioPub_ = mCtrlNode_->advertise<audio_common_msgs::AudioData>( "pyride/audio_feedback", 1 );
 }
 
 void AudioFeedbackStream::addClient()
