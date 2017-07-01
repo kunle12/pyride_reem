@@ -160,16 +160,13 @@ void AudioFeedbackStream::grabAndDispatchAudioStreamData()
       usleep( 100 ); // 1ms
     } while (dataSize == 0 && gcount < 10);
 
-    if (dataSize == 0) {
-      continue;
-    }
+    audio_common_msgs::AudioData msg;
 
-    /*
     if (dataSize == 0 || dataSize % PYRIDE_AUDIO_BYTES_PER_PACKET != 0) {
       continue;
     }
 
-   // double ts = double(now.tv_sec) + (double(now.tv_usec) / 1000000.0);
+    // double ts = double(now.tv_sec) + (double(now.tv_usec) / 1000000.0);
 
     audioFrames = dataSize / PYRIDE_AUDIO_BYTES_PER_PACKET;
 
@@ -180,20 +177,10 @@ void AudioFeedbackStream::grabAndDispatchAudioStreamData()
           (short *)(audioData) + i * PYRIDE_AUDIO_FRAME_SIZE, PYRIDE_AUDIO_FRAME_SIZE );
     }
     decodedSize = audioFrames * PYRIDE_AUDIO_FRAME_SIZE * sizeof( short );
-   */
-    audio_common_msgs::AudioData msg;
-
-    /*
-    DEBUG_MSG("Got audio data size %d.\n", decodedSize );
 
     msg.data.resize( decodedSize );
-
     memcpy( &msg.data[0], audioData, decodedSize );
-    */
-    DEBUG_MSG("Got audio data size %d.\n", dataSize );
-    msg.data.resize( dataSize );
 
-    memcpy( &msg.data[0], data, dataSize );
     audioPub_.publish( msg );
   }
 
