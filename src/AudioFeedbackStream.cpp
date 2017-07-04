@@ -30,6 +30,7 @@ AudioFeedbackStream::AudioFeedbackStream() :
   audioDecoder_( NULL )
 {
   streaming_data_thread_ = NULL;
+  pyExtension_ = NULL;
 }
 
 AudioFeedbackStream::~AudioFeedbackStream()
@@ -45,10 +46,11 @@ AudioFeedbackStream * AudioFeedbackStream::instance()
   return s_pAudioFeedbackStream;
 }
 
-void AudioFeedbackStream::initWithNode( NodeHandle * nodeHandle )
+void AudioFeedbackStream::initWithNode( NodeHandle * nodeHandle, PyModuleExtension * extension )
 {
   mCtrlNode_ = nodeHandle;
   audioPub_ = mCtrlNode_->advertise<audio_common_msgs::AudioData>( "pyride/audio_feedback", 1 );
+  pyExtension_ = extension;
 }
 
 void AudioFeedbackStream::addClient()
@@ -58,6 +60,19 @@ void AudioFeedbackStream::addClient()
   if (!isRunning_) {
     INFO_MSG( "Start the feedback streaming service.\n" );
     this->start();
+
+    if (pyExtension_) {
+      PyGILState_STATE gstate;
+      gstate = PyGILState_Ensure();
+
+      PyObject * arg = Py_BuildValue( "(O)", Py_True );
+
+      pyExtension_->invokeCallback( "onAudioFeedback", arg );
+
+      Py_DECREF( arg );
+
+      PyGILState_Release( gstate );
+    }
   }
 }
 
@@ -72,6 +87,19 @@ void AudioFeedbackStream::removeClient()
   if (clientNo_ == 0) {
     INFO_MSG( "No more client audio, stop the feedback streaming service.\n" );
     this->stop();
+
+    if (pyExtension_) {
+      PyGILState_STATE gstate;
+      gstate = PyGILState_Ensure();
+
+      PyObject * arg = Py_BuildValue( "(O)", Py_False );
+
+      pyExtension_->invokeCallback( "onAudioFeedback", arg );
+
+      Py_DECREF( arg );
+
+      PyGILState_Release( gstate );
+    }
   }
 }
 

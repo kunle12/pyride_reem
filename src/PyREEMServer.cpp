@@ -75,7 +75,7 @@ bool PyREEMServer::init()
       PyREEMModule::instance(), scriptdir.c_str() );
   ServerDataProcessor::instance()->discoverConsoles();
   VideoToWebBridge::instance()->setPyModuleExtension( PyREEMModule::instance() );
-  AudioFeedbackStream::instance()->initWithNode( hcNodeHandle_ );
+  AudioFeedbackStream::instance()->initWithNode( hcNodeHandle_, PyREEMModule::instance() );
   return true;
 }
 
