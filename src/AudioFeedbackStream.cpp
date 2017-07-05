@@ -125,7 +125,7 @@ bool AudioFeedbackStream::start()
   audioDecoder_ = celt_decoder_create_custom( celtMode_, 1, NULL );
 
   dataStream_ = new RTPDataReceiver();
-  dataStream_->init( PYRIDE_VIDEO_STREAM_BASE_PORT - 40, true );
+  dataStream_->init( PYRIDE_VIDEO_STREAM_BASE_PORT + 6, true );
 
   isRunning_ = true;
 
