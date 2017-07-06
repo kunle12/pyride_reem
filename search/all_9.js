@@ -1,6 +1,8 @@
 var searchData=
 [
   ['onbatterychargechange',['onBatteryChargeChange',['../classPyREEM.html#abc7d8a7ba502111201c3ab7f1d0c3d1a',1,'PyREEM']]],
+  ['onexclusivecontrolrelease',['onExclusiveControlRelease',['../classPyREEM.html#a89ba7a7ab23845ca75df803aaf827ab5',1,'PyREEM']]],
+  ['onexclusivecontrolrequest',['onExclusiveControlRequest',['../classPyREEM.html#a0f09728fa0ebf0a77c903ed62c8de45b',1,'PyREEM']]],
   ['ongotopoifailed',['onGotoPOIFailed',['../classPyREEM.html#ae07a62d6dbd67ea477a8c61a2c21cac4',1,'PyREEM']]],
   ['ongotopoisuccess',['onGotoPOISuccess',['../classPyREEM.html#aef4f15088470b496952f451c7cb23ebe',1,'PyREEM']]],
   ['onhandactionfailed',['onHandActionFailed',['../classPyREEM.html#a624f25119a654919e5da5eba36fb9ae7',1,'PyREEM']]],

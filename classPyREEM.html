@@ -267,6 +267,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ab7f2071168f860fce1c1337d020dc97d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#ab7f2071168f860fce1c1337d020dc97d">onUserLogOff</a> (user_name)</td></tr>
 <tr class="memdesc:ab7f2071168f860fce1c1337d020dc97d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when a remote user logs off.  <a href="#ab7f2071168f860fce1c1337d020dc97d">More...</a><br/></td></tr>
 <tr class="separator:ab7f2071168f860fce1c1337d020dc97d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f09728fa0ebf0a77c903ed62c8de45b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a0f09728fa0ebf0a77c903ed62c8de45b">onExclusiveControlRequest</a> (user_name)</td></tr>
+<tr class="memdesc:a0f09728fa0ebf0a77c903ed62c8de45b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when a user is requesting the exclusive control of the robot through a remote client.  <a href="#a0f09728fa0ebf0a77c903ed62c8de45b">More...</a><br/></td></tr>
+<tr class="separator:a0f09728fa0ebf0a77c903ed62c8de45b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89ba7a7ab23845ca75df803aaf827ab5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a89ba7a7ab23845ca75df803aaf827ab5">onExclusiveControlRelease</a> (user_name)</td></tr>
+<tr class="memdesc:a89ba7a7ab23845ca75df803aaf827ab5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when a remote user releases the exclusive control.  <a href="#a89ba7a7ab23845ca75df803aaf827ab5">More...</a><br/></td></tr>
+<tr class="separator:a89ba7a7ab23845ca75df803aaf827ab5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59d000e6b2f5c2d43c22942656270407"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a59d000e6b2f5c2d43c22942656270407">disconnect</a> (username)</td></tr>
 <tr class="memdesc:a59d000e6b2f5c2d43c22942656270407"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disconnect all remote clients.  <a href="#a59d000e6b2f5c2d43c22942656270407">More...</a><br/></td></tr>
 <tr class="separator:a59d000e6b2f5c2d43c22942656270407"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -292,6 +298,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a2449f339acd1a7bb9ad9c2e5b82432b4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a2449f339acd1a7bb9ad9c2e5b82432b4">isTimerRunning</a> (timer_id)</td></tr>
 <tr class="memdesc:a2449f339acd1a7bb9ad9c2e5b82432b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether a timer object is still alive.  <a href="#a2449f339acd1a7bb9ad9c2e5b82432b4">More...</a><br/></td></tr>
 <tr class="separator:a2449f339acd1a7bb9ad9c2e5b82432b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa16207d34eeb76ce4627f7ce5789e1bc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#aa16207d34eeb76ce4627f7ce5789e1bc">isTimerExecuting</a> (timer_id)</td></tr>
+<tr class="memdesc:aa16207d34eeb76ce4627f7ce5789e1bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether a timer object is in execution mode.  <a href="#aa16207d34eeb76ce4627f7ce5789e1bc">More...</a><br/></td></tr>
+<tr class="separator:aa16207d34eeb76ce4627f7ce5789e1bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af9bcb81751a454ae9e2e289ffc650490"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#af9bcb81751a454ae9e2e289ffc650490">removeAllTimers</a> ()</td></tr>
 <tr class="memdesc:af9bcb81751a454ae9e2e289ffc650490"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove all timer objects in the system.  <a href="#af9bcb81751a454ae9e2e289ffc650490">More...</a><br/></td></tr>
 <tr class="separator:af9bcb81751a454ae9e2e289ffc650490"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -378,10 +387,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a42b4baae87e88a1278a95b65fe614c4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Action Callback Functions</div></td></tr>
 <tr class="memitem:addfbe834b418869407f44a7ff36e6a9f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#addfbe834b418869407f44a7ff36e6a9f">onHeadActionSuccess</a> ()</td></tr>
-<tr class="memdesc:addfbe834b418869407f44a7ff36e6a9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#a89c5dd1292b40dc1be46adfd9dfc849a" title="Point the REEM head towards a specific coordinates in a reference frame with respect to &#39;stereo_link&#39;...">PyREEM.pointHeadTo</a> method call is successful.  <a href="#addfbe834b418869407f44a7ff36e6a9f">More...</a><br/></td></tr>
+<tr class="memdesc:addfbe834b418869407f44a7ff36e6a9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#acfc08db20190ea0ce9db96d7a223d7c6" title="Move the REEM head to a specific yaw and pitch position. ">PyREEM.moveHeadTo</a> or <a class="el" href="classPyREEM.html#ab87684d7f7cb3868b4911cd490eaee84" title="Move REEM head to a sequence of waypoints, i.e. joint trajectory. ">PyREEM.moveHeadWithJointTrajectory</a> or <a class="el" href="classPyREEM.html#a89c5dd1292b40dc1be46adfd9dfc849a" title="Point the REEM head towards a specific coordinates in a reference frame with respect to &#39;stereo_link&#39;...">PyREEM.pointHeadTo</a> method call is successful.  <a href="#addfbe834b418869407f44a7ff36e6a9f">More...</a><br/></td></tr>
 <tr class="separator:addfbe834b418869407f44a7ff36e6a9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc8d6450e06cf1c3ca80093eb5c35ecc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#acc8d6450e06cf1c3ca80093eb5c35ecc">onHeadActionFailed</a> ()</td></tr>
-<tr class="memdesc:acc8d6450e06cf1c3ca80093eb5c35ecc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#a89c5dd1292b40dc1be46adfd9dfc849a" title="Point the REEM head towards a specific coordinates in a reference frame with respect to &#39;stereo_link&#39;...">PyREEM.pointHeadTo</a> method call is failed.  <a href="#acc8d6450e06cf1c3ca80093eb5c35ecc">More...</a><br/></td></tr>
+<tr class="memdesc:acc8d6450e06cf1c3ca80093eb5c35ecc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#acfc08db20190ea0ce9db96d7a223d7c6" title="Move the REEM head to a specific yaw and pitch position. ">PyREEM.moveHeadTo</a> or <a class="el" href="classPyREEM.html#ab87684d7f7cb3868b4911cd490eaee84" title="Move REEM head to a sequence of waypoints, i.e. joint trajectory. ">PyREEM.moveHeadWithJointTrajectory</a> or <a class="el" href="classPyREEM.html#a89c5dd1292b40dc1be46adfd9dfc849a" title="Point the REEM head towards a specific coordinates in a reference frame with respect to &#39;stereo_link&#39;...">PyREEM.pointHeadTo</a> method call is failed.  <a href="#acc8d6450e06cf1c3ca80093eb5c35ecc">More...</a><br/></td></tr>
 <tr class="separator:acc8d6450e06cf1c3ca80093eb5c35ecc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3a80fcafb8c976c93fc8f274f57ac8e7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPyREEM.html#a3a80fcafb8c976c93fc8f274f57ac8e7">onMoveArmActionSuccess</a> (is_left_arm)</td></tr>
 <tr class="memdesc:a3a80fcafb8c976c93fc8f274f57ac8e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function when <a class="el" href="classPyREEM.html#a2d8ecb78d985e019a87ee85ac1d8710b" title="Move a REEM arm to the specified joint position within a time frame. ">PyREEM.moveArmWithJointPos</a> or <a class="el" href="classPyREEM.html#add75b3895e90c446186a4744d624d950" title="Move a REEM arm to a sequence of waypoints, i.e. joint trajectory. ">PyREEM.moveArmWithJointTrajectory</a> method call is successful.  <a href="#a3a80fcafb8c976c93fc8f274f57ac8e7">More...</a><br/></td></tr>
@@ -1261,6 +1270,31 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="aa16207d34eeb76ce4627f7ce5789e1bc"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">isTimerExecuting </td>
+          <td>(</td>
+          <td class="paramtype">timer_id&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Check whether a timer object is in execution mode. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">long</td><td>timer_id. ID of the timer object. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True = timer is executing code; False = timer is in hibernation. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a2449f339acd1a7bb9ad9c2e5b82432b4"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1799,6 +1833,56 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a89ba7a7ab23845ca75df803aaf827ab5"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">onExclusiveControlRelease </td>
+          <td>(</td>
+          <td class="paramtype">user_name&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Callback function when a remote user releases the exclusive control. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>user_name. The name of the user. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>None. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a0f09728fa0ebf0a77c903ed62c8de45b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">onExclusiveControlRequest </td>
+          <td>(</td>
+          <td class="paramtype">user_name&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Callback function when a user is requesting the exclusive control of the robot through a remote client. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>user_name. The name of the user. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>None or an integer. When the return value is a non-zero integer, the user request is rejected; otherwise, the user will gain the exclusive control right. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ae07a62d6dbd67ea477a8c61a2c21cac4"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1900,7 +1984,7 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Callback function when <a class="el" href="classPyREEM.html#a89c5dd1292b40dc1be46adfd9dfc849a" title="Point the REEM head towards a specific coordinates in a reference frame with respect to &#39;stereo_link&#39;...">PyREEM.pointHeadTo</a> method call is failed. </p>
+<p>Callback function when <a class="el" href="classPyREEM.html#acfc08db20190ea0ce9db96d7a223d7c6" title="Move the REEM head to a specific yaw and pitch position. ">PyREEM.moveHeadTo</a> or <a class="el" href="classPyREEM.html#ab87684d7f7cb3868b4911cd490eaee84" title="Move REEM head to a sequence of waypoints, i.e. joint trajectory. ">PyREEM.moveHeadWithJointTrajectory</a> or <a class="el" href="classPyREEM.html#a89c5dd1292b40dc1be46adfd9dfc849a" title="Point the REEM head towards a specific coordinates in a reference frame with respect to &#39;stereo_link&#39;...">PyREEM.pointHeadTo</a> method call is failed. </p>
 <dl class="section return"><dt>Returns</dt><dd>None. </dd></dl>
 
 </div>
@@ -1918,7 +2002,7 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Callback function when <a class="el" href="classPyREEM.html#a89c5dd1292b40dc1be46adfd9dfc849a" title="Point the REEM head towards a specific coordinates in a reference frame with respect to &#39;stereo_link&#39;...">PyREEM.pointHeadTo</a> method call is successful. </p>
+<p>Callback function when <a class="el" href="classPyREEM.html#acfc08db20190ea0ce9db96d7a223d7c6" title="Move the REEM head to a specific yaw and pitch position. ">PyREEM.moveHeadTo</a> or <a class="el" href="classPyREEM.html#ab87684d7f7cb3868b4911cd490eaee84" title="Move REEM head to a sequence of waypoints, i.e. joint trajectory. ">PyREEM.moveHeadWithJointTrajectory</a> or <a class="el" href="classPyREEM.html#a89c5dd1292b40dc1be46adfd9dfc849a" title="Point the REEM head towards a specific coordinates in a reference frame with respect to &#39;stereo_link&#39;...">PyREEM.pointHeadTo</a> method call is successful. </p>
 <dl class="section return"><dt>Returns</dt><dd>None. </dd></dl>
 
 </div>
@@ -2459,7 +2543,7 @@ Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>None. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>None or boolean. When the return value is false, the user will be removed from the system; otherwise the user is allowed to use the robot. </dd></dl>
 
 </div>
 </div>
@@ -3623,7 +3707,7 @@ Default output file name path is in the format of /removable/recordings/Ymd_HM_s
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu May 18 2017 10:52:22 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jul 6 2017 18:00:47 for PyRIDE by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
