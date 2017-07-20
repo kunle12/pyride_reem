@@ -367,7 +367,7 @@ static PyObject * PyModule_REEMMoveTorsoTo( PyObject * self, PyObject * args )
  *  \memberof PyREEM
  *  \brief Move REEM torso to a sequence of waypoints, i.e. joint trajectory.
  *  \param list joint_trajectory. A list of waypoints that contain joint position dictionaries of {'torso_1_joint','torso_2_joint'}.
- *  \return None.
+ *  \return bool. True == valid command; False == invalid command.
  *  \warning no joint value validation
  */
 static PyObject * PyModule_REEMMoveTorsoWithJointTraj( PyObject * self, PyObject * args )
@@ -423,8 +423,10 @@ static PyObject * PyModule_REEMMoveTorsoWithJointTraj( PyObject * self, PyObject
     }
   }
 
-  REEMProxyManager::instance()->moveTorsoWithJointTrajectory( trajectory, times_to_reach );
-  Py_RETURN_NONE;
+  if (REEMProxyManager::instance()->moveTorsoWithJointTrajectory( trajectory, times_to_reach ))
+    Py_RETURN_TRUE;
+
+  Py_RETURN_FALSE;
 }
 
 /*! \fn moveBodyTo(x,y,theta,best_time)
@@ -554,7 +556,7 @@ static PyObject * PyModule_REEMMoveHeadTo( PyObject * self, PyObject * args )
  *  \memberof PyREEM
  *  \brief Move REEM head to a sequence of waypoints, i.e. joint trajectory.
  *  \param list joint_trajectory. A list of waypoints that contain joint position dictionaries of {'head_1_joint','head_2_joint'}.
- *  \return None.
+ *  \return bool. True == valid command; False == invalid command.
  *  \warning no joint value validation
  */
 static PyObject * PyModule_REEMMoveHeadWithJointTraj( PyObject * self, PyObject * args )
@@ -610,8 +612,10 @@ static PyObject * PyModule_REEMMoveHeadWithJointTraj( PyObject * self, PyObject 
     }
   }
 
-  REEMProxyManager::instance()->moveHeadWithJointTrajectory( trajectory, times_to_reach );
-  Py_RETURN_NONE;
+  if (REEMProxyManager::instance()->moveHeadWithJointTrajectory( trajectory, times_to_reach ))
+    Py_RETURN_TRUE;
+  else
+    Py_RETURN_FALSE;
 }
 
 /*! \fn pointHeadTo(reference_frame, x, y, z)
@@ -966,7 +970,7 @@ static PyObject * PyModule_REEMGetRelativeTF( PyObject * self, PyObject * args )
  *  \brief Navigate REEM body to a specified pose.
  *  \param tuple target_position. Position in the form of (x,y,z).
  *  \param tuple target_orientation. Orientation in quaternion form (w,x,y,z).
- *  \return None.
+ *  \return bool. True == valid command; False == invalid command.
  *  \note Must have REEM navigation stack running prior the start of PyRIDE.
  */
 static PyObject * PyModule_REEMNavigateBodyTo( PyObject * self, PyObject * args, PyObject * keywds )
@@ -1014,8 +1018,10 @@ static PyObject * PyModule_REEMNavigateBodyTo( PyObject * self, PyObject * args,
     orientation[i] = PyFloat_AsDouble( tmpObj );
   }
 
-  REEMProxyManager::instance()->navigateBodyTo( position, orientation );
-  Py_RETURN_NONE;
+  if (REEMProxyManager::instance()->navigateBodyTo( position, orientation ))
+    Py_RETURN_TRUE;
+
+  Py_RETURN_FALSE;
 }
 
 /*! \fn cancelBodyNavigation()
@@ -1103,7 +1109,7 @@ static PyObject * PyModule_REEMSetRobotPoseInMap( PyObject * self, PyObject * ar
  *  \param tuple position. Target position in (x,y,z) w.r.t to odometry_combined reference frame.
  *  \param tuple orientation. Orientation in quaternion form (w,x,y,z).
  *  \param bool use_left_arm. True to move the left arm; False to use the right arm.
- *  \return None.
+ *  \return bool. True == valid command; False == invalid command.
  *  \note Must have a working inverse kinematic engine i.e. either MoveIt! or S-REEM.
  */
 /*! \fn getArmPose(left_arm)
@@ -1181,7 +1187,7 @@ static PyObject * PyModule_REEMMoveArmPoseTo( PyObject * self, PyObject * args, 
  *  \param dict joint_position. A dictionary of arm joint positions in radian.
  *  The dictionary must the same structure as the return of PyREEM.getArmJointPositions.
  *  \param float time_to_reach. Timeframe for reaching the pose.
- *  \return None.
+ *  \return bool. True == valid command; False == invalid command.
  */
 static PyObject * PyModule_REEMMoveArmWithJointPos( PyObject * self, PyObject * args, PyObject * keywds )
 {
@@ -1216,8 +1222,10 @@ static PyObject * PyModule_REEMMoveArmWithJointPos( PyObject * self, PyObject * 
   positions[5] = w_f_j;
   positions[6] = w_r_j;
 
-  REEMProxyManager::instance()->moveArmWithJointPos( isLeftArm, positions, time_to_reach );
-  Py_RETURN_NONE;
+  if (REEMProxyManager::instance()->moveArmWithJointPos( isLeftArm, positions, time_to_reach ))
+    Py_RETURN_TRUE;
+
+  Py_RETURN_FALSE;
 }
 
 /*! \fn moveArmWithJointTrajectory(joint_trajectory)
@@ -1225,7 +1233,7 @@ static PyObject * PyModule_REEMMoveArmWithJointPos( PyObject * self, PyObject * 
  *  \brief Move a REEM arm to a sequence of waypoints, i.e. joint trajectory.
  *  \param list joint_trajectory. A list of waypoints that contain joint position dictionaries with the same structure
  *  of the PyREEM.moveArmWithJointPos.
- *  \return None.
+ *  \return bool. True == valid command; False == invalid command.
  */
 static PyObject * PyModule_REEMMoveArmWithJointTraj( PyObject * self, PyObject * args )
 {
@@ -1302,8 +1310,10 @@ static PyObject * PyModule_REEMMoveArmWithJointTraj( PyObject * self, PyObject *
     }
   }
 
-  REEMProxyManager::instance()->moveArmWithJointTrajectory( (armsel == 1), trajectory, times_to_reach );
-  Py_RETURN_NONE;
+  if (REEMProxyManager::instance()->moveArmWithJointTrajectory( (armsel == 1), trajectory, times_to_reach ))
+    Py_RETURN_TRUE;
+
+  Py_RETURN_FALSE;
 }
 
 /*! \fn moveArmWithJointTrajectoryAndSpeed(joint_trajectory)
@@ -1312,7 +1322,7 @@ static PyObject * PyModule_REEMMoveArmWithJointTraj( PyObject * self, PyObject *
  *  \param list joint_trajectory. A list of waypoints with the joint data dictionaries structure
  *  of { "joint_name" : { "position" : value, "velocity" : value }, ... }. Each list item, i.e. a waypoint must also
  *  have a time to reach value that is consistent with the joint velocities at the adjacent waypoints.
- *  \return None.
+ *  \return bool. True == valid command; False == invalid command.
  */
 static PyObject * PyModule_REEMMoveArmWithJointTrajAndSpeed( PyObject * self, PyObject * args )
 {
@@ -1406,8 +1416,10 @@ static PyObject * PyModule_REEMMoveArmWithJointTrajAndSpeed( PyObject * self, Py
     }
   }
   
-  REEMProxyManager::instance()->moveArmWithJointTrajectoryAndSpeed( (armsel == 1), trajectory, joint_velocities, times_to_reach );
-  Py_RETURN_NONE;
+  if (REEMProxyManager::instance()->moveArmWithJointTrajectoryAndSpeed( (armsel == 1), trajectory, joint_velocities, times_to_reach ))
+    Py_RETURN_TRUE;
+
+  Py_RETURN_FALSE;
 }
 
 /*! \fn cancelMoveArmAction(is_left_arm)

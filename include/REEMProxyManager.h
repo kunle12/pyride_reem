@@ -135,17 +135,17 @@ public:
   bool pointHeadTo( const std::string & frame, float x, float y, float z );
   void updateHeadPos( float yaw, float pitch );
 
-  void moveHeadWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
+  bool moveHeadWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
                                      std::vector<float> & times_to_reach );
 
   bool moveArmWithGoalPose( bool isLeftArm, std::vector<double> & position,
                            std::vector<double> & orientation, float time_to_reach = 10.0 );
-  void moveArmWithJointPos( bool isLeftArm, std::vector<double> & positions,
+  bool moveArmWithJointPos( bool isLeftArm, std::vector<double> & positions,
                            float time_to_reach = 5.0 );
-  void moveArmWithJointTrajectory( bool isLeftArm,
+  bool moveArmWithJointTrajectory( bool isLeftArm,
                                    std::vector< std::vector<double> > & trajectory,
                                    std::vector<float> & times_to_reach );
-  void moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
+  bool moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
                                   std::vector< std::vector<double> > & trajectory,
                                   std::vector< std::vector<double> > & joint_velocities,
                                   std::vector<float> & times_to_reach );
@@ -174,7 +174,7 @@ public:
 
   bool moveTorsoTo( double yaw, double pitch, bool relative = false, float time_to_reach = 2.0 );
 
-  void moveTorsoWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
+  bool moveTorsoWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
                                      std::vector<float> & times_to_reach );
 
   bool playDefaultMotion( const std::string & motion_name );
