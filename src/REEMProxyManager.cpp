@@ -97,6 +97,7 @@ REEMProxyManager::REEMProxyManager() :
   rHandCtrl_( false ),
   lArmCtrl_( false ),
   rArmCtrl_( false ),
+  speechCtrl_( false ),
   palFaceDatabaseInit_( false ),
   audioVolume_( 0 ),
   powerVoltage_( -1 ),
@@ -972,6 +973,8 @@ void REEMProxyManager::doneRecordAudioAction( const actionlib::SimpleClientGoalS
 void REEMProxyManager::doneSpeakAction( const actionlib::SimpleClientGoalState & state,
                             const TtsResultConstPtr & result )
 {
+  speechCtrl_ = false;
+
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
 
@@ -987,20 +990,22 @@ void REEMProxyManager::doneSpeakAction( const actionlib::SimpleClientGoalState &
   ROS_INFO( "On speak finished in state [%s]", state.toString().c_str());
 }
 
-void REEMProxyManager::sayWithVolume( const std::string & text, float volume, bool toBlock )
+bool REEMProxyManager::sayWithVolume( const std::string & text, float volume, bool toBlock )
 {
-  if (!soundClient_)
-    return;
+  if (!soundClient_ || speechCtrl_)
+    return false;
 
   pal_interaction_msgs::TtsGoal goal;
 
   goal.rawtext.text = text;
   goal.rawtext.lang_id = "en_GB";
 
+  speechCtrl_ = true;
   soundClient_->sendGoal( goal,
                         boost::bind( &REEMProxyManager::doneSpeakAction, this, _1, _2 ),
                         TTSClient::SimpleActiveCallback(),
                         TTSClient::SimpleFeedbackCallback() );
+  return true;
 }
 
 void REEMProxyManager::setAudioVolume( const int vol )

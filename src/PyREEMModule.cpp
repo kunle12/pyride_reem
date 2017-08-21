@@ -174,10 +174,12 @@ static PyObject * PyModule_REEMSayWithVolume( PyObject * self, PyObject * args )
     return NULL;
   }
   if (dataStr) {
-    REEMProxyManager::instance()->sayWithVolume( string( dataStr ), volume,
-                                               (toBlockObj && PyObject_IsTrue( toBlockObj )) );
+    if (REEMProxyManager::instance()->sayWithVolume( string( dataStr ), volume,
+                                               (toBlockObj && PyObject_IsTrue( toBlockObj )) )) {
+      Py_RETURN_TRUE;
+    }
   }
-  Py_RETURN_NONE;
+  Py_RETURN_FALSE;
 }
 
 /*! \fn getBatteryStatus()

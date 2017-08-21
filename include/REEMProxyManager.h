@@ -109,7 +109,7 @@ public:
 
   void initWithNodeHandle( NodeHandle * nodeHandle, bool useOptionNodes = false, bool useMoveIt = false );
     
-  void sayWithVolume( const std::string & text, float volume  = 0.0, bool toBlock = false );
+  bool sayWithVolume( const std::string & text, float volume  = 0.0, bool toBlock = false );
   void setAudioVolume( const int vol );
 
   int getAudioVolume() const { return audioVolume_; }
@@ -312,6 +312,7 @@ private:
   bool rHandCtrl_;
   bool lArmCtrl_;
   bool rArmCtrl_;
+  bool speechCtrl_;
   bool palFaceDatabaseInit_;
   
   int audioVolume_;
