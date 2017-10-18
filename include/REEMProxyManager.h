@@ -60,6 +60,7 @@
 
 #include <pyride_common_msgs/TrackedObjectStatusChange.h>
 #include <pyride_common_msgs/TrackedObjectUpdate.h>
+#include <pyride_common_msgs/ObjectEnrolmentAction.h>
 
 #include "PyRideCommon.h"
 
@@ -72,6 +73,7 @@ using namespace play_motion_msgs;
 using namespace pal_navigation_msgs;
 using namespace audio_file_player;
 using namespace audio_stream;
+using namespace pyride_common_msgs;
 
 namespace pyride {
 
@@ -84,6 +86,7 @@ typedef actionlib::SimpleActionClient<pal_navigation_msgs::GoToPOIAction> GotoPO
 typedef actionlib::SimpleActionClient<play_motion_msgs::PlayMotionAction> PlayMotionClient;
 typedef actionlib::SimpleActionClient<audio_file_player::AudioFilePlayAction> PlayAudioClient;
 typedef actionlib::SimpleActionClient<audio_stream::RecordAudioAction> RecordAudioClient;
+typedef actionlib::SimpleActionClient<pyride_common_msgs::ObjectEnrolmentAction> ObjectEnrolmentClient;
 
 typedef enum {
   WHITE = 0,
@@ -182,6 +185,8 @@ public:
   bool playAudioFile( const std::string & audio_name );
 
   bool recordAudioFile( const std::string & audio_name, const float period );
+
+  bool enrolHumanFace( const std::string & face_name, const int required_samples = 35 );
 
   void updateBodyPose( const RobotPose & pose, bool localupdate = false );
   
@@ -350,6 +355,7 @@ private:
   PlayMotionClient * playMotionClient_;
   PlayAudioClient * playAudioClient_;
   RecordAudioClient * recordAudioClient_;
+  ObjectEnrolmentClient * faceEnrolmentClient_;
 
   moveit::planning_interface::MoveGroup * rarmGroup_;
   moveit::planning_interface::MoveGroup * larmGroup_;
@@ -420,6 +426,9 @@ private:
 
   void doneRecordAudioAction( const actionlib::SimpleClientGoalState & state,
                             const RecordAudioResultConstPtr & result );
+
+  void doneFaceEnrolmentAction( const actionlib::SimpleClientGoalState & state,
+                            const ObjectEnrolmentResultConstPtr & result );
 
   void moveLHandActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback );
   void moveRHandActionFeedback( const FollowJointTrajectoryFeedbackConstPtr & feedback );

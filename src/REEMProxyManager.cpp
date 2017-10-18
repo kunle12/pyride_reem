@@ -122,6 +122,7 @@ REEMProxyManager::REEMProxyManager() :
   playMotionClient_( NULL ),
   playAudioClient_( NULL ),
   recordAudioClient_( NULL ),
+  faceEnrolmentClient_( NULL ),
   batChargingState_( UNKNOWN ),
   batCapacity_( 100.0 ),
   lowPowerThreshold_( 0 ), // # no active power monitoring
@@ -338,6 +339,19 @@ void REEMProxyManager::initWithNodeHandle( NodeHandle * nodeHandle, bool useOpti
     recordAudioClient_ = NULL;
   }
 
+  trials = 0;
+  faceEnrolmentClient_ = new ObjectEnrolmentClient( "/face_server/face_enrolment", true );
+
+  while (!faceEnrolmentClient_->waitForServer( ros::Duration( 5.0 ) ) && trials < 2) {
+    ROS_INFO( "Waiting for the face server action server to come up." );
+    trials++;
+  }
+  if (!faceEnrolmentClient_->isServerConnected()) {
+    ROS_INFO( "face server action server is down." );
+    delete faceEnrolmentClient_;
+    faceEnrolmentClient_ = NULL;
+  }
+
   if (useMoveIt) {
     ROS_INFO( "Loading MoveIt service..." );
     try {
@@ -484,6 +498,10 @@ void REEMProxyManager::fini()
   if (recordAudioClient_) {
     delete recordAudioClient_;
     recordAudioClient_ = NULL;
+  }
+  if (faceEnrolmentClient_) {
+    delete faceEnrolmentClient_;
+    faceEnrolmentClient_ = NULL;
   }
   jointSub_.shutdown();
   powerSub_.shutdown();
@@ -958,6 +976,39 @@ void REEMProxyManager::doneRecordAudioAction( const actionlib::SimpleClientGoalS
   PyGILState_Release( gstate );
 
   ROS_INFO( "On record audio file finished in state [%s]", state.toString().c_str());
+}
+
+/*! \typedef onFaceEnrolmentSuccess()
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.enrolHumanFace method call is successful.
+ *  \return None.
+ */
+/*! \typedef onFaceEnrolmentFailed()
+ *  \memberof PyREEM.
+ *  \brief Callback function when PyREEM.enrolHumanFace method call is failed.
+ *  \return None.
+ */
+
+void REEMProxyManager::doneFaceEnrolmentAction( const actionlib::SimpleClientGoalState & state,
+                          const ObjectEnrolmentResultConstPtr & result )
+{
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
+    PyREEMModule::instance()->invokeCallback( "onFaceEnrolmentSuccess", NULL );
+  }
+  else {
+    PyObject * arg = Py_BuildValue( "(s)", result->reason.c_str() );
+
+    PyREEMModule::instance()->invokeCallback( "onFaceEnrolmentFailed", NULL );
+
+    Py_DECREF( arg );
+  }
+
+  PyGILState_Release( gstate );
+
+  ROS_INFO( "On face enrolment finished in state [%s]", state.toString().c_str());
 }
 
 /*! \typedef onSpeakSuccess()
@@ -2266,6 +2317,27 @@ bool REEMProxyManager::recordAudioFile( const std::string & audio_name, const fl
                       boost::bind( &REEMProxyManager::doneRecordAudioAction, this, _1, _2 ),
                       RecordAudioClient::SimpleActiveCallback(),
                       RecordAudioClient::SimpleFeedbackCallback() );
+  return true;
+}
+
+bool REEMProxyManager::enrolHumanFace( const std::string & face_name, const int required_samples )
+{
+  if (!faceEnrolmentClient_)
+    return false;
+
+  if (face_name.length() == 0 || required_samples <= 0) // really just check for negative sample.
+    return false;
+
+  pyride_common_msgs::ObjectEnrolmentGoal goal;
+
+  goal.name = face_name;
+  goal.instances = required_samples;
+  goal.timeout = required_samples * 1.5;
+
+  faceEnrolmentClient_->sendGoal( goal,
+                      boost::bind( &REEMProxyManager::doneFaceEnrolmentAction, this, _1, _2 ),
+                      ObjectEnrolmentClient::SimpleActiveCallback(),
+                      ObjectEnrolmentClient::SimpleFeedbackCallback() );
   return true;
 }
 

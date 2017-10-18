@@ -1678,6 +1678,34 @@ static PyObject * PyModule_REEMCancelAudioRecording( PyObject * self )
   Py_RETURN_NONE;
 }
 
+/*! \fn enrolHumanFace(face_name, int)
+ *  \memberof PyREEM
+ *  \brief Enrol a human face for face recognition
+ *  \param str face_name. Name for the enrolling face.
+ *  \param int. The number of samples to be taken
+ *  \return bool. True == valid command; False == invalid command.
+ */
+static PyObject * PyModule_REEMEnrolHumanFace( PyObject * self, PyObject * args )
+{
+  char * name = NULL;
+  int samples = 0.0;
+
+  if (!PyArg_ParseTuple( args, "si", &name, &samples )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  if (samples < 20) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.enrolHumanFace: samples must be greater than 20." );
+    return NULL;
+  }
+
+  if (REEMProxyManager::instance()->enrolHumanFace( name, samples ))
+    Py_RETURN_TRUE;
+  else
+    Py_RETURN_FALSE;
+}
+
 /*! \fn registerBaseScanCallback( callback_function, target_frame )
  *  \memberof PyREEM
  *  \brief Register a callback function for receiving base laser scan data.
@@ -2602,6 +2630,8 @@ static PyMethodDef PyModule_methods[] = {
     "Start PAL built-in face enrollment." },
   { "stopPalFaceEnrollment", (PyCFunction)PyModule_REEMStopPalFaceEnrollment, METH_NOARGS,
     "Stop PAL built-in face enrollment." },
+  { "enrolHumanFace", (PyCFunction)PyModule_REEMEnrolHumanFace, METH_VARARGS,
+    "Use default human face enrolment." },
   { "directToWeb", (PyCFunction)PyModule_REEMDirectToWeb, METH_VARARGS,
     "Direct REEM chest screen to a URI." },
   { "getCurrentMapPOIs", (PyCFunction)PyModule_REEMGetCurrentMapPOIs, METH_NOARGS,
