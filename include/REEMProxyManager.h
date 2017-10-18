@@ -307,6 +307,13 @@ private:
   boost::mutex joint_mutex_;
   boost::mutex voltage_mutex_;
   
+  boost::recursive_mutex htsub_mutex_;
+  boost::recursive_mutex legsub_mutex_;
+  boost::recursive_mutex palfacesub_mutex_;
+  boost::recursive_mutex sonarsub_mutex_;
+  boost::recursive_mutex basescansub_mutex_;
+  boost::recursive_mutex tiltscansub_mutex_;
+
   bool bodyCtrlWithOdmetry_;
   bool bodyCtrlWithNavigation_;
   bool torsoCtrl_;

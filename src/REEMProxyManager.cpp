@@ -1071,6 +1071,11 @@ void REEMProxyManager::setAudioVolume( const int vol )
 
 void REEMProxyManager::baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg )
 {
+  boost::recursive_mutex::scoped_lock lock( basescansub_mutex_, boost::try_to_lock );
+
+  if (!lock)
+    return;
+
   if (baseScanTransformFrame_.length() > 0) { // we transform to point cloud w.r.t to the frame
     sensor_msgs::PointCloud cloud;
     try  {
@@ -1143,6 +1148,11 @@ void REEMProxyManager::baseScanDataCB( const sensor_msgs::LaserScanConstPtr & ms
 
 void REEMProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg )
 {
+  boost::recursive_mutex::scoped_lock lock( tiltscansub_mutex_, boost::try_to_lock );
+
+  if (!lock)
+    return;
+
   if (tiltScanTransformFrame_.length() > 0) { // we transform to point cloud w.r.t to the frame
     sensor_msgs::PointCloud cloud;
     try  {
@@ -1215,6 +1225,11 @@ void REEMProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & ms
 
 void REEMProxyManager::torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg )
 {
+  boost::recursive_mutex::scoped_lock lock( sonarsub_mutex_, boost::try_to_lock );
+
+  if (!lock)
+    return;
+
   if ((msg->range > msg->max_range) || (msg->range < msg->min_range)) {
     return;
   }
@@ -1243,6 +1258,11 @@ void REEMProxyManager::torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg 
 
 void REEMProxyManager::htObjStatusCB( const pyride_common_msgs::TrackedObjectStatusChangeConstPtr & msg )
 {
+  boost::recursive_mutex::scoped_lock lock( htsub_mutex_, boost::try_to_lock );
+
+  if (!lock)
+    return;
+
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
 
@@ -1258,6 +1278,11 @@ void REEMProxyManager::htObjStatusCB( const pyride_common_msgs::TrackedObjectSta
 
 void REEMProxyManager::htObjUpdateCB( const pyride_common_msgs::TrackedObjectUpdateConstPtr & msg )
 {
+  boost::recursive_mutex::scoped_lock lock( htsub_mutex_, boost::try_to_lock );
+
+  if (!lock)
+    return;
+
   size_t rsize = msg->objects.size();
 
   PyGILState_STATE gstate;
@@ -1528,6 +1553,7 @@ void REEMProxyManager::registerForBaseScanData( const std::string & target_frame
 
 void REEMProxyManager::deregisterForBaseScanData()
 {
+  boost::recursive_mutex::scoped_lock lock( basescansub_mutex_ );
   if (rawBaseScanSub_) {
     rawBaseScanSub_->shutdown();
     delete rawBaseScanSub_;
@@ -1572,6 +1598,7 @@ void REEMProxyManager::registerForTiltScanData( const std::string & target_frame
   
 void REEMProxyManager::deregisterForTiltScanData()
 {
+  boost::recursive_mutex::scoped_lock lock( tiltscansub_mutex_ );
   if (rawTiltScanSub_) {
     rawTiltScanSub_->shutdown();
     delete rawTiltScanSub_;
@@ -1602,6 +1629,8 @@ void REEMProxyManager::registerForPalFaceData()
 void REEMProxyManager::deregisterForPalFaceData()
 {
   if (faceDetectSub_) {
+    boost::recursive_mutex::scoped_lock lock( palfacesub_mutex_ );
+
     faceDetectSub_->shutdown();
     delete faceDetectSub_;
     faceDetectSub_ = NULL;
@@ -1622,6 +1651,7 @@ void REEMProxyManager::registerForLegData( const float distance )
 void REEMProxyManager::deregisterForLegData()
 {
   if (legDetectSub_) {
+    boost::recursive_mutex::scoped_lock lock( legsub_mutex_ );
     legDetectSub_->shutdown();
     delete legDetectSub_;
     legDetectSub_ = NULL;
@@ -1641,6 +1671,8 @@ void REEMProxyManager::registerForSonarData()
 void REEMProxyManager::deregisterForSonarData()
 {
   if (torsoSonarSub_) {
+    boost::recursive_mutex::scoped_lock lock( sonarsub_mutex_ );
+
     torsoSonarSub_->shutdown();
     delete torsoSonarSub_;
     torsoSonarSub_ = NULL;
@@ -1663,11 +1695,13 @@ void REEMProxyManager::registerForHumanData( bool tracking_data )
 void REEMProxyManager::deregisterForHumanData()
 {
   if (htObjStatusSub_) {
+    boost::recursive_mutex::scoped_lock lock( htsub_mutex_ );
     htObjStatusSub_->shutdown();
     delete htObjStatusSub_;
     htObjStatusSub_ = NULL;
   }
   if (htObjUpdateSub_) {
+    boost::recursive_mutex::scoped_lock stop_lock( htsub_mutex_ );
     htObjUpdateSub_->shutdown();
     delete htObjUpdateSub_;
     htObjUpdateSub_ = NULL;
@@ -2769,6 +2803,11 @@ void REEMProxyManager::audioVolumeDataCB( const std_msgs::Int8ConstPtr & msg )
 
 void REEMProxyManager::palFaceDataCB( const pal_detection_msgs::FaceDetectionsConstPtr & msg )
 {
+  boost::recursive_mutex::scoped_lock lock( palfacesub_mutex_, boost::try_to_lock );
+
+  if (!lock)
+    return;
+
   size_t rsize = msg->faces.size();
 
   if (rsize == 0) {
@@ -2823,6 +2862,11 @@ void REEMProxyManager::palFaceDataCB( const pal_detection_msgs::FaceDetectionsCo
 
 void REEMProxyManager::legDataCB( const people_msgs::PositionMeasurementArrayConstPtr & msg )
 {
+  boost::recursive_mutex::scoped_lock lock( legsub_mutex_, boost::try_to_lock );
+
+  if (!lock)
+    return;
+
   size_t rsize = msg->people.size();
 
   int count = 0;
