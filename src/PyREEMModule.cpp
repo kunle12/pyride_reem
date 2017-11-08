@@ -1877,7 +1877,7 @@ static PyObject * PyModule_REEMRegisterPalFaceData( PyObject * self, PyObject * 
  *  None object can be used to stop receiving the leg detection data.
  *  \param callback_function that takes a list of detected legs data, dictionary of {'id', 'confidence', 'position' (x,y)}
  *  \param float distance. distance where the leg detection callback will be triggered. Optional, default 1.0 metre.
- *  \return None.
+ *  \return previously set callback_function if any, otherwise none.
  */
 static PyObject * PyModule_REEMRegisterLegDetectData( PyObject * self, PyObject * args )
 {
@@ -1905,9 +1905,16 @@ static PyObject * PyModule_REEMRegisterLegDetectData( PyObject * self, PyObject 
     return NULL;
   }
 
+  PyObject * oldcb = PyREEMModule::instance()->getLegDetectCallback();
+
+  // must set return object before set callback since set callback will
+  // decrement the olde cb's ref count
+  PyObject * retObj = Py_BuildValue( "(O)", oldcb ? oldcb : Py_None );
+
   PyREEMModule::instance()->setLegDetectCallback( callbackFn );
   REEMProxyManager::instance()->registerForLegData( distance );
-  Py_RETURN_NONE;
+
+  return retObj;
 }
 
 /*! \fn addSolidObject(name,volume,position,orientation)
@@ -2464,7 +2471,7 @@ static PyObject * PyModule_REEMSendMessageToNode( PyObject * self, PyObject * ar
  *  \param detection_callback function that takes inputs of (object_type, detection_id, identification_number, status)
  *  \param tracking_callback (optional) function that takes a list of dictionaries of { 'object_type', 'track_id',
  *  'bound' (in topleft x, y, width, height), 'est_pos' (in x, y z)}.
- *  \return None
+ *  \return previously set detection_callback and tracking_callback in a tuple if any, otherwise return a tuple of none.
  *  \note est_pos is not working at this moment.
  */
 static PyObject * PyModule_REEMRegisterObjectDetectTracking( PyObject * self, PyObject * args )
@@ -2493,10 +2500,18 @@ static PyObject * PyModule_REEMRegisterObjectDetectTracking( PyObject * self, Py
     return NULL;
   }
 
+  PyObject * olddetectcb = PyREEMModule::instance()->getObjectDetectCallback();
+  PyObject * oldtrackcb = PyREEMModule::instance()->getObjectTrackCallback();
+
+  // must set return object before set callback since set callback will
+  // decrement the olde cb's ref count
+  PyObject * retObj = Py_BuildValue( "(OO)", olddetectcb ? olddetectcb : Py_None, oldtrackcb ? oldtrackcb : Py_None );
+
   PyREEMModule::instance()->setObjectDTCallback( detectcb, trackcb );
 
   REEMProxyManager::instance()->registerForHumanData( (trackcb != NULL) );
-  Py_RETURN_NONE;
+
+  return retObj;
 }
 
 /**@}*/

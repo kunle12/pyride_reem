@@ -26,6 +26,10 @@ public:
   void invokeTorsoSonarCallback( PyObject * arg );
   void invokeLegDetectCallback( PyObject * arg );
   
+  PyObject * getObjectDetectCallback() const { return objectDetectCB_; }
+  PyObject * getObjectTrackCallback() const { return objectTrackCB_; }
+  PyObject * getLegDetectCallback() const { return legDetectCB_; }
+
   void setBaseScanCallback( PyObject * obj );
   void setTiltScanCallback( PyObject * obj );
   void setPalFaceCallback( PyObject * obj );
