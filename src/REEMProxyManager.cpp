@@ -1071,10 +1071,15 @@ void REEMProxyManager::setAudioVolume( const int vol )
 
 void REEMProxyManager::baseScanDataCB( const sensor_msgs::LaserScanConstPtr & msg )
 {
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
   boost::recursive_mutex::scoped_lock lock( basescansub_mutex_, boost::try_to_lock );
 
-  if (!lock)
+  if (!lock) {
+    PyGILState_Release( gstate );
     return;
+  }
 
   if (baseScanTransformFrame_.length() > 0) { // we transform to point cloud w.r.t to the frame
     sensor_msgs::PointCloud cloud;
@@ -1085,13 +1090,10 @@ void REEMProxyManager::baseScanDataCB( const sensor_msgs::LaserScanConstPtr & ms
 
       lprojector_.transformLaserScanToPointCloud( baseScanTransformFrame_, *msg, cloud, tflistener_ );
     }
-    catch (tf::TransformException& e)
-    {
+    catch (tf::TransformException& e) {
+      PyGILState_Release( gstate );
       return;
     }
-    
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
     
     size_t psize = cloud.points.size();
     
@@ -1106,13 +1108,8 @@ void REEMProxyManager::baseScanDataCB( const sensor_msgs::LaserScanConstPtr & ms
     
     Py_DECREF( arg );
     Py_DECREF( retList );
-    
-    PyGILState_Release( gstate );
   }
   else {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-    
     size_t rsize = msg->ranges.size();
     size_t isize = msg->intensities.size();
     
@@ -1141,17 +1138,21 @@ void REEMProxyManager::baseScanDataCB( const sensor_msgs::LaserScanConstPtr & ms
     Py_DECREF( arg );
     Py_DECREF( rangeData );
     Py_DECREF( intensityData );
-    
-    PyGILState_Release( gstate );
   }
+  PyGILState_Release( gstate );
 }
 
 void REEMProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & msg )
 {
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
   boost::recursive_mutex::scoped_lock lock( tiltscansub_mutex_, boost::try_to_lock );
 
-  if (!lock)
+  if (!lock) {
+    PyGILState_Release( gstate );
     return;
+  }
 
   if (tiltScanTransformFrame_.length() > 0) { // we transform to point cloud w.r.t to the frame
     sensor_msgs::PointCloud cloud;
@@ -1162,14 +1163,11 @@ void REEMProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & ms
       
       lprojector_.transformLaserScanToPointCloud( tiltScanTransformFrame_, *msg, cloud, tflistener_ );
     }
-    catch (tf::TransformException& e)
-    {
+    catch (tf::TransformException& e) {
+      PyGILState_Release( gstate );
       return;
     }
-    
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-    
+
     size_t psize = cloud.points.size();
     
     PyObject * retList = PyList_New( psize );
@@ -1183,13 +1181,8 @@ void REEMProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & ms
     
     Py_DECREF( arg );
     Py_DECREF( retList );
-    
-    PyGILState_Release( gstate );
   }
   else {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-    
     size_t rsize = msg->ranges.size();
     size_t isize = msg->intensities.size();
     
@@ -1218,24 +1211,26 @@ void REEMProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & ms
     Py_DECREF( arg );
     Py_DECREF( rangeData );
     Py_DECREF( intensityData );
-    
-    PyGILState_Release( gstate );
   }
+  PyGILState_Release( gstate );
 }
 
 void REEMProxyManager::torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg )
 {
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
   boost::recursive_mutex::scoped_lock lock( sonarsub_mutex_, boost::try_to_lock );
 
-  if (!lock)
-    return;
-
-  if ((msg->range > msg->max_range) || (msg->range < msg->min_range)) {
+  if (!lock) {
+    PyGILState_Release( gstate );
     return;
   }
 
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
+  if ((msg->range > msg->max_range) || (msg->range < msg->min_range)) {
+    PyGILState_Release( gstate );
+    return;
+  }
 
   PyObject * retObj = PyDict_New();
   PyObject * elemObj = PyBool_FromLong( (msg->header.frame_id.compare( "torso_sonar_15_link" ) == 0) ? 1 : 0 );
@@ -1258,13 +1253,15 @@ void REEMProxyManager::torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg 
 
 void REEMProxyManager::htObjStatusCB( const pyride_common_msgs::TrackedObjectStatusChangeConstPtr & msg )
 {
-  boost::recursive_mutex::scoped_lock lock( htsub_mutex_, boost::try_to_lock );
-
-  if (!lock)
-    return;
-
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
+
+  boost::recursive_mutex::scoped_lock lock( htsub_mutex_, boost::try_to_lock );
+
+  if (!lock) {
+    PyGILState_Release( gstate );
+    return;
+  }
 
   PyObject * arg = Py_BuildValue( "(iisi)", msg->objtype, msg->trackid,
                                  msg->name.c_str(), msg->status );
@@ -1278,15 +1275,17 @@ void REEMProxyManager::htObjStatusCB( const pyride_common_msgs::TrackedObjectSta
 
 void REEMProxyManager::htObjUpdateCB( const pyride_common_msgs::TrackedObjectUpdateConstPtr & msg )
 {
-  boost::recursive_mutex::scoped_lock lock( htsub_mutex_, boost::try_to_lock );
-
-  if (!lock)
-    return;
-
-  size_t rsize = msg->objects.size();
-
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
+
+  boost::recursive_mutex::scoped_lock lock( htsub_mutex_, boost::try_to_lock );
+
+  if (!lock) {
+    PyGILState_Release( gstate );
+    return;
+  }
+
+  size_t rsize = msg->objects.size();
 
   PyObject * retList = PyList_New( rsize );
 
@@ -2862,10 +2861,15 @@ void REEMProxyManager::palFaceDataCB( const pal_detection_msgs::FaceDetectionsCo
 
 void REEMProxyManager::legDataCB( const people_msgs::PositionMeasurementArrayConstPtr & msg )
 {
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
   boost::recursive_mutex::scoped_lock lock( legsub_mutex_, boost::try_to_lock );
 
-  if (!lock)
+  if (!lock) {
+    PyGILState_Release( gstate );
     return;
+  }
 
   size_t rsize = msg->people.size();
 
@@ -2879,9 +2883,6 @@ void REEMProxyManager::legDataCB( const people_msgs::PositionMeasurementArrayCon
     }
     count++;
   }
-
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
 
   PyObject * retList = PyList_New( count );
   count = 0;
