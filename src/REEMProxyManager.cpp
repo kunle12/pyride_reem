@@ -708,6 +708,8 @@ void REEMProxyManager::doneNavgiateBodyAction( const actionlib::SimpleClientGoal
 void REEMProxyManager::doneGotoPOIAction( const actionlib::SimpleClientGoalState & state,
                                              const GoToPOIResultConstPtr & result )
 {
+  std::string poi = targetPOIName_;
+
   targetPOIName_ = "";
 
   bodyCtrlWithNavigation_ = false;
@@ -715,7 +717,7 @@ void REEMProxyManager::doneGotoPOIAction( const actionlib::SimpleClientGoalState
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
 
-  PyObject * arg = Py_BuildValue( "(s)", targetPOIName_.c_str() );
+  PyObject * arg = Py_BuildValue( "(s)", poi.c_str() );
 
   if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
     PyREEMModule::instance()->invokeCallback( "onGotoPOISuccess", arg );
