@@ -99,6 +99,7 @@ REEMProxyManager::REEMProxyManager() :
   rArmCtrl_( false ),
   speechCtrl_( false ),
   palFaceDatabaseInit_( false ),
+  noLegDetected_( false ),
   audioVolume_( 0 ),
   powerVoltage_( -1 ),
   lArmActionTimeout_( 20 ),
@@ -2886,42 +2887,44 @@ void REEMProxyManager::legDataCB( const people_msgs::PositionMeasurementArrayCon
     count++;
   }
 
-  PyObject * retList = PyList_New( count );
-  count = 0;
+  if (count > 0 || !noLegDetected_) { // send no leg callback once
+    PyObject * retList = PyList_New( count );
+    count = 0;
 
-  for (size_t i = 0; i < rsize; i++) {
-    const people_msgs::PositionMeasurement & person = msg->people[i];
+    for (size_t i = 0; i < rsize; i++) {
+      const people_msgs::PositionMeasurement & person = msg->people[i];
 
-    if ((person.pos.x * person.pos.x + person.pos.y * person.pos.y) > legDetectDistance_) {
-      // filter out person outside of specified distance
-      continue;
+      if ((person.pos.x * person.pos.x + person.pos.y * person.pos.y) > legDetectDistance_) {
+        // filter out person outside of specified distance
+        continue;
+      }
+      PyObject * retObj = PyDict_New();
+      PyObject * elemObj = PyString_FromString( person.object_id.c_str() );
+      PyDict_SetItemString( retObj, "id", elemObj );
+      Py_DECREF( elemObj );
+
+      elemObj = PyFloat_FromDouble( person.reliability );
+      PyDict_SetItemString( retObj, "confidence", elemObj );
+      Py_DECREF( elemObj );
+
+      elemObj = PyTuple_New( 2 );
+      PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( person.pos.x ) );
+      PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( person.pos.y ) );
+      PyDict_SetItemString( retObj, "position", elemObj );
+      Py_DECREF( elemObj );
+
+      PyList_SetItem( retList, count++, retObj );
     }
-    PyObject * retObj = PyDict_New();
-    PyObject * elemObj = PyString_FromString( person.object_id.c_str() );
-    PyDict_SetItemString( retObj, "id", elemObj );
-    Py_DECREF( elemObj );
 
-    elemObj = PyFloat_FromDouble( person.reliability );
-    PyDict_SetItemString( retObj, "confidence", elemObj );
-    Py_DECREF( elemObj );
+    PyObject * arg = Py_BuildValue( "(O)", retList );
 
-    elemObj = PyTuple_New( 2 );
-    PyTuple_SetItem( elemObj, 0, PyFloat_FromDouble( person.pos.x ) );
-    PyTuple_SetItem( elemObj, 1, PyFloat_FromDouble( person.pos.y ) );
-    PyDict_SetItemString( retObj, "position", elemObj );
-    Py_DECREF( elemObj );
+    PyREEMModule::instance()->invokeLegDetectCallback( arg );
 
-    PyList_SetItem( retList, count++, retObj );
+    Py_DECREF( arg );
+    Py_DECREF( retList );
   }
-
-  PyObject * arg = Py_BuildValue( "(O)", retList );
-
-  PyREEMModule::instance()->invokeLegDetectCallback( arg );
-
-  Py_DECREF( arg );
-  Py_DECREF( retList );
-
   PyGILState_Release( gstate );
+  noLegDetected_ = (count == 0);
 }
 
 void REEMProxyManager::setLowPowerThreshold( int percent )

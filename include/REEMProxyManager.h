@@ -326,6 +326,7 @@ private:
   bool rArmCtrl_;
   bool speechCtrl_;
   bool palFaceDatabaseInit_;
+  bool noLegDetected_;
   
   int audioVolume_;
   int powerVoltage_;
