@@ -62,7 +62,13 @@ bool PyREEMServer::init()
     ERROR_MSG( "Unable to initialise any active robot audio device.\n" );
   }
 
-  nodeStatusSub_ = hcNodeHandle_->subscribe( "pyride/node_status", 10, &PyREEMServer::nodeStatusCB, this );
+  ros::SubscribeOptions sopts = ros::SubscribeOptions::create<pyride_common_msgs::NodeStatus>( "pyride/node_status",
+        10, boost::bind( &PyREEMServer::nodeStatusCB, this, _1 ), ros::VoidPtr(), &nodeStatusQueue_ );
+
+  nodeStatusSub_ = hcNodeHandle_->subscribe( sopts );
+
+  nodeStatusThread_ = new ros::AsyncSpinner( 1, &nodeStatusQueue_ );
+  nodeStatusThread_->start();
 
   REEMProxyManager::instance()->initWithNodeHandle( hcNodeHandle_, useOptionNodes, useMoveIt );
   ServerDataProcessor::instance()->init( activeVideoDevices_, activeAudioDevices_ );
@@ -72,7 +78,7 @@ bool PyREEMServer::init()
       (RobotCapability)(MOBILITY|VIDEO_FEEBACK|AUDIO_FEEBACK|MANIPULATION) );
   
   PythonServer::instance()->init( AppConfigManager::instance()->enablePythonConsole(),
-      PyREEMModule::instance(), scriptdir.c_str() );
+      PyREEMModule::instance(), scriptdir.c_str(), "/home/pal/local" );
   ServerDataProcessor::instance()->discoverConsoles();
   VideoToWebBridge::instance()->setPyModuleExtension( PyREEMModule::instance() );
   AudioFeedbackStream::instance()->initWithNode( hcNodeHandle_, PyREEMModule::instance() );
@@ -108,6 +114,10 @@ void PyREEMServer::fini()
   finiAudioDevices();
 
   nodeStatusSub_.shutdown();
+
+  nodeStatusThread_->stop();
+  delete nodeStatusThread_;
+  nodeStatusThread_ = NULL;
 
   REEMProxyManager::instance()->fini();
   AppConfigManager::instance()->fini();

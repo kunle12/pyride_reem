@@ -21,6 +21,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <ros/ros.h>
+#include <ros/callback_queue.h>
 #include <pyride_common_msgs/NodeStatus.h>
 
 #include "ServerDataProcessor.h"
@@ -46,6 +47,9 @@ private:
   bool isRunning_;
   NodeHandle * hcNodeHandle_;
   Subscriber nodeStatusSub_;
+
+  AsyncSpinner * nodeStatusThread_;
+  CallbackQueue nodeStatusQueue_;
 
   VideoDeviceList activeVideoDevices_;
   AudioDeviceList activeAudioDevices_;
