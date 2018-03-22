@@ -233,6 +233,9 @@ public:
   void registerForHumanData( bool tracking_data );
   void deregisterForHumanData();
 
+  void registerForWakeWord();
+  void deregisterForWakeWord();
+
   void directToWeb( const std::string & uri );
 
   int setEarLED( const REEMLedColour colour, const int side = 3 );
@@ -273,6 +276,7 @@ private:
   Subscriber * torsoSonarSub_;
   Subscriber * faceDetectSub_;
   Subscriber * legDetectSub_;
+  Subscriber * hotwordSub_;
 
   AsyncSpinner * jointDataThread_;
   CallbackQueue jointDataQueue_;
@@ -453,6 +457,7 @@ private:
   void palFaceDataCB( const pal_detection_msgs::FaceDetectionsConstPtr & msg );
   void legDataCB( const people_msgs::PositionMeasurementArrayConstPtr & msg );
   void torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg );
+  void hotwordTriggerCB( const std_msgs::StringConstPtr & msg );
 
   bool findSolidObjectInScene( const std::string & name );
 

@@ -25,16 +25,19 @@ public:
   void invokePalFaceCallback( PyObject * arg );
   void invokeTorsoSonarCallback( PyObject * arg );
   void invokeLegDetectCallback( PyObject * arg );
+  void invokeWakeWordCallback( PyObject * arg );
   
   PyObject * getObjectDetectCallback() const { return objectDetectCB_; }
   PyObject * getObjectTrackCallback() const { return objectTrackCB_; }
   PyObject * getLegDetectCallback() const { return legDetectCB_; }
+  PyObject * getWakeWordCallback() const { return wakeWordCB_; }
 
   void setBaseScanCallback( PyObject * obj );
   void setTiltScanCallback( PyObject * obj );
   void setPalFaceCallback( PyObject * obj );
   void setTorsoSonarCallback( PyObject* obj );
   void setLegDetectCallback( PyObject* obj );
+  void setWakeWordCallback( PyObject* obj );
   void setObjectDTCallback( PyObject * detectcb, PyObject * trackcb );
 
   void invokeObjectDetectionCallback( PyObject * arg );
@@ -50,6 +53,7 @@ private:
   PyObject * objectDetectCB_;
   PyObject * objectTrackCB_;
   PyObject * legDetectCB_;
+  PyObject * wakeWordCB_;
 
   PyREEMModule();
   PyObject * createPyModule();

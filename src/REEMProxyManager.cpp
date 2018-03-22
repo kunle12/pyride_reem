@@ -87,6 +87,7 @@ REEMProxyManager::REEMProxyManager() :
   legDetectSub_( NULL ),
   htObjStatusSub_( NULL ),
   htObjUpdateSub_( NULL ),
+  hotwordSub_( NULL ),
   bodyCtrlWithOdmetry_( false ),
   bodyCtrlWithNavigation_( false ),
   torsoCtrl_( false ),
@@ -514,6 +515,7 @@ void REEMProxyManager::fini()
   deregisterForPalFaceData();
   deregisterForLegData();
   deregisterForSonarData();
+  deregisterForWakeWord();
 
   powerBoardDataThread_->stop();
   delete powerBoardDataThread_;
@@ -1218,6 +1220,20 @@ void REEMProxyManager::tiltScanDataCB( const sensor_msgs::LaserScanConstPtr & ms
   PyGILState_Release( gstate );
 }
 
+void REEMProxyManager::hotwordTriggerCB( const std_msgs::StringConstPtr & msg )
+{
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  PyObject * arg = Py_BuildValue( "(s)", msg->data.c_str() );
+
+  PyREEMModule::instance()->invokeWakeWordCallback( arg );
+
+  Py_DECREF( arg );
+
+  PyGILState_Release( gstate );
+}
+
 void REEMProxyManager::torsoSonarDataCB( const sensor_msgs::RangeConstPtr & msg )
 {
   PyGILState_STATE gstate;
@@ -1678,6 +1694,25 @@ void REEMProxyManager::deregisterForSonarData()
     torsoSonarSub_->shutdown();
     delete torsoSonarSub_;
     torsoSonarSub_ = NULL;
+  }
+}
+
+void REEMProxyManager::registerForWakeWord()
+{
+  if (hotwordSub_) {
+    ROS_WARN( "Already registered for hot word trigger." );
+  }
+  else {
+    hotwordSub_ = new ros::Subscriber( mCtrlNode_->subscribe( "hotword_trigger/trigger", 1, &REEMProxyManager::hotwordTriggerCB, this ) );
+  }
+}
+
+void REEMProxyManager::deregisterForWakeWord()
+{
+  if (hotwordSub_) {
+    hotwordSub_->shutdown();
+    delete hotwordSub_;
+    hotwordSub_ = NULL;
   }
 }
 

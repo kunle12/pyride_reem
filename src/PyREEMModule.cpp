@@ -1917,6 +1917,45 @@ static PyObject * PyModule_REEMRegisterLegDetectData( PyObject * self, PyObject 
   return retObj;
 }
 
+/*! \fn registerWakeWordTrigger( callback_function )
+ *  \memberof PyREEM
+ *  \brief Register a callback function triggered by a wake word.
+ *  None object can be used unregister the callback.
+ *  \param callback_function that takes a string input
+ *  \return previously set callback_function if any, otherwise none.
+ */
+static PyObject * PyModule_REEMRegisterWakeWordTrigger( PyObject * self, PyObject * args )
+{
+  PyObject * callbackFn = NULL;
+
+  if (!PyArg_ParseTuple( args, "O", &callbackFn )) {
+    // PyArg_ParseTuple will set the error status.
+    return NULL;
+  }
+
+  if (callbackFn == Py_None) {
+    PyREEMModule::instance()->setWakeWordCallback( NULL );
+    REEMProxyManager::instance()->deregisterForWakeWord();
+    Py_RETURN_NONE;
+  }
+
+  if (!PyCallable_Check( callbackFn )) {
+    PyErr_Format( PyExc_ValueError, "PyREEM.registerWakeWordTrigger:: the input parameter is not a callable object" );
+    return NULL;
+  }
+
+  PyObject * oldcb = PyREEMModule::instance()->getWakeWordCallback();
+
+  // must set return object before set callback since set callback will
+  // decrement the olde cb's ref count
+  PyObject * retObj = Py_BuildValue( "(O)", oldcb ? oldcb : Py_None );
+
+  PyREEMModule::instance()->setWakeWordCallback( callbackFn );
+  REEMProxyManager::instance()->registerForWakeWord();
+
+  return retObj;
+}
+
 /*! \fn addSolidObject(name,volume,position,orientation)
  *  \memberof PyREEM
  *  \brief Add a solid object to the current collision scene.
@@ -2641,6 +2680,8 @@ static PyMethodDef PyModule_methods[] = {
     "Register (or deregister) a callback function to get leg detection data." },
   { "registerHumanDetectTracking", (PyCFunction)PyModule_REEMRegisterObjectDetectTracking, METH_VARARGS,
     "Register (or deregister) callback functions to get human detection and tracking information." },
+  { "registerWakeWordTrigger", (PyCFunction)PyModule_REEMRegisterWakeWordTrigger, METH_VARARGS,
+    "Register (or deregister) callback function for wake word trigger." },
   { "startPalFaceEnrollment", (PyCFunction)PyModule_REEMStartPalFaceEnrollment, METH_VARARGS,
     "Start PAL built-in face enrollment." },
   { "stopPalFaceEnrollment", (PyCFunction)PyModule_REEMStopPalFaceEnrollment, METH_NOARGS,
@@ -2664,7 +2705,8 @@ static PyMethodDef PyModule_methods[] = {
 
 PyREEMModule::PyREEMModule() : PyModuleExtension( "PyREEM" )
 {
-  baseScanCB_ = tiltScanCB_ = palFaceCB_ = torsoSonarCB_ = objectDetectCB_ = objectTrackCB_ = legDetectCB_ = NULL;
+  baseScanCB_ = tiltScanCB_ = palFaceCB_ = torsoSonarCB_ = NULL;
+  objectDetectCB_ = objectTrackCB_ = legDetectCB_ = wakeWordCB_ = NULL;
 }
 
 PyREEMModule::~PyREEMModule()
@@ -2684,6 +2726,10 @@ PyREEMModule::~PyREEMModule()
   if (legDetectCB_){
     Py_DECREF( legDetectCB_ );
     legDetectCB_ = NULL;
+  }
+  if (wakeWordCB_){
+    Py_DECREF( wakeWordCB_ );
+    wakeWordCB_ = NULL;
   }
   if (objectDetectCB_) {
     Py_DECREF( objectDetectCB_ );
@@ -2733,6 +2779,11 @@ void PyREEMModule::invokeLegDetectCallback( PyObject * arg )
   this->invokeCallbackHandler( legDetectCB_, arg );
 }
 
+void PyREEMModule::invokeWakeWordCallback( PyObject * arg )
+{
+  this->invokeCallbackHandler( wakeWordCB_, arg );
+}
+
 void PyREEMModule::setBaseScanCallback( PyObject * obj )
 {
   this->swapCallbackHandler( baseScanCB_, obj );
@@ -2756,6 +2807,11 @@ void PyREEMModule::setPalFaceCallback( PyObject * obj )
 void PyREEMModule::setLegDetectCallback( PyObject * obj )
 {
   this->swapCallbackHandler( legDetectCB_, obj );
+}
+
+void PyREEMModule::setWakeWordCallback( PyObject * obj )
+{
+  this->swapCallbackHandler( wakeWordCB_, obj );
 }
 
 void PyREEMModule::invokeObjectDetectionCallback( PyObject * arg )
