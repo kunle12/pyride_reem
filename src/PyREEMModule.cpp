@@ -1882,6 +1882,7 @@ static PyObject * PyModule_REEMRegisterPalFaceData( PyObject * self, PyObject * 
 static PyObject * PyModule_REEMRegisterLegDetectData( PyObject * self, PyObject * args )
 {
   PyObject * callbackFn = NULL;
+  PyObject * retObj = NULL;
   float distance = 1.0;
 
   if (!PyArg_ParseTuple( args, "O|f", &callbackFn, &distance )) {
@@ -1895,24 +1896,28 @@ static PyObject * PyModule_REEMRegisterLegDetectData( PyObject * self, PyObject 
   }
 
   if (callbackFn == Py_None) {
+    PyObject * oldcb = PyREEMModule::instance()->getLegDetectCallback();
+
+    // must set return object before set callback since set callback will
+    // decrement the olde cb's ref count
+    retObj = Py_BuildValue( "(O)", oldcb ? oldcb : Py_None );
+
     PyREEMModule::instance()->setLegDetectCallback( NULL );
     REEMProxyManager::instance()->deregisterForLegData();
-    Py_RETURN_NONE;
   }
+  else if (PyCallable_Check( callbackFn )) {
+    PyObject * oldcb = PyREEMModule::instance()->getLegDetectCallback();
 
-  if (!PyCallable_Check( callbackFn )) {
+    // must set return object before set callback since set callback will
+    // decrement the olde cb's ref count
+    retObj = Py_BuildValue( "(O)", oldcb ? oldcb : Py_None );
+
+    PyREEMModule::instance()->setLegDetectCallback( callbackFn );
+    REEMProxyManager::instance()->registerForLegData( distance );
+  }
+  else {
     PyErr_Format( PyExc_ValueError, "PyREEM.registerLegDetectCallback:: first input parameter is not a callable object" );
-    return NULL;
   }
-
-  PyObject * oldcb = PyREEMModule::instance()->getLegDetectCallback();
-
-  // must set return object before set callback since set callback will
-  // decrement the olde cb's ref count
-  PyObject * retObj = Py_BuildValue( "(O)", oldcb ? oldcb : Py_None );
-
-  PyREEMModule::instance()->setLegDetectCallback( callbackFn );
-  REEMProxyManager::instance()->registerForLegData( distance );
 
   return retObj;
 }
@@ -1927,6 +1932,7 @@ static PyObject * PyModule_REEMRegisterLegDetectData( PyObject * self, PyObject 
 static PyObject * PyModule_REEMRegisterWakeWordTrigger( PyObject * self, PyObject * args )
 {
   PyObject * callbackFn = NULL;
+  PyObject * retObj = NULL;
 
   if (!PyArg_ParseTuple( args, "O", &callbackFn )) {
     // PyArg_ParseTuple will set the error status.
@@ -1934,24 +1940,26 @@ static PyObject * PyModule_REEMRegisterWakeWordTrigger( PyObject * self, PyObjec
   }
 
   if (callbackFn == Py_None) {
+    PyObject * oldcb = PyREEMModule::instance()->getWakeWordCallback();
+    // must set return object before set callback since set callback will
+    // decrement the olde cb's ref count
+    retObj = Py_BuildValue( "O", oldcb ? oldcb : Py_None );
+
     PyREEMModule::instance()->setWakeWordCallback( NULL );
     REEMProxyManager::instance()->deregisterForWakeWord();
-    Py_RETURN_NONE;
   }
+  else if (PyCallable_Check( callbackFn )) {
+    PyObject * oldcb = PyREEMModule::instance()->getWakeWordCallback();
+    // must set return object before set callback since set callback will
+    // decrement the olde cb's ref count
+    retObj = Py_BuildValue( "O", oldcb ? oldcb : Py_None );
 
-  if (!PyCallable_Check( callbackFn )) {
+    PyREEMModule::instance()->setWakeWordCallback( callbackFn );
+    REEMProxyManager::instance()->registerForWakeWord();
+  }
+  else {
     PyErr_Format( PyExc_ValueError, "PyREEM.registerWakeWordTrigger:: the input parameter is not a callable object" );
-    return NULL;
   }
-
-  PyObject * oldcb = PyREEMModule::instance()->getWakeWordCallback();
-
-  // must set return object before set callback since set callback will
-  // decrement the olde cb's ref count
-  PyObject * retObj = Py_BuildValue( "(O)", oldcb ? oldcb : Py_None );
-
-  PyREEMModule::instance()->setWakeWordCallback( callbackFn );
-  REEMProxyManager::instance()->registerForWakeWord();
 
   return retObj;
 }
@@ -2517,6 +2525,7 @@ static PyObject * PyModule_REEMRegisterObjectDetectTracking( PyObject * self, Py
 {
   PyObject * detectcb = NULL;
   PyObject * trackcb = NULL;
+  PyObject * retObj = NULL;
 
   if (!PyArg_ParseTuple( args, "O|O", &detectcb, &trackcb )) {
     // PyArg_ParseTuple will set the error status.
@@ -2524,31 +2533,35 @@ static PyObject * PyModule_REEMRegisterObjectDetectTracking( PyObject * self, Py
   }
 
   if (detectcb == Py_None) {
+    PyObject * olddetectcb = PyREEMModule::instance()->getObjectDetectCallback();
+    PyObject * oldtrackcb = PyREEMModule::instance()->getObjectTrackCallback();
+
+    // must set return object before set callback since set callback will
+    // decrement the olde cb's ref count
+    retObj = Py_BuildValue( "(OO)", olddetectcb ? olddetectcb : Py_None, oldtrackcb ? oldtrackcb : Py_None );
+
     PyREEMModule::instance()->setObjectDTCallback( NULL, NULL );
     REEMProxyManager::instance()->deregisterForHumanData();
-    Py_RETURN_NONE;
   }
+  else if (PyCallable_Check( detectcb )) {
+    if (trackcb && !PyCallable_Check( trackcb )) {
+      PyErr_Format( PyExc_ValueError, "Secode input parameter is not a callable object" );
+      return NULL;
+    }
+    PyObject * olddetectcb = PyREEMModule::instance()->getObjectDetectCallback();
+    PyObject * oldtrackcb = PyREEMModule::instance()->getObjectTrackCallback();
 
-  if (!PyCallable_Check( detectcb )) {
+    // must set return object before set callback since set callback will
+    // decrement the olde cb's ref count
+    retObj = Py_BuildValue( "(OO)", olddetectcb ? olddetectcb : Py_None, oldtrackcb ? oldtrackcb : Py_None );
+
+    PyREEMModule::instance()->setObjectDTCallback( detectcb, trackcb );
+
+    REEMProxyManager::instance()->registerForHumanData( (trackcb != NULL) );
+  }
+  else {
     PyErr_Format( PyExc_ValueError, "First input parameter is not a callable object" );
-    return NULL;
   }
-
-  if (trackcb && !PyCallable_Check( trackcb )) {
-    PyErr_Format( PyExc_ValueError, "Secode input parameter is not a callable object" );
-    return NULL;
-  }
-
-  PyObject * olddetectcb = PyREEMModule::instance()->getObjectDetectCallback();
-  PyObject * oldtrackcb = PyREEMModule::instance()->getObjectTrackCallback();
-
-  // must set return object before set callback since set callback will
-  // decrement the olde cb's ref count
-  PyObject * retObj = Py_BuildValue( "(OO)", olddetectcb ? olddetectcb : Py_None, oldtrackcb ? oldtrackcb : Py_None );
-
-  PyREEMModule::instance()->setObjectDTCallback( detectcb, trackcb );
-
-  REEMProxyManager::instance()->registerForHumanData( (trackcb != NULL) );
 
   return retObj;
 }
