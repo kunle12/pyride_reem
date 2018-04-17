@@ -2,6 +2,7 @@ var searchData=
 [
   ['getarmjointpositions',['getArmJointPositions',['../classPyREEM.html#ad34ee9430b52db397f40faaeb1614c8a',1,'PyREEM']]],
   ['getarmpose',['getArmPose',['../classPyREEM.html#a0e091e88e66473f4ded76513cdb8d2d7',1,'PyREEM']]],
+  ['getaudiovolume',['getAudioVolume',['../classPyREEM.html#a59645f4f4e1b48b730e1346450f04a13',1,'PyREEM']]],
   ['getbatterystatus',['getBatteryStatus',['../classPyREEM.html#acdfa8d305b9a6eb75886110fbe4140d1',1,'PyREEM']]],
   ['getcurrentmappois',['getCurrentMapPOIs',['../classPyREEM.html#a710eb5c8511243f7d35f07f7e33ce7a6',1,'PyREEM']]],
   ['gethandjointpositions',['getHandJointPositions',['../classPyREEM.html#a2ebb5abf054df0e63e673bbf4afa7875',1,'PyREEM']]],

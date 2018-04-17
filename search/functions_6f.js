@@ -1,6 +1,10 @@
 var searchData=
 [
   ['onbatterychargechange',['onBatteryChargeChange',['../classPyREEM.html#abc7d8a7ba502111201c3ab7f1d0c3d1a',1,'PyREEM']]],
+  ['onexclusivecontrolrelease',['onExclusiveControlRelease',['../classPyREEM.html#a89ba7a7ab23845ca75df803aaf827ab5',1,'PyREEM']]],
+  ['onexclusivecontrolrequest',['onExclusiveControlRequest',['../classPyREEM.html#a0f09728fa0ebf0a77c903ed62c8de45b',1,'PyREEM']]],
+  ['onfaceenrolmentfailed',['onFaceEnrolmentFailed',['../classPyREEM.html#a58d53e0bcd7c6346a681fc933b113d3b',1,'PyREEM']]],
+  ['onfaceenrolmentsuccess',['onFaceEnrolmentSuccess',['../classPyREEM.html#a67df517261582113b69973292539da19',1,'PyREEM']]],
   ['ongotopoifailed',['onGotoPOIFailed',['../classPyREEM.html#ae07a62d6dbd67ea477a8c61a2c21cac4',1,'PyREEM']]],
   ['ongotopoisuccess',['onGotoPOISuccess',['../classPyREEM.html#aef4f15088470b496952f451c7cb23ebe',1,'PyREEM']]],
   ['onhandactionfailed',['onHandActionFailed',['../classPyREEM.html#a624f25119a654919e5da5eba36fb9ae7',1,'PyREEM']]],
@@ -17,8 +21,12 @@ var searchData=
   ['onnavigatebodysuccess',['onNavigateBodySuccess',['../classPyREEM.html#a43f54d79297b621086fb27edbbd61301',1,'PyREEM']]],
   ['onnodestatusupdate',['onNodeStatusUpdate',['../classPyREEM.html#a55382b7352e5d3710778521bb2523f9d',1,'PyREEM']]],
   ['onpeermessage',['onPeerMessage',['../classPyREEM.html#a3db2e5359b0c6241217f446624072ae4',1,'PyREEM']]],
+  ['onplayaudiofailed',['onPlayAudioFailed',['../classPyREEM.html#a36e412bc1fb9f914e4abc80f80406fb1',1,'PyREEM']]],
+  ['onplayaudiosuccess',['onPlayAudioSuccess',['../classPyREEM.html#a0efce09b5e6b58af9f0660892cbd5140',1,'PyREEM']]],
   ['onplaymotionfailed',['onPlayMotionFailed',['../classPyREEM.html#a7a5fa7f075c36f30fb1a003d096d1ba3',1,'PyREEM']]],
   ['onplaymotionsuccess',['onPlayMotionSuccess',['../classPyREEM.html#ab17dd518c05c223717f267066a63983a',1,'PyREEM']]],
+  ['onrecordaudiofailed',['onRecordAudioFailed',['../classPyREEM.html#aab634ee84c1fd41407bb899b74e68f65',1,'PyREEM']]],
+  ['onrecordaudiosuccess',['onRecordAudioSuccess',['../classPyREEM.html#a7d9b3c8cf6170d417d94dcde4a6d514b',1,'PyREEM']]],
   ['onremotecommand',['onRemoteCommand',['../classPyREEM.html#ab066ed63929d4f1e7793724fd5401563',1,'PyREEM']]],
   ['onsnapshotimage',['onSnapshotImage',['../classPyREEM.html#af8bc1cd49c8ec2faea99608dca5a30e5',1,'PyREEM']]],
   ['onspeakfailed',['onSpeakFailed',['../classPyREEM.html#ad2619bc47da74d97fb1f70e2a6f0f5d0',1,'PyREEM']]],
