@@ -93,7 +93,7 @@ REEMProxyManager::REEMProxyManager() :
   torsoCtrl_( false ),
   headCtrlWithTrajActionClient_( false ),
   headCtrlWithActionClient_( false ),
-  defaultMotionCtrl_( false ),
+  palMotionCtrl_( false ),
   lHandCtrl_( false ),
   rHandCtrl_( false ),
   lArmCtrl_( false ),
@@ -889,18 +889,18 @@ void REEMProxyManager::doneRHandAction( const actionlib::SimpleClientGoalState &
 
 /*! \typedef onPlayMotionSuccess()
  *  \memberof PyREEM.
- *  \brief Callback function when PyREEM.playDefaultMotion method call is successful.
+ *  \brief Callback function when PyREEM.playPalMotion method call is successful.
  *  \return None.
  */
 /*! \typedef onPlayMotionFailed()
  *  \memberof PyREEM.
- *  \brief Callback function when PyREEM.playDefaultMotion method call is failed.
+ *  \brief Callback function when PyREEM.playPalMotion method call is failed.
  *  \return None.
  */
 void REEMProxyManager::donePlayMotionAction( const actionlib::SimpleClientGoalState & state,
                             const PlayMotionResultConstPtr & result )
 {
-  defaultMotionCtrl_ = false;
+  palMotionCtrl_ = false;
 
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
@@ -1796,7 +1796,7 @@ bool REEMProxyManager::cancelEarLED( const int effectID )
 
 bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative, float time_to_reach )
 {
-  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || defaultMotionCtrl_ || !headClient_)
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || palMotionCtrl_ || !headClient_)
     return false;
   
   double newYaw, newPitch;
@@ -1848,7 +1848,7 @@ bool REEMProxyManager::moveHeadTo( double yaw, double pitch, bool relative, floa
 bool REEMProxyManager::moveHeadWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
                                    std::vector<float> & times_to_reach )
 {
-  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || defaultMotionCtrl_ || !headClient_)
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || palMotionCtrl_ || !headClient_)
     return false;
 
   control_msgs::FollowJointTrajectoryGoal goal;
@@ -1885,7 +1885,7 @@ bool REEMProxyManager::moveHeadWithJointTrajectory( std::vector< std::vector<dou
 
 bool REEMProxyManager::pointHeadTo( const std::string & frame, float x, float y, float z )
 {
-  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || defaultMotionCtrl_ || !phClient_)
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || palMotionCtrl_ || !phClient_)
     return false;
 
   tf::StampedTransform transform;
@@ -1929,7 +1929,7 @@ bool REEMProxyManager::pointHeadTo( const std::string & frame, float x, float y,
 
 bool REEMProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> & positions, float time_to_reach )
 {
-  if (defaultMotionCtrl_) {
+  if (palMotionCtrl_) {
     ROS_WARN( "Default motion is executing." );
     return false;
   }
@@ -2012,7 +2012,7 @@ bool REEMProxyManager::moveArmWithJointPos( bool isLeftArm, std::vector<double> 
 bool REEMProxyManager::moveArmWithJointTrajectory( bool isLeftArm, std::vector< std::vector<double> > & trajectory,
                                                   std::vector<float> & times_to_reach )
 {
-  if (defaultMotionCtrl_) {
+  if (palMotionCtrl_) {
     ROS_WARN( "Default motion is executing." );
     return false;
   }
@@ -2094,7 +2094,7 @@ bool REEMProxyManager::moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
                                         std::vector< std::vector<double> > & joint_velocities,
                                         std::vector<float> & times_to_reach )
 {
-  if (defaultMotionCtrl_) {
+  if (palMotionCtrl_) {
     ROS_WARN( "Default motion is executing." );
     return false;
   }
@@ -2174,7 +2174,7 @@ bool REEMProxyManager::moveArmWithJointTrajectoryAndSpeed( bool isLeftArm,
 bool REEMProxyManager::moveArmWithGoalPose( bool isLeftArm, std::vector<double> & position,
                                           std::vector<double> & orientation, float time_to_reach )
 {
-  if (defaultMotionCtrl_) {
+  if (palMotionCtrl_) {
     ROS_WARN( "Default motion is executing." );
     return false;
   }
@@ -2323,21 +2323,21 @@ void REEMProxyManager::cancelAudioRecording()
   }
 }
 
-void REEMProxyManager::cancelDefaultMotion()
+void REEMProxyManager::cancelPalMotion()
 {
   if (!playMotionClient_)
     return;
 
   if (playMotionClient_->getState() == actionlib::SimpleClientGoalState::ACTIVE) {
     playMotionClient_->cancelGoal();
-    defaultMotionCtrl_ = false;
+    palMotionCtrl_ = false;
   }
 }
 
-bool REEMProxyManager::playDefaultMotion( const std::string & motion_name )
+bool REEMProxyManager::playPalMotion( const std::string & motion_name )
 {
   if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ ||
-      rArmCtrl_ || lArmCtrl_ || torsoCtrl_ || defaultMotionCtrl_ || !playMotionClient_)
+      rArmCtrl_ || lArmCtrl_ || torsoCtrl_ || palMotionCtrl_ || !playMotionClient_)
   {
     return false;
   }
@@ -2348,7 +2348,7 @@ bool REEMProxyManager::playDefaultMotion( const std::string & motion_name )
   goal.skip_planning = false;
   goal.priority = 20;
 
-  defaultMotionCtrl_ = true;
+  palMotionCtrl_ = true;
 
   playMotionClient_->sendGoal( goal,
                       boost::bind( &REEMProxyManager::donePlayMotionAction, this, _1, _2 ),
@@ -2476,7 +2476,7 @@ void REEMProxyManager::enablePalFaceDetection( bool enable, float confidence )
 
 bool REEMProxyManager::setHandPosition( bool isLeftHand, std::vector<double> & positions, float time_to_reach )
 {
-  if (defaultMotionCtrl_) {
+  if (palMotionCtrl_) {
     ROS_WARN( "Default motion is executing." );
     return false;
   }
@@ -2561,7 +2561,7 @@ bool REEMProxyManager::setHandPosition( bool isLeftHand, std::vector<double> & p
 
 void REEMProxyManager::updateHeadPos( float yaw, float pitch )
 {
-  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || defaultMotionCtrl_)
+  if (headCtrlWithActionClient_ || headCtrlWithTrajActionClient_ || palMotionCtrl_)
     return;
   
   headYawRate_ = clamp( yaw, kHeadYawRate );
@@ -2643,7 +2643,7 @@ void REEMProxyManager::updateBodyPose( const RobotPose & speed, bool localupdate
 
 bool REEMProxyManager::moveTorsoTo( double yaw, double pitch, bool relative, float time_to_reach )
 {
-  if (torsoCtrl_ || defaultMotionCtrl_ || !torsoClient_)
+  if (torsoCtrl_ || palMotionCtrl_ || !torsoClient_)
     return false;
 
   double newYaw, newPitch;
@@ -2696,7 +2696,7 @@ bool REEMProxyManager::moveTorsoTo( double yaw, double pitch, bool relative, flo
 bool REEMProxyManager::moveTorsoWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
                                    std::vector<float> & times_to_reach )
 {
-  if (torsoCtrl_ || defaultMotionCtrl_ || !torsoClient_)
+  if (torsoCtrl_ || palMotionCtrl_ || !torsoClient_)
     return false;
 
   control_msgs::FollowJointTrajectoryGoal goal;
@@ -3465,11 +3465,15 @@ bool REEMProxyManager::findSolidObjectInScene( const std::string & name )
   return found;
 }
 
-void REEMProxyManager::directToWeb( const std::string & uri )
+void REEMProxyManager::directToWeb( const std::string & uri, bool useVK )
 {
   pal_web_msgs::WebGoTo msg;
-  msg.type = 2;
   msg.value = uri;
+  if (useVK)
+    msg.type = 2 | 1 << 2;
+  else
+    msg.type = 2;
+
   wPub_.publish( msg );
 }
 

@@ -1037,14 +1037,14 @@ static PyObject * PyModule_REEMCancelBodyNavigation( PyObject * self )
   Py_RETURN_NONE;
 }
 
-/*! \fn cancelDefaultMotion()
+/*! \fn cancelPalMotion()
  *  \memberof PyREEM
  *  \brief Stop the currently playing default motion.
  *  \return None.
  */
-static PyObject * PyModule_REEMCancelDefaultMotion( PyObject * self )
+static PyObject * PyModule_REEMCancelPalMotion( PyObject * self )
 {
-  REEMProxyManager::instance()->cancelDefaultMotion();
+  REEMProxyManager::instance()->cancelPalMotion();
   Py_RETURN_NONE;
 }
 
@@ -1585,13 +1585,13 @@ static PyObject * PyModule_REEMSetHandPosition( PyObject * self, PyObject * args
     Py_RETURN_FALSE;
 }
 
-/*! \fn playDefaultMotion()
+/*! \fn playPalMotion()
  *  \memberof PyREEM
- *  \brief play a default motion prebuilt with PAL.
+ *  \brief play a PAL predefined motion.
  *  \param string name. Motion name
  *  \return bool. True == valid command; False == invalid command.
  */
-static PyObject * PyModule_REEMPlayDefaultMotion( PyObject * self, PyObject * args )
+static PyObject * PyModule_REEMPlayPalMotion( PyObject * self, PyObject * args )
 {
   char * motion = NULL;
 
@@ -1600,7 +1600,7 @@ static PyObject * PyModule_REEMPlayDefaultMotion( PyObject * self, PyObject * ar
     return NULL;
   }
 
-  if (REEMProxyManager::instance()->playDefaultMotion( motion ))
+  if (REEMProxyManager::instance()->playPalMotion( motion ))
     Py_RETURN_TRUE;
   else
     Py_RETURN_FALSE;
@@ -2411,22 +2411,36 @@ static PyObject * PyModule_REEMStopPalFaceEnrollment( PyObject * self )
   Py_RETURN_FALSE;
 }
 
-/*! \fn directToWeb(uri)
+/*! \fn directToWeb(uri,virtual_keyboard)
  *  \memberof PyREEM
  *  \brief direct REEM touch screen to a specified web site.
  *  \param str uri. URI for the web site.
+ *  \param boolean virtual_keyboard. True == turn on virtual keyboard; False == otherwise. Optional, default is False.
  *  \return None.
  */
 static PyObject * PyModule_REEMDirectToWeb( PyObject * self, PyObject * args )
 {
   char * uriStr = NULL;
+  PyObject * boolObj = NULL;
+  bool useVK = false;
 
-  if (!PyArg_ParseTuple( args, "s", &uriStr ) || strlen(uriStr) == 0) {
+  if (!PyArg_ParseTuple( args, "s|O", &uriStr, &boolObj ) || strlen(uriStr) == 0) {
     // PyArg_ParseTuple will set the error status.
     return NULL;
   }
-  REEMProxyManager::instance()->directToWeb( uriStr );
-    Py_RETURN_NONE;
+
+  if (boolObj) {
+    if (PyBool_Check( boolObj )) {
+      useVK = PyObject_IsTrue( boolObj );
+    }
+    else {
+      PyErr_Format( PyExc_ValueError, "PyREEM.directToWeb: second input parameter must be a boolean." );
+      return NULL;
+    }
+  }
+
+  REEMProxyManager::instance()->directToWeb( uriStr, useVK );
+  Py_RETURN_NONE;
 }
 
 /*! \fn getCurrentMapPOIs()
@@ -2657,9 +2671,9 @@ static PyMethodDef PyModule_methods[] = {
     "List supported REEM TF frames." },
   { "isSupportedTFFrame", (PyCFunction)PyModule_REEMCheckTFFrame, METH_VARARGS,
     "Check whether the input TF frames is supported." },
-  { "playDefaultMotion", (PyCFunction)PyModule_REEMPlayDefaultMotion, METH_VARARGS,
-    "Let REEM play one of its default motion." },
-  { "cancelDefaultMotion", (PyCFunction)PyModule_REEMCancelDefaultMotion, METH_NOARGS,
+  { "playPalMotion", (PyCFunction)PyModule_REEMPlayPalMotion, METH_VARARGS,
+    "Let REEM play one of its PAL pre-defined motion." },
+  { "cancelPalMotion", (PyCFunction)PyModule_REEMCancelPalMotion, METH_NOARGS,
     "Cancel currently playing default motion." },
   { "playAudioFile", (PyCFunction)PyModule_REEMPlayAudioFile, METH_VARARGS,
     "Let REEM play an audio file (mp3 or wav)." },
@@ -2702,7 +2716,7 @@ static PyMethodDef PyModule_methods[] = {
   { "enrolHumanFace", (PyCFunction)PyModule_REEMEnrolHumanFace, METH_VARARGS,
     "Use default human face enrolment." },
   { "directToWeb", (PyCFunction)PyModule_REEMDirectToWeb, METH_VARARGS,
-    "Direct REEM chest screen to a URI." },
+    "Direct REEM touch screen to a URI." },
   { "getCurrentMapPOIs", (PyCFunction)PyModule_REEMGetCurrentMapPOIs, METH_NOARGS,
     "Get a dictionary of Point of Interest (POI) in the current map." },
   { "gotoPOI", (PyCFunction)PyModule_REEMGotoPOI, METH_VARARGS,

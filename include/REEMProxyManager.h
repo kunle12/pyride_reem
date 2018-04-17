@@ -180,7 +180,7 @@ public:
   bool moveTorsoWithJointTrajectory( std::vector< std::vector<double> > & trajectory,
                                      std::vector<float> & times_to_reach );
 
-  bool playDefaultMotion( const std::string & motion_name );
+  bool playPalMotion( const std::string & motion_name );
 
   bool playAudioFile( const std::string & audio_name );
 
@@ -195,7 +195,7 @@ public:
   
   bool gotoPOI( const std::string & poi_name );
 
-  void cancelDefaultMotion();
+  void cancelPalMotion();
 
   void cancelBodyNavigation();
 
@@ -236,7 +236,7 @@ public:
   void registerForWakeWord();
   void deregisterForWakeWord();
 
-  void directToWeb( const std::string & uri );
+  void directToWeb( const std::string & uri, bool useVK = false );
 
   int setEarLED( const REEMLedColour colour, const int side = 3 );
   int pulseEarLED( const REEMLedColour colour1, const REEMLedColour colour2,
@@ -323,7 +323,7 @@ private:
   bool torsoCtrl_;
   bool headCtrlWithTrajActionClient_;
   bool headCtrlWithActionClient_;
-  bool defaultMotionCtrl_;
+  bool palMotionCtrl_;
   bool lHandCtrl_;
   bool rHandCtrl_;
   bool lArmCtrl_;
