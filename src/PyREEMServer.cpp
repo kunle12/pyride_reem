@@ -62,14 +62,6 @@ bool PyREEMServer::init()
     ERROR_MSG( "Unable to initialise any active robot audio device.\n" );
   }
 
-  ros::SubscribeOptions sopts = ros::SubscribeOptions::create<pyride_common_msgs::NodeStatus>( "pyride/node_status",
-        10, boost::bind( &PyREEMServer::nodeStatusCB, this, _1 ), ros::VoidPtr(), &nodeStatusQueue_ );
-
-  nodeStatusSub_ = hcNodeHandle_->subscribe( sopts );
-
-  nodeStatusThread_ = new ros::AsyncSpinner( 1, &nodeStatusQueue_ );
-  nodeStatusThread_->start();
-
   REEMProxyManager::instance()->initWithNodeHandle( hcNodeHandle_, useOptionNodes, useMoveIt );
   ServerDataProcessor::instance()->init( activeVideoDevices_, activeAudioDevices_ );
   ServerDataProcessor::instance()->addCommandHandler( this );
@@ -82,6 +74,15 @@ bool PyREEMServer::init()
   ServerDataProcessor::instance()->discoverConsoles();
   VideoToWebBridge::instance()->setPyModuleExtension( PyREEMModule::instance() );
   AudioFeedbackStream::instance()->initWithNode( hcNodeHandle_, PyREEMModule::instance() );
+
+  ros::SubscribeOptions sopts = ros::SubscribeOptions::create<pyride_common_msgs::NodeStatus>( "pyride/node_status",
+        10, boost::bind( &PyREEMServer::nodeStatusCB, this, _1 ), ros::VoidPtr(), &nodeStatusQueue_ );
+
+  nodeStatusSub_ = hcNodeHandle_->subscribe( sopts );
+
+  nodeStatusThread_ = new ros::AsyncSpinner( 1, &nodeStatusQueue_ );
+  nodeStatusThread_->start();
+
   return true;
 }
 
