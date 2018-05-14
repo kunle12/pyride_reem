@@ -70,7 +70,7 @@ bool PyREEMServer::init()
       (RobotCapability)(MOBILITY|VIDEO_FEEBACK|AUDIO_FEEBACK|MANIPULATION) );
   
   PythonServer::instance()->init( AppConfigManager::instance()->enablePythonConsole(),
-      PyREEMModule::instance(), scriptdir.c_str(), "/home/pal/local" );
+      PyREEMModule::instance(), scriptdir.c_str(), "/home/pal" );
   ServerDataProcessor::instance()->discoverConsoles();
   VideoToWebBridge::instance()->setPyModuleExtension( PyREEMModule::instance() );
   AudioFeedbackStream::instance()->initWithNode( hcNodeHandle_, PyREEMModule::instance() );

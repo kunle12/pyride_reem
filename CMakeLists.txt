@@ -106,6 +106,7 @@ add_definitions(-DROS_BUILD -DUSE_ENCRYPTION -DDEFINED_ENCRYPTION_KEY)
 # include_directories(include)
 include_directories(
   include
+  include/python2.7
   pyridecore
   ${PYTHON_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
@@ -141,10 +142,12 @@ add_dependencies(pyride_reem ${catkin_EXPORTED_TARGETS})
 
 add_library(celt STATIC IMPORTED)
 set_target_properties(celt PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/lib/libcelt0.a)
+add_library(python STATIC IMPORTED)
+set_target_properties(python PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/lib/libpython2.7.a)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(pyride_reem 
    ccrtp1 ccgnu2
-   crypto python2.7
+   crypto python
    jpeg tinyxml celt
    asound
    ${catkin_LIBRARIES}
