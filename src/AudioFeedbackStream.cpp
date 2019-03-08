@@ -19,14 +19,13 @@ using namespace ros;
 AudioFeedbackStream * AudioFeedbackStream::s_pAudioFeedbackStream = NULL;
 
 static bool __verbose = false;
-static const int kMaxCachedAudioData = 128 * PYRIDE_AUDIO_FRAME_SIZE;
+static const int kMaxCachedAudioData = PYRIDE_AUDIO_SAMPLE_RATE; // one second audio cache.
 
 AudioFeedbackStream::AudioFeedbackStream() :
   clientNo_( 0 ),
   isRunning_( false ),
   mCtrlNode_( NULL ),
   dataStream_( NULL ),
-  celtMode_( NULL ),
   audioDecoder_( NULL )
 {
   streaming_data_thread_ = NULL;
@@ -115,14 +114,13 @@ bool AudioFeedbackStream::start()
     return false;
   }
 
-  celtMode_ = celt_mode_create( PYRIDE_AUDIO_SAMPLE_RATE, PYRIDE_AUDIO_FRAME_SIZE, NULL );
+  int err = 0;
+  audioDecoder_ = opus_decoder_create( PYRIDE_AUDIO_SAMPLE_RATE, 1, &err );
 
-  if (!celtMode_) {
-    ERROR_MSG( "Unable to create encoding mode.\n" );
+  if (!audioDecoder_) {
+    ERROR_MSG( "Unable to initialise audio decoder.\n" );
     return false;
   }
-
-  audioDecoder_ = celt_decoder_create_custom( celtMode_, 1, NULL );
 
   dataStream_ = new RTPDataReceiver();
   dataStream_->init( PYRIDE_VIDEO_STREAM_BASE_PORT + 6, true );
@@ -148,12 +146,8 @@ void AudioFeedbackStream::stop()
   }
 
   if (audioDecoder_) {
-    celt_decoder_destroy( audioDecoder_ );
+    opus_decoder_destroy( audioDecoder_ );
     audioDecoder_ = NULL;
-  }
-  if (celtMode_) {
-    celt_mode_destroy( celtMode_ );
-    celtMode_ = NULL;
   }
 
   if (dataStream_) {
@@ -174,7 +168,7 @@ void AudioFeedbackStream::grabAndDispatchAudioStreamData()
   if (!dataStream_)
     return;
 
-  unsigned char * audioData = new unsigned char[kMaxCachedAudioData * sizeof(short)];
+  signed short * audioData = new signed short[kMaxCachedAudioData];
 
   while (isRunning_) {
     int gcount = 0;
@@ -188,28 +182,27 @@ void AudioFeedbackStream::grabAndDispatchAudioStreamData()
       usleep( 100 ); // 1ms
     } while (dataSize == 0 && gcount < 10);
 
-    audio_common_msgs::AudioData msg;
-
-    if (dataSize == 0 || dataSize % PYRIDE_AUDIO_BYTES_PER_PACKET != 0) {
+    if (dataSize == 0) {
       continue;
     }
 
     // double ts = double(now.tv_sec) + (double(now.tv_usec) / 1000000.0);
 
-    audioFrames = dataSize / PYRIDE_AUDIO_BYTES_PER_PACKET;
-
     //DEBUG_MSG("Got audio frames %d.\n", audioFrames );
 
-    for (int i = 0;i < audioFrames;i++) {
-      celt_decode( audioDecoder_, data+i*PYRIDE_AUDIO_BYTES_PER_PACKET, PYRIDE_AUDIO_BYTES_PER_PACKET,
-          (short *)(audioData) + i * PYRIDE_AUDIO_FRAME_SIZE, PYRIDE_AUDIO_FRAME_SIZE );
+    int frame_size = opus_decode( audioDecoder_, data, dataSize, audioData,
+          PYRIDE_AUDIO_SAMPLE_RATE, 0 );
+
+    if (frame_size > 0) {
+      decodedSize = frame_size * sizeof( short ); // single channel
+
+      audio_common_msgs::AudioData msg;
+
+      msg.data.resize( decodedSize );
+      memcpy( &msg.data[0], (unsigned char*)audioData, decodedSize );
+
+      audioPub_.publish( msg );
     }
-    decodedSize = audioFrames * PYRIDE_AUDIO_FRAME_SIZE * sizeof( short );
-
-    msg.data.resize( decodedSize );
-    memcpy( &msg.data[0], audioData, decodedSize );
-
-    audioPub_.publish( msg );
   }
 
   delete [] audioData;

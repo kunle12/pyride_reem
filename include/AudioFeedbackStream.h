@@ -15,7 +15,7 @@
 
 #include <ros/ros.h>
 
-#include <celt/celt.h>
+#include <opus/opus.h>
 
 #include "RTPDataReceiver.h"
 #include "PyModuleStub.h"
@@ -46,8 +46,7 @@ private:
   RTPDataReceiver * dataStream_;
   PyModuleExtension * pyExtension_;
 
-  CELTMode * celtMode_;
-  CELTDecoder * audioDecoder_;
+  OpusDecoder * audioDecoder_;
 
   boost::thread * streaming_data_thread_;
 
